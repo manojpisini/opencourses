@@ -160,14 +160,14 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
         {topContributors.map(c => (
           <a href={`${base}/contributors/${c.login}`} class="contributor-card">
-            <Avatar login={c.login} size="md" />
-            <div class="contributor-card__name">@{c.login}</div>
-            <div class="contributor-card__role">{c.role}</div>
-            <div style="margin-top:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">
-              {c.commits} commits · {c.courses} courses
+            <Avatar login={c.login} size="sm" />
+            <div class="contributor-card__info">
+              <span class="contributor-card__name">@{c.login}</span>
+              <span class="contributor-card__role">{c.role}</span>
+              <span class="contributor-card__stats">{c.commits} commits · {c.courses} courses</span>
             </div>
           </a>
         ))}

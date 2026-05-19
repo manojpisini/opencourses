@@ -67,11 +67,11 @@ const rest = sorted.slice(3);
       <div class="contributors-grid">
         {sorted.map(c => (
           <a href={`${base}/contributors/${c.login}`} class="contributor-card">
-            <Avatar login={c.login} size="md" />
-            <div>
-              <div class="contributor-card__name">@{c.login}</div>
-              <div class="contributor-card__role">{c.role}</div>
-              <div class="contributor-card__role" style="margin-top:2px">{c.courses} courses · {c.commits} commits</div>
+            <Avatar login={c.login} size="sm" />
+            <div class="contributor-card__info">
+              <span class="contributor-card__name">@{c.login}</span>
+              <span class="contributor-card__role">{c.role}</span>
+              <span class="contributor-card__stats">{c.courses} courses · {c.commits} commits</span>
             </div>
           </a>
         ))}
