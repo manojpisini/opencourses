@@ -15,6 +15,7 @@
  */
 
 import * as fs   from 'fs';
+import * as path from 'path';
 import { makeOctokit, repoFromEnv } from '../lib/github.ts';
 import type { LeaderboardEntry } from '../types/course.ts';
 
@@ -242,6 +243,33 @@ async function main() {
   const md      = renderMarkdown(entries);
   fs.writeFileSync('LEADERBOARD.md', md);
   console.log(`✓ LEADERBOARD.md written (${entries.length} students)`);
+
+  // Emit JSON for the site (CWD is engine/, path resolves to site/src/data/)
+  const jsonPath = path.join('..', 'site', 'src', 'data', 'leaderboard.json');
+  const payload = {
+    entries: entries.slice(0, 100).map(e => ({
+      rank:             e.rank,
+      login:            e.login,
+      coursesCompleted: e.coursesCompleted,
+      avgScore:         parseFloat(e.avgScore.toFixed(1)),
+      totalPoints:      e.totalPoints,
+      maxPoints:        e.maxPoints,
+      fastestCourse:    e.fastestCourse ?? null,
+      certified:        e.certified,
+      enrolledCourses:  e.enrolledCourses,
+    })),
+    stats: {
+      totalEnrolled:    entries.length,
+      totalCertified:   entries.filter(e => e.certified).length,
+      totalCompletions: entries.reduce((s, e) => s + e.coursesCompleted, 0),
+      avgScore:         entries.length > 0
+        ? parseFloat((entries.reduce((s, e) => s + e.avgScore, 0) / entries.length).toFixed(1))
+        : 0,
+    },
+    builtAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(jsonPath, JSON.stringify(payload, null, 2) + '\n');
+  console.log('✓ leaderboard.json written');
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

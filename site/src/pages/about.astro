@@ -8,26 +8,25 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const maintainers = OC.CONTRIBUTORS.filter(c => c.role.startsWith('Maintainer')).slice(0, 4);
 
 const howItWorks = [
-  { step: '01', title: 'Enroll', desc: 'Open an Issue in any course repo using the enrollment template.' },
-  { step: '02', title: 'Learn', desc: 'Watch videos, read Markdown content in the repo, write code.' },
-  { step: '03', title: 'Submit', desc: 'Open a Pull Request with your assignment code.' },
-  { step: '04', title: 'Graded', desc: 'GitHub Actions runs your tests automatically. You get a score.' },
-  { step: '05', title: 'Advance', desc: 'Pass all stages. Complete the quiz. Unlock the next stage.' },
-  { step: '06', title: 'Certified', desc: 'Receive a GPG-signed certificate as a GitHub Release.' },
+  { step: '01', title: 'Enroll',    desc: 'Open an enrollment issue. Your GitHub @username is your sole identity — no separate login needed.' },
+  { step: '02', title: 'Learn',     desc: 'Work through the course content: lessons, readings, and exercises defined in course.md.' },
+  { step: '03', title: 'Test',      desc: 'Open a quiz-submit issue with your answers. Supports MCQ, multi-select, true/false, short-answer, and code.' },
+  { step: '04', title: 'Graded',    desc: 'GitHub Actions scores your submission algorithmically — no AI. Code questions run in an isolated Docker sandbox.' },
+  { step: '05', title: 'Complete',  desc: 'Pass all chapter tests. If a final exam is required, it unlocks automatically. Your rank appears on the leaderboard.' },
+  { step: '06', title: 'Certified', desc: 'Receive a GPG-signed SVG certificate as a GitHub Release, compliant with Open Badges 3.0.' },
 ];
 
 const contributeSteps = [
-  'Complete the Instructor Certification course — it teaches the engine.',
-  'Fork the course-template repo from github.com/opencourse.',
-  'Follow the schema in course.yaml — every field is validated.',
-  'Add content to curriculum/ — Markdown, videos, quizzes, assignments.',
-  'Write tests in tests/ — these run in the grading sandbox.',
-  'Open a PR to opencourse/registry to list your course.',
+  'Copy engine/courses/template/ to engine/courses/<your-slug>/ and edit course.md.',
+  'Define lessons, chapter tests, and optional projects. course.md is the single source of truth.',
+  'Add dynamic test generators to assets/tests/ for code questions — students never see the same inputs twice.',
+  'Keep reference solutions in assets/solutions/ (gitignored — never used by the grader).',
+  'Open a PR — the course-publish workflow validates course.md on merge and emits course.json.',
 ];
 
 const improveSteps = [
-  'Find an issue in the course repo — look for "help wanted" label.',
-  'Fork the repo and make your changes on a feature branch.',
+  'Find an issue at github.com/manojpisini/opencourses — look for "help wanted".',
+  'Fork the repo and make changes on a feature branch.',
   'Open a PR with a clear description of what changed and why.',
   'A maintainer will review within 7 days.',
 ];

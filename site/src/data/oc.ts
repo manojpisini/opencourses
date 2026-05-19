@@ -1,13 +1,8 @@
 /* OpenCourses — Data Layer */
 
-export const today = new Date();
+import leaderboardRaw from './leaderboard.json';
 
-const daysAgo = (n: number): string => {
-  const d = new Date(today);
-  d.setDate(d.getDate() - n);
-  return d.toISOString();
-};
-void daysAgo; // exported for use by generated data loaders
+export const today = new Date();
 
 // ============================================================
 // Types
@@ -89,6 +84,29 @@ export interface ModuleItem {
   title: string;
   duration: string;
   body: string;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  login: string;
+  coursesCompleted: number;
+  avgScore: number;
+  totalPoints: number;
+  maxPoints: number;
+  fastestCourse: number | null;
+  certified: boolean;
+  enrolledCourses: string[];
+}
+
+export interface LeaderboardData {
+  entries: LeaderboardEntry[];
+  stats: {
+    totalEnrolled: number;
+    totalCertified: number;
+    totalCompletions: number;
+    avgScore: number;
+  };
+  builtAt: string;
 }
 
 // ============================================================
@@ -237,6 +255,7 @@ const OC = {
   STATS,
   TRACK_COLORS,
   MODULE_TEMPLATES,
+  LEADERBOARD: leaderboardRaw as unknown as LeaderboardData,
   activity: generateActivity(),
   sparklineSvg,
   fuzzyScore,
@@ -244,6 +263,8 @@ const OC = {
   trackName,
   today,
 };
+
+export const LEADERBOARD = leaderboardRaw as unknown as LeaderboardData;
 
 export { COURSES };
 export default OC;

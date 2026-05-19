@@ -65,11 +65,3 @@ jobs:
               ref: 'main',
             });
 
-      - name: Commit audit log
-        run: |
-          git config user.name "opencourse-bot[bot]"
-          git config user.email "opencourse-bot[bot]@users.noreply.github.com"
-          git add engine/audit/log.jsonl
-          git diff --staged --quiet || git commit -m "audit: quiz by ${{ github.event.issue.user.login }} [skip ci]"
-          git push
-        working-directory: ${{ github.workspace }}

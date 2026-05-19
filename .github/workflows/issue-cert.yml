@@ -96,11 +96,3 @@ jobs:
               state: 'closed', state_reason: 'completed'
             });
 
-      - name: Commit CERTIFIED.md and audit log
-        run: |
-          git config user.name "opencourse-bot[bot]"
-          git config user.email "opencourse-bot[bot]@users.noreply.github.com"
-          git add engine/CERTIFIED.md engine/audit/log.jsonl
-          git diff --staged --quiet || git commit -m "cert: ${{ inputs.student }} completed ${{ inputs.course }} [skip ci]"
-          git push
-        working-directory: ${{ github.workspace }}
