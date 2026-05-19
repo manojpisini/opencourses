@@ -5,8 +5,8 @@
 <br/>
 
 [![Site](https://img.shields.io/badge/Website-Live-0075ca?style=for-the-badge&logo=github&logoColor=white)](https://manojpisini.github.io/opencourses)
-[![Courses](https://img.shields.io/badge/Courses-16-2ea44f?style=for-the-badge&logo=bookstack&logoColor=white)](https://manojpisini.github.io/opencourses/courses)
-[![Contributors](https://img.shields.io/badge/Contributors-18-a78bfa?style=for-the-badge&logo=github&logoColor=white)](https://manojpisini.github.io/opencourses/contributors)
+[![Courses](https://img.shields.io/badge/dynamic/json?color=2ea44f&label=Courses&query=%24.courses&url=https%3A%2F%2Fmanojpisini.github.io%2Fopencourses%2Fstats.json&style=for-the-badge&logo=bookstack&logoColor=white)](https://manojpisini.github.io/opencourses/courses)
+[![Contributors](https://img.shields.io/badge/dynamic/json?color=a78bfa&label=Contributors&query=%24.contributors&url=https%3A%2F%2Fmanojpisini.github.io%2Fopencourses%2Fstats.json&style=for-the-badge&logo=github&logoColor=white)](https://manojpisini.github.io/opencourses/contributors)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/manojpisini/opencourses/deploy-site.yml?label=Deploy&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/manojpisini/opencourses/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=for-the-badge)](LICENSE)
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/Content-CC%20BY--SA%204.0-f5c542?style=for-the-badge)](LICENSE-CONTENT)

@@ -39,7 +39,7 @@ We aim to acknowledge reports within **48 hours** and provide a fix or mitigatio
 
 The engine is built with a defense-in-depth approach:
 
-- **Grading sandbox:** `--network none --memory 128m --read-only --user 1001:1001 --security-opt no-new-privileges`
+- **Grading sandbox:** `--network none --memory 256m --cpus 1 --read-only --user 1001:1001 --security-opt no-new-privileges --tmpfs /tmp:size=100m`
 - **Tamper detection:** PRs modifying `tests/`, `.github/`, or `scripts/graders/` are rejected
 - **Rate limiting:** Max 5 submission attempts per stage per student
 - **Audit log:** Append-only JSONL log of all automation events

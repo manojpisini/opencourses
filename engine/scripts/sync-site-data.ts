@@ -27,8 +27,9 @@ const { owner, repo } = repoFromEnv();
 
 // ─── Path helpers ─────────────────────────────────────────────────────────────
 
-const COURSES_DIR = path.join('courses');
-const SITE_DATA   = path.join('..', 'site', 'src', 'data');
+const COURSES_DIR  = path.join('courses');
+const SITE_DATA    = path.join('..', 'site', 'src', 'data');
+const SITE_PUBLIC  = path.join('..', 'site', 'public');
 
 function siteFile(name: string): string {
   return path.join(SITE_DATA, name);
@@ -367,7 +368,15 @@ function buildGraph(courses: SiteCourse[]) {
 function write(name: string, data: unknown): void {
   const dest = siteFile(name);
   fs.writeFileSync(dest, JSON.stringify(data, null, 2) + '\n');
-  console.log(`✓ ${name} written`);
+  console.log(`✓ site/src/data/${name} written`);
+}
+
+/** Write a copy of stats.json to site/public/ for the shields.io dynamic badge endpoint. */
+function writePublicStats(data: unknown): void {
+  if (!fs.existsSync(SITE_PUBLIC)) fs.mkdirSync(SITE_PUBLIC, { recursive: true });
+  const dest = path.join(SITE_PUBLIC, 'stats.json');
+  fs.writeFileSync(dest, JSON.stringify(data, null, 2) + '\n');
+  console.log(`✓ site/public/stats.json written`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -412,6 +421,7 @@ async function main() {
   write('graph.json',        graph);
   write('activity.json',     activity);
   write('stats.json',        stats);
+  writePublicStats(stats);   // also write to site/public/ for shields.io dynamic badges
 
   console.log(`\nSync complete — ${courses.length} courses, ${contributors.length} contributors`);
 }

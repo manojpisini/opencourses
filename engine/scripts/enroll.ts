@@ -129,7 +129,7 @@ ${certDelivery}
 
 - 🏆 [Leaderboard](../../blob/main/LEADERBOARD.md)
 - 📖 [Course file](../../blob/main/engine/courses/${course.meta.slug}/course.md)
-- 💬 [Get help](../../issues/new?template=support.yml)
+- 💬 [Get help](../../issues/new?template=help.yml)
 
 ---
 _Issue #${enrollmentIssue} is your progress tracker — keep it open. Labels are added here as you complete chapters._`;
