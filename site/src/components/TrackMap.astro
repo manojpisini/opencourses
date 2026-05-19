@@ -1,0 +1,524 @@
+---
+/**
+ * TrackMap.astro — Train-station / track map for the course catalog.
+ *
+ * Layout:
+ *   - Each learning track = a vertical colored rail line (column)
+ *   - Difficulty tiers    = horizontal bands (beginner → intermediate → advanced)
+ *   - Each course         = a station circle on its track's rail
+ *   - Prerequisites       = bezier curves connecting stations across tracks
+ *
+ * Interactions (client-side):
+ *   - Hover station  → highlight it + connected edges, dim rest
+ *   - Click station  → navigate to course page
+ *   - Hover track label → filter to that track
+ */
+import OC from '../data/oc';
+
+const { COURSES, TRACKS, TRACK_COLORS } = OC;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// ── Layout constants ──────────────────────────────────────────────────────────
+const COL_W    = 140;   // px between track center columns
+const PAD_L    = 48;    // left / right padding
+const HEADER   = 72;    // px reserved for track header labels at top
+const FOOTER   = 32;    // bottom padding
+const TIER_H   = 180;   // px per difficulty tier
+const NODE_R   = 10;    // station circle radius
+const LABEL_OFFSET = NODE_R + 8;
+
+const TIERS = ['beginner', 'intermediate', 'advanced'] as const;
+const TIER_LABELS: Record<string, string> = {
+  beginner:     'Beginner',
+  intermediate: 'Intermediate',
+  advanced:     'Advanced',
+};
+
+// ── Computed dimensions ───────────────────────────────────────────────────────
+const svgW  = Math.max(920, TRACKS.length * COL_W + PAD_L * 2);
+const svgH  = TIERS.length * TIER_H + HEADER + FOOTER;
+const midX  = svgW / 2;
+
+// ── Track x positions ─────────────────────────────────────────────────────────
+const trackX: Record<string, number> = {};
+TRACKS.forEach((t, i) => {
+  trackX[t.slug] = PAD_L + i * COL_W + COL_W / 2;
+});
+
+// ── Difficulty → tier y-center ────────────────────────────────────────────────
+const tierY: Record<string, number> = {
+  beginner:     HEADER + TIER_H * 0 + TIER_H / 2,
+  intermediate: HEADER + TIER_H * 1 + TIER_H / 2,
+  advanced:     HEADER + TIER_H * 2 + TIER_H / 2,
+  draft:        HEADER + TIER_H * 2 + TIER_H / 2,
+};
+
+// ── Station positions ─────────────────────────────────────────────────────────
+interface Station {
+  slug: string; title: string; track: string;
+  difficulty: string; x: number; y: number; color: string;
+}
+const stations: Station[] = [];
+
+TRACKS.forEach(track => {
+  const color   = TRACK_COLORS[track.slug] ?? '#4f9eff';
+  const courses = COURSES.filter(c => c.track === track.slug);
+
+  // Group by tier
+  const byTier: Record<string, typeof courses> = {};
+  courses.forEach(c => {
+    const key = c.difficulty in tierY ? c.difficulty : 'advanced';
+    byTier[key] = byTier[key] ?? [];
+    byTier[key].push(c);
+  });
+
+  Object.entries(byTier).forEach(([diff, group]) => {
+    const cy      = tierY[diff] ?? tierY.beginner;
+    const spacing = group.length > 1 ? Math.min(38, (TIER_H - 50) / group.length) : 0;
+    group.forEach((c, i) => {
+      const offset = (i - (group.length - 1) / 2) * spacing;
+      stations.push({
+        slug: c.slug, title: c.title,
+        track: c.track, difficulty: c.difficulty,
+        x: trackX[track.slug]!, y: cy + offset, color,
+      });
+    });
+  });
+});
+
+// ── Build lookup ──────────────────────────────────────────────────────────────
+const bySlug: Record<string, Station> = {};
+stations.forEach(s => { bySlug[s.slug] = s; });
+
+// ── Prerequisite edges ────────────────────────────────────────────────────────
+interface Edge { x1:number; y1:number; x2:number; y2:number; color:string; srcSlug:string; dstSlug:string; }
+const edges: Edge[] = [];
+stations.forEach(dst => {
+  const c = COURSES.find(c => c.slug === dst.slug);
+  c?.prerequisites.forEach(prereqSlug => {
+    const src = bySlug[prereqSlug];
+    if (src) edges.push({ x1:src.x, y1:src.y, x2:dst.x, y2:dst.y, color:dst.color, srcSlug:prereqSlug, dstSlug:dst.slug });
+  });
+});
+
+// ── Bezier path for a prerequisite edge ──────────────────────────────────────
+function edgePath(e: Edge): string {
+  const mx = (e.x1 + e.x2) / 2;
+  const my = (e.y1 + e.y2) / 2;
+  if (Math.abs(e.x1 - e.x2) < 4) {
+    // Same column — simple vertical curve
+    return `M${e.x1},${e.y1} C${e.x1},${my} ${e.x2},${my} ${e.x2},${e.y2}`;
+  }
+  // Cross-column — S-curve through midpoint
+  return `M${e.x1},${e.y1} C${e.x1},${my} ${e.x2},${my} ${e.x2},${e.y2}`;
+}
+
+// ── Band definitions ──────────────────────────────────────────────────────────
+const bands = TIERS.map((tier, i) => ({
+  tier,
+  y: HEADER + TIER_H * i,
+  cy: HEADER + TIER_H * i + TIER_H / 2,
+}));
+
+const isEmpty = COURSES.length === 0;
+---
+
+<div class="track-map-outer">
+  <!-- Scroll hint on narrow viewports -->
+  <div class="track-map-scroll-hint">← scroll →</div>
+
+  <div class="track-map-scroll">
+    <svg
+      id="track-map-svg"
+      class="track-map-svg"
+      width={svgW}
+      height={svgH}
+      viewBox={`0 0 ${svgW} ${svgH}`}
+      role="img"
+      aria-label="Course track map"
+    >
+      <defs>
+        <!-- Gradient for rail lines -->
+        {TRACKS.map(t => {
+          const color = TRACK_COLORS[t.slug] ?? '#4f9eff';
+          return (
+            <linearGradient id={`rail-${t.slug}`} x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse"
+              gradientTransform={`translate(0,${HEADER}) scale(1,${svgH - HEADER - FOOTER})`}>
+              <stop offset="0%"   stop-color={color} stop-opacity="0.8" />
+              <stop offset="100%" stop-color={color} stop-opacity="0.2" />
+            </linearGradient>
+          );
+        })}
+        <!-- Arrow marker for prerequisite direction -->
+        <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="var(--text-muted)" opacity="0.5" />
+        </marker>
+      </defs>
+
+      <!-- ── Difficulty tier bands ──────────────────────────────────── -->
+      {bands.map((b, i) => (
+        <g class="tier-band">
+          <rect
+            x={0} y={b.y} width={svgW} height={TIER_H}
+            fill={i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-base)'}
+            opacity="0.35"
+          />
+          <!-- Tier separator line -->
+          {i > 0 && (
+            <line x1={0} y1={b.y} x2={svgW} y2={b.y}
+              stroke="var(--border-default)" stroke-width="1" opacity="0.4" />
+          )}
+          <!-- Tier label (left edge) -->
+          <text
+            x={10} y={b.cy + 4}
+            font-family="var(--font-mono)" font-size="10"
+            fill="var(--text-muted)" opacity="0.5"
+            text-anchor="start" dominant-baseline="middle"
+          >{TIER_LABELS[b.tier]}</text>
+          <!-- Tier label (right edge, mirrored) -->
+          <text
+            x={svgW - 10} y={b.cy + 4}
+            font-family="var(--font-mono)" font-size="10"
+            fill="var(--text-muted)" opacity="0.5"
+            text-anchor="end" dominant-baseline="middle"
+          >{TIER_LABELS[b.tier]}</text>
+        </g>
+      ))}
+
+      <!-- ── Track rail lines ───────────────────────────────────────── -->
+      {TRACKS.map(t => {
+        const x     = trackX[t.slug]!;
+        const color = TRACK_COLORS[t.slug] ?? '#4f9eff';
+        const hasC  = COURSES.some(c => c.track === t.slug);
+        return (
+          <g class="track-rail" data-track={t.slug}>
+            <!-- The rail line -->
+            <line
+              x1={x} y1={HEADER} x2={x} y2={svgH - FOOTER}
+              stroke={isEmpty || !hasC ? color : `url(#rail-${t.slug})`}
+              stroke-width={hasC ? '2.5' : '1.5'}
+              stroke-dasharray={!hasC ? '6 4' : undefined}
+              opacity={hasC ? '0.5' : '0.2'}
+              class="rail-line"
+            />
+            <!-- Rail terminus dot at top -->
+            <circle cx={x} cy={HEADER} r="4" fill={color} opacity={hasC ? '0.7' : '0.25'} />
+            <!-- Rail terminus dot at bottom -->
+            <circle cx={x} cy={svgH - FOOTER} r="3" fill={color} opacity={hasC ? '0.4' : '0.15'} />
+
+            <!-- Track header label -->
+            <g class="track-header" style="cursor:default">
+              <rect
+                x={x - 44} y={8} width={88} height={22}
+                rx={4} fill={color} opacity="0.12"
+              />
+              <rect
+                x={x - 44} y={8} width={4} height={22}
+                rx={2} fill={color} opacity="0.9"
+              />
+              <text
+                x={x - 36} y={22}
+                font-family="var(--font-mono)" font-size="10.5" font-weight="600"
+                fill={color} text-anchor="start"
+                class="track-label"
+                data-track={t.slug}
+              >{t.name}</text>
+            </g>
+
+            <!-- Ghost stations when no courses on this track -->
+            {!hasC && bands.map(b => (
+              <circle
+                cx={x} cy={b.cy}
+                r={NODE_R}
+                fill="none"
+                stroke={color}
+                stroke-width="1.5"
+                stroke-dasharray="4 3"
+                opacity="0.2"
+              />
+            ))}
+          </g>
+        );
+      })}
+
+      <!-- ── Prerequisite edges ─────────────────────────────────────── -->
+      <g id="edges-layer">
+        {edges.map(e => (
+          <path
+            d={edgePath(e)}
+            fill="none"
+            stroke={e.color}
+            stroke-width="1.5"
+            stroke-dasharray="5 3"
+            opacity="0.3"
+            marker-end="url(#arrow)"
+            class="prereq-edge"
+            data-src={e.srcSlug}
+            data-dst={e.dstSlug}
+          />
+        ))}
+      </g>
+
+      <!-- ── Station nodes ──────────────────────────────────────────── -->
+      <g id="stations-layer">
+        {stations.map(s => {
+          const labelRight = s.x < midX;
+          const lx = labelRight ? s.x + LABEL_OFFSET : s.x - LABEL_OFFSET;
+          return (
+            <g
+              class="station"
+              data-slug={s.slug}
+              data-track={s.track}
+              style="cursor:pointer"
+              role="button"
+              tabindex="0"
+              aria-label={s.title}
+            >
+              <!-- Hover aura -->
+              <circle cx={s.x} cy={s.y} r={NODE_R + 10} fill={s.color} opacity="0" class="station__aura" />
+              <!-- Outer ring (difficulty indicator) -->
+              <circle cx={s.x} cy={s.y} r={NODE_R + 3} fill="none"
+                stroke={s.color} stroke-width="1" opacity="0.35" class="station__ring" />
+              <!-- Main station circle -->
+              <circle cx={s.x} cy={s.y} r={NODE_R}
+                fill={s.color} stroke="var(--bg-base)" stroke-width="2.5"
+                class="station__dot" />
+              <!-- Inner icon for difficulty: solid for advanced, half for intermediate -->
+              {s.difficulty === 'advanced' && (
+                <circle cx={s.x} cy={s.y} r={4} fill="var(--bg-base)" opacity="0.6" />
+              )}
+              {s.difficulty === 'intermediate' && (
+                <circle cx={s.x} cy={s.y} r={3} fill="var(--bg-base)" opacity="0.4" />
+              )}
+              <!-- Station label -->
+              <text
+                x={lx} y={s.y}
+                font-family="var(--font-mono)" font-size="10.5" font-weight="500"
+                fill="var(--text-secondary)"
+                text-anchor={labelRight ? 'start' : 'end'}
+                dominant-baseline="middle"
+                class="station__label"
+              >{s.title.length > 22 ? s.title.slice(0, 20) + '…' : s.title}</text>
+            </g>
+          );
+        })}
+      </g>
+
+      <!-- ── Empty state overlay ────────────────────────────────────── -->
+      {isEmpty && (
+        <g>
+          <text
+            x={svgW / 2} y={svgH / 2 - 12}
+            font-family="var(--font-mono)" font-size="13" font-weight="500"
+            fill="var(--text-muted)" text-anchor="middle"
+          >No courses yet</text>
+          <text
+            x={svgW / 2} y={svgH / 2 + 10}
+            font-family="var(--font-mono)" font-size="11"
+            fill="var(--text-muted)" opacity="0.6" text-anchor="middle"
+          >Add a course.md to see it appear here as a station</text>
+        </g>
+      )}
+    </svg>
+  </div>
+
+  <!-- ── Tooltip (positioned by JS) ──────────────────────────────────── -->
+  <div id="track-map-tooltip" class="track-map-tooltip" hidden>
+    <div id="tmt-title" class="tmt-title"></div>
+    <div id="tmt-meta"  class="tmt-meta"></div>
+    <div id="tmt-hint"  class="tmt-hint">Click to open course →</div>
+  </div>
+</div>
+
+<style>
+  .track-map-outer {
+    position: relative;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .track-map-scroll-hint {
+    display: none;
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 2;
+  }
+  @media (max-width: 900px) {
+    .track-map-scroll-hint { display: block; }
+  }
+
+  .track-map-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-default) transparent;
+  }
+
+  .track-map-svg {
+    display: block;
+    min-width: 100%;
+  }
+
+  /* Station interactions */
+  .station { transition: opacity 0.15s; }
+  .station__aura { transition: opacity 0.15s; }
+  .station__dot  { transition: r 0.15s; }
+  .station__ring { transition: opacity 0.15s; }
+  .station__label {
+    pointer-events: none;
+    transition: opacity 0.15s, fill 0.15s;
+    paint-order: stroke;
+    stroke: var(--bg-base);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  /* Edge interactions */
+  .prereq-edge { transition: opacity 0.15s, stroke-width 0.15s; }
+
+  /* Rail lines */
+  .rail-line { transition: opacity 0.15s; }
+
+  /* Track labels */
+  .track-label { transition: opacity 0.15s; }
+
+  /* Tooltip */
+  .track-map-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    padding: 9px 13px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 10;
+    min-width: 160px;
+    max-width: 220px;
+    transform: translate(-50%, -110%);
+    transition: opacity 0.1s;
+  }
+  .track-map-tooltip[hidden] { display: none; }
+  .tmt-title {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+  .tmt-meta {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .tmt-hint {
+    font-size: 10px;
+    color: var(--text-link);
+    opacity: 0.8;
+  }
+</style>
+
+<script is:inline define:vars={{ ocCourses: COURSES, ocBase: base }}>
+(function () {
+  const svg      = document.getElementById('track-map-svg');
+  const tooltip  = document.getElementById('track-map-tooltip');
+  const ttTitle  = document.getElementById('tmt-title');
+  const ttMeta   = document.getElementById('tmt-meta');
+  if (!svg || !tooltip) return;
+
+  const stationEls = svg.querySelectorAll('.station');
+  const edgeEls    = svg.querySelectorAll('.prereq-edge');
+  const railEls    = svg.querySelectorAll('.rail-line');
+  const labelEls   = svg.querySelectorAll('.track-label');
+
+  // Build slug→course lookup
+  const courseMap = {};
+  (ocCourses || []).forEach(c => { courseMap[c.slug] = c; });
+
+  function resetAll() {
+    stationEls.forEach(el => {
+      el.style.opacity = '1';
+      el.querySelector('.station__aura').style.opacity = '0';
+    });
+    edgeEls.forEach(el => { el.style.opacity = '0.3'; el.style.strokeWidth = '1.5'; });
+    railEls.forEach(el => { el.style.opacity = ''; });
+    labelEls.forEach(el => { el.style.opacity = '1'; });
+    tooltip.hidden = true;
+  }
+
+  function highlightStation(slug) {
+    // Build connected set
+    const connected = new Set([slug]);
+    edgeEls.forEach(el => {
+      if (el.dataset.src === slug) connected.add(el.dataset.dst);
+      if (el.dataset.dst === slug) connected.add(el.dataset.src);
+    });
+
+    // Dim / highlight stations
+    stationEls.forEach(el => {
+      const s = el.dataset.slug;
+      const active = connected.has(s);
+      el.style.opacity = active ? '1' : '0.18';
+      el.querySelector('.station__aura').style.opacity = s === slug ? '0.12' : '0';
+    });
+
+    // Highlight / dim edges
+    edgeEls.forEach(el => {
+      const isConn = el.dataset.src === slug || el.dataset.dst === slug;
+      el.style.opacity    = isConn ? '0.85' : '0.05';
+      el.style.strokeWidth = isConn ? '2.5' : '1.5';
+    });
+  }
+
+  // Mouse / pointer events on stations
+  stationEls.forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const slug   = el.dataset.slug;
+      const course = courseMap[slug];
+      if (!course) return;
+
+      highlightStation(slug);
+
+      // Tooltip
+      ttTitle.textContent = course.title;
+      ttMeta.textContent  = `${course.difficulty} · ${course.track} · ${course.duration || ''}`;
+      tooltip.hidden = false;
+    });
+
+    el.addEventListener('mousemove', e => {
+      const rect = svg.getBoundingClientRect();
+      const wrap = svg.closest('.track-map-outer').getBoundingClientRect();
+      const x = e.clientX - wrap.left;
+      const y = e.clientY - wrap.top;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top  = y + 'px';
+    });
+
+    el.addEventListener('mouseleave', () => {
+      resetAll();
+    });
+
+    el.addEventListener('click', () => {
+      const slug = el.dataset.slug;
+      if (slug) window.location.href = `${ocBase}/courses/${slug}`;
+    });
+
+    // Keyboard accessibility
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const slug = el.dataset.slug;
+        if (slug) window.location.href = `${ocBase}/courses/${slug}`;
+      }
+    });
+  });
+})();
+</script>

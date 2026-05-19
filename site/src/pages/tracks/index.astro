@@ -1,13 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
+import TrackMap from '../../components/TrackMap.astro';
 import OC from '../../data/oc';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-
-const sorted = OC.TRACKS;
 ---
 
-<Base title="Curriculum Tracks" description="Navigate OpenCourses curriculum by learning track.">
+<Base title="Track Map" description="Navigate OpenCourses curriculum by learning track — a train-station map of all courses and their dependencies.">
   <div class="container">
     <div class="page-head">
       <div class="page-head__crumbs">
@@ -15,54 +14,57 @@ const sorted = OC.TRACKS;
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         <span>tracks</span>
       </div>
-      <h1 class="page-head__title">Curriculum Map</h1>
-      <p class="page-head__sub">Explore the knowledge graph — courses organized by prerequisite dependencies and learning tracks.</p>
+      <h1 class="page-head__title">Track Map</h1>
+      <p class="page-head__sub">
+        Courses arranged by track and difficulty. Each column is a learning track; each node is a course.
+        Dashed lines show prerequisites. Hover a station to highlight its connections.
+      </p>
     </div>
 
-    <!-- Knowledge Graph -->
-    <div class="section">
-      <div class="section-head">
-        <h2 class="section-head__title">Knowledge Graph</h2>
+    <!-- Legend -->
+    <div class="track-map-legend">
+      <div class="tml-group">
+        <span class="tml-label">Difficulty</span>
+        <span class="tml-item"><span class="tml-dot tml-dot--beg"></span>Beginner</span>
+        <span class="tml-item"><span class="tml-dot tml-dot--int"></span>Intermediate</span>
+        <span class="tml-item"><span class="tml-dot tml-dot--adv"></span>Advanced</span>
       </div>
-
-      <div class="graph-wrap">
-        <svg id="graph-svg" class="graph-svg"></svg>
-
-        <!-- Toolbar: filter + reset — absolute inside wrap -->
-        <div class="graph-toolbar">
-          <select id="graph-track-filter">
-            <option value="all">All tracks</option>
-            {sorted.map(t => <option value={t.slug}>{t.name}</option>)}
-          </select>
-          <button id="graph-reset" class="btn btn-ghost btn-sm">Reset</button>
-        </div>
-
-        <!-- Detail card — slides in top-right on node click -->
-        <div id="graph-detail" class="graph-detail" hidden>
-          <button id="graph-detail-close" class="graph-detail__close">✕</button>
-          <h3 id="graph-detail-title" class="graph-detail__title"></h3>
-          <p id="graph-detail-meta" class="graph-detail__meta"></p>
-          <p id="graph-detail-desc" class="graph-detail__desc"></p>
-          <a id="graph-detail-link" class="btn btn-primary btn-sm" style="margin-top:0.25rem" href="#">View course →</a>
-        </div>
+      <div class="tml-group">
+        <span class="tml-label">Connections</span>
+        <span class="tml-item">
+          <svg width="28" height="10" viewBox="0 0 28 10" style="vertical-align:middle">
+            <line x1="0" y1="5" x2="28" y2="5" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="4 2.5" />
+          </svg>
+          Prerequisite
+        </span>
       </div>
+      <div class="tml-group">
+        <span class="tml-label">Interaction</span>
+        <span class="tml-item" style="color:var(--text-muted);font-size:11px">Hover to highlight · Click to open</span>
+      </div>
+    </div>
+
+    <!-- The map -->
+    <div class="section" style="margin-top:0">
+      <TrackMap />
     </div>
 
     <div class="section-divider"></div>
 
-    <!-- Track cards -->
+    <!-- Track list -->
     <div class="section">
       <div class="section-head">
         <h2 class="section-head__title">All Tracks</h2>
-        <p class="section-head__sub">{OC.TRACKS.length} tracks, {OC.COURSES.length} courses total.</p>
+        <p class="section-head__sub">{OC.TRACKS.length} tracks · {OC.COURSES.length} courses total</p>
       </div>
 
-      <div class="tracks-page">
-        {sorted.map(track => {
+      <div class="tracks-page" id="tracks-list">
+        {OC.TRACKS.map(track => {
           const trackCourses = OC.COURSES.filter(c => c.track === track.slug);
           const color = OC.TRACK_COLORS[track.slug] ?? '#4f9eff';
           return (
             <a
+              id={track.slug}
               href={`${base}/courses?track=${track.slug}`}
               class="track-card"
               style={`--track-color:${color}`}
@@ -70,18 +72,27 @@ const sorted = OC.TRACKS;
               <div class="track-card__stripe"></div>
               <div class="track-card__body">
                 <div class="track-card__head">
-                  <h3 class="track-card__name">{track.name}</h3>
-                  <span class="track-card__count">{trackCourses.length} courses</span>
+                  <span class="track-card__icon">{track.icon}</span>
+                  <div>
+                    <h3 class="track-card__name">{track.name}</h3>
+                    <span class="track-card__count">{trackCourses.length} course{trackCourses.length !== 1 ? 's' : ''}</span>
+                  </div>
                 </div>
                 <p class="track-card__desc">{track.description}</p>
-                <div class="track-card__samples">
-                  {trackCourses.slice(0, 3).map(c => (
-                    <span class="track-card__sample">{c.title}</span>
-                  ))}
-                  {trackCourses.length > 3 && (
-                    <span class="track-card__sample track-card__sample--more">+{trackCourses.length - 3} more</span>
-                  )}
-                </div>
+                {trackCourses.length > 0 ? (
+                  <div class="track-card__samples">
+                    {trackCourses.slice(0, 3).map(c => (
+                      <span class="track-card__sample">{c.title}</span>
+                    ))}
+                    {trackCourses.length > 3 && (
+                      <span class="track-card__sample track-card__sample--more">+{trackCourses.length - 3} more</span>
+                    )}
+                  </div>
+                ) : (
+                  <div class="track-card__samples">
+                    <span class="track-card__sample" style="opacity:0.4;font-style:italic">No courses yet</span>
+                  </div>
+                )}
               </div>
             </a>
           );
@@ -91,9 +102,50 @@ const sorted = OC.TRACKS;
   </div>
 </Base>
 
-<script is:inline define:vars={{ graphData: { nodes: OC.GRAPH.nodes, links: OC.GRAPH.links }, trackColors: OC.TRACK_COLORS, ocCourses: OC.COURSES }}>
-  window.OC_GRAPH = graphData;
-  window.OC_TRACK_COLORS = trackColors;
-  window.OC_COURSES = ocCourses;
-</script>
-<script is:inline src={`${base}/js/graph.js`}></script>
+<style>
+  /* Legend */
+  .track-map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-secondary);
+  }
+  .tml-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .tml-label {
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-right: 1px solid var(--border-default);
+    padding-right: 0.75rem;
+  }
+  .tml-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tml-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-base);
+    box-shadow: 0 0 0 1.5px currentColor;
+  }
+  .tml-dot--beg { background: var(--color-beginner, #34d399); color: var(--color-beginner, #34d399); }
+  .tml-dot--int { background: var(--color-intermediate, #60a5fa); color: var(--color-intermediate, #60a5fa); }
+  .tml-dot--adv { background: var(--color-advanced, #f472b6); color: var(--color-advanced, #f472b6); }
+</style>

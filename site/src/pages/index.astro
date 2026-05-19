@@ -11,24 +11,24 @@ import OC from '../data/oc';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const featured = OC.COURSES.filter(c => c.featured);
 const topContributors = OC.CONTRIBUTORS.slice(0, 6);
-const recentChangelog = OC.CHANGELOG[0].entries.slice(0, 3);
+const recentChangelog = (OC.CHANGELOG[0]?.entries ?? []).slice(0, 3);
 const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
 ---
 
 <Base title="OpenCourses" currentPath="/">
-  <!-- HERO — Typographic variant -->
+  <!-- HERO -->
   <section class="hero">
     <div class="container hero__inner">
       <div>
         <div class="hero__eyebrow anim-up">
           <span class="hero__eyebrow__dot"></span>
-          <span>v1.0 · 16 courses · 18 maintainers</span>
+          <span>Open-source curriculum</span>
         </div>
         <h1 class="hero__title anim-up anim-up-d1">
           Learning,<br />in the <em>open</em>.
         </h1>
         <p class="hero__sub anim-up anim-up-d2">
-          Open-source curriculum, version-controlled and community-built.
+          Version-controlled curriculum, community-built and freely available.
           Every course is a repo. Every contributor is a maintainer. Every update ships like software.
         </p>
         <div class="hero__ctas anim-up anim-up-d3">
@@ -36,7 +36,7 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
             Explore courses
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
-          <a href={`${base}/tracks`} class="btn btn-secondary">View tracks</a>
+          <a href={`${base}/tracks`} class="btn btn-secondary">Track map</a>
           <button class="btn btn-ghost" id="hero-search-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             Search
@@ -48,17 +48,14 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
         <div class="hero__stat">
           <span class="hero__stat__num">{OC.STATS.courses}</span>
           <span class="hero__stat__label">Courses</span>
-          <span class="hero__stat__delta">+3 this month</span>
         </div>
         <div class="hero__stat">
           <span class="hero__stat__num">{OC.STATS.contributors}</span>
           <span class="hero__stat__label">Contributors</span>
-          <span class="hero__stat__delta">+4 this month</span>
         </div>
         <div class="hero__stat">
-          <span class="hero__stat__num">{(OC.STATS.stars / 1000).toFixed(1)}k</span>
-          <span class="hero__stat__label">Stars</span>
-          <span class="hero__stat__delta">+128 this week</span>
+          <span class="hero__stat__num">{OC.STATS.tracks}</span>
+          <span class="hero__stat__label">Tracks</span>
         </div>
       </div>
     </div>
@@ -79,9 +76,15 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
       </div>
-      <div class="courses-rail">
-        {featured.map(c => <CourseCard course={c} />)}
-      </div>
+      {featured.length > 0 ? (
+        <div class="courses-rail">
+          {featured.map(c => <CourseCard course={c} />)}
+        </div>
+      ) : (
+        <div style="padding:3rem 0;text-align:center;font-family:var(--font-mono);font-size:0.85rem;color:var(--text-muted)">
+          No courses yet — <a href="https://github.com/manojpisini/opencourses" style="color:var(--text-link)">add the first one ↗</a>
+        </div>
+      )}
     </div>
   </section>
 
@@ -96,7 +99,7 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
           <div class="section-head__sub">Curated learning paths</div>
         </div>
         <a href={`${base}/tracks`} class="section-head__link">
-          Knowledge graph
+          Track map
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </a>
       </div>
@@ -145,70 +148,76 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
     </div>
   </section>
 
-  <hr class="section-divider" />
-
-  <!-- TOP CONTRIBUTORS -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <h2 class="section-head__title">Top contributors</h2>
-          <div class="section-head__sub">The people who ship the curriculum</div>
-        </div>
-        <a href={`${base}/contributors`} class="section-head__link">
-          All contributors
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-        {topContributors.map(c => (
-          <a href={`${base}/contributors/${c.login}`} class="contributor-card">
-            <Avatar login={c.login} size="sm" />
-            <div class="contributor-card__info">
-              <span class="contributor-card__name">@{c.login}</span>
-              <span class="contributor-card__role">{c.role}</span>
-              <span class="contributor-card__stats">{c.commits} commits · {c.courses} courses</span>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <hr class="section-divider" />
-
-  <!-- RECENT CHANGELOG -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <div>
-          <h2 class="section-head__title">Recent changes</h2>
-          <div class="section-head__sub">From the curriculum changelog</div>
-        </div>
-        <a href={`${base}/changelog`} class="section-head__link">
-          Full changelog
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        {recentChangelog.map(entry => (
-          <a href={`${base}/courses/${entry.slug}`} class="changelog-entry">
-            <div class="changelog-entry__head">
-              <h3 class="changelog-entry__title">{entry.course}</h3>
-              <VersionTag version={entry.version} />
-              <span class="changelog-entry__date">{entry.date}</span>
-            </div>
+  {topContributors.length > 0 && (
+    <>
+      <hr class="section-divider" />
+      <!-- TOP CONTRIBUTORS -->
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
             <div>
-              {entry.changes.slice(0, 3).map(ch => (
-                <div class={`change-line change-line--${ch.type}`}>
-                  <span class="change-line__marker">{ch.type === 'added' ? '+' : ch.type === 'removed' ? '-' : '~'}</span>
-                  <span>{ch.text}</span>
-                </div>
-              ))}
+              <h2 class="section-head__title">Top contributors</h2>
+              <div class="section-head__sub">The people who ship the curriculum</div>
             </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  </section>
+            <a href={`${base}/contributors`} class="section-head__link">
+              All contributors
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+            {topContributors.map(c => (
+              <a href={`${base}/contributors/${c.login}`} class="contributor-card">
+                <Avatar login={c.login} size="sm" />
+                <div class="contributor-card__info">
+                  <span class="contributor-card__name">@{c.login}</span>
+                  <span class="contributor-card__role">{c.role}</span>
+                  <span class="contributor-card__stats">{c.commits} commits · {c.courses} courses</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  )}
+
+  {recentChangelog.length > 0 && (
+    <>
+      <hr class="section-divider" />
+      <!-- RECENT CHANGELOG -->
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-head__title">Recent changes</h2>
+              <div class="section-head__sub">From the curriculum changelog</div>
+            </div>
+            <a href={`${base}/changelog`} class="section-head__link">
+              Full changelog
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            {recentChangelog.map(entry => (
+              <a href={`${base}/courses/${entry.slug}`} class="changelog-entry">
+                <div class="changelog-entry__head">
+                  <h3 class="changelog-entry__title">{entry.course}</h3>
+                  <VersionTag version={entry.version} />
+                  <span class="changelog-entry__date">{entry.date}</span>
+                </div>
+                <div>
+                  {entry.changes.slice(0, 3).map(ch => (
+                    <div class={`change-line change-line--${ch.type}`}>
+                      <span class="change-line__marker">{ch.type === 'added' ? '+' : ch.type === 'removed' ? '-' : '~'}</span>
+                      <span>{ch.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  )}
 </Base>
