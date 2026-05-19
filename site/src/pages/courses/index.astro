@@ -139,7 +139,7 @@ const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 1
         </div>
 
         <!-- LIST VIEW (hidden by default) -->
-        <div id="course-list" style="display:flex;flex-direction:column;gap:8px" hidden>
+        <div id="course-list" class="course-list" hidden>
           {OC.COURSES.map(c => <CourseRow course={c} />)}
         </div>
 
