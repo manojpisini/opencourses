@@ -1,4 +1,3 @@
-<div align="center">
 
 <img src="docs/banner.svg" alt="OpenCourses — Free, open-source developer education" width="100%"/>
 
@@ -459,5 +458,3 @@ Built in the open.  Shipped like software.  Free, forever.
 <br/>
 
 <sub>Copyright © 2026 manojpisini &nbsp;·&nbsp; <a href="LICENSE">OpenCourses Community License</a> &nbsp;·&nbsp; <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> for content</sub>
-
-</div>
