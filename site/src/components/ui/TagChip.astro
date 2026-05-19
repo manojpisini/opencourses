@@ -1,0 +1,18 @@
+---
+interface Props {
+  tag: string;
+  href?: string;
+  selected?: boolean;
+}
+
+const { tag, href, selected = false } = Astro.props;
+const Tag = href ? 'a' : 'span';
+---
+
+<Tag
+  href={href}
+  class="tag-chip"
+  aria-selected={selected ? 'true' : undefined}
+>
+  {tag}
+</Tag>

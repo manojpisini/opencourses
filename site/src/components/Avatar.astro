@@ -1,0 +1,23 @@
+---
+import OC from '../data/oc';
+
+interface Props {
+  login: string;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+}
+const { login, size = 'md' } = Astro.props;
+
+const c = OC.CONTRIBUTORS.find(x => x.login === login);
+const hue = c ? c.hue : (login.charCodeAt(0) * 7) % 360;
+const hue2 = (hue + 40) % 360;
+const fullName = c ? c.name : login || '?';
+const initials = fullName.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
+const bg = `linear-gradient(135deg, hsl(${hue} 70% 38%) 0%, hsl(${hue2} 60% 24%) 100%)`;
+---
+<span class={`avatar avatar--${size}`} title={`@${login}`}>
+  <svg viewBox="0 0 100 100" style={`background:${bg}`}>
+    <circle cx="20" cy="30" r="14" fill="rgba(255,255,255,0.12)" />
+    <circle cx="78" cy="72" r="22" fill="rgba(0,0,0,0.18)" />
+    <text x="50" y="56" text-anchor="middle" font-size="34" font-family="Geist, sans-serif" font-weight="700" fill="rgba(255,255,255,0.92)">{initials}</text>
+  </svg>
+</span>

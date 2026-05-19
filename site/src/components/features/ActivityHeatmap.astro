@@ -1,0 +1,38 @@
+---
+import activityData from '../../data/activity.json';
+
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const days = ['Mon','','Wed','','Fri','',''];
+---
+
+<div class="overflow-x-auto">
+  <div class="flex gap-1 min-w-max pb-2">
+    <div class="flex flex-col gap-1 mr-1">
+      {days.map(d => (
+        <div class="text-[10px] font-mono text-[var(--text-muted)] h-[12px] leading-[12px] w-7 text-right">
+          {d}
+        </div>
+      ))}
+    </div>
+    <div class="heatmap-grid">
+      {activityData.weeks.map((week, wi) => (
+        <div class="heatmap-week">
+          {week.map((level, di) => (
+            <div
+              class="heatmap-cell"
+              data-level={Math.min(level, 3)}
+              title={`${level} update${level !== 1 ? 's' : ''}`}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+  <div class="flex items-center gap-2 mt-2 text-[10px] font-mono text-[var(--text-muted)]">
+    <span>Less</span>
+    {[0,1,2,3].map(l => (
+      <div class="heatmap-cell" data-level={l} style="width:10px;height:10px;" />
+    ))}
+    <span>More</span>
+  </div>
+</div>

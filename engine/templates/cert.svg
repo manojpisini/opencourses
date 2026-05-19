@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1056 748" width="1056" height="748" font-family="Georgia, 'Times New Roman', serif">
+  <!-- Background -->
+  <rect width="1056" height="748" fill="#0d0f12"/>
+
+  <!-- Outer border -->
+  <rect x="24" y="24" width="1008" height="700" rx="12" ry="12"
+        fill="none" stroke="#4f9eff" stroke-width="2" opacity="0.4"/>
+
+  <!-- Inner border -->
+  <rect x="40" y="40" width="976" height="668" rx="8" ry="8"
+        fill="none" stroke="#4f9eff" stroke-width="0.5" opacity="0.2"/>
+
+  <!-- Corner decorations -->
+  <g fill="none" stroke="#4f9eff" stroke-width="1.5" opacity="0.6">
+    <path d="M60 60 L90 60 L90 90" />
+    <path d="M996 60 L966 60 L966 90" />
+    <path d="M60 688 L90 688 L90 658" />
+    <path d="M996 688 L966 688 L966 658" />
+  </g>
+
+  <!-- Radial glow behind seal -->
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#4f9eff" stop-opacity="0.08"/>
+    <stop offset="100%" stop-color="#4f9eff" stop-opacity="0"/>
+  </radialGradient>
+  <ellipse cx="528" cy="374" rx="300" ry="200" fill="url(#glow)"/>
+
+  <!-- Issuer logo/wordmark -->
+  <text x="528" y="100" text-anchor="middle" font-family="monospace" font-size="22" fill="#4f9eff" letter-spacing="2">
+    &lt; OPEN
+  </text>
+  <text x="528" y="100" text-anchor="middle" font-family="monospace" font-size="22" fill="#eef0f4" letter-spacing="2" dx="88">
+    COURSES &gt;
+  </text>
+
+  <!-- Certificate title -->
+  <text x="528" y="170" text-anchor="middle" font-size="14" fill="#8892a4"
+        font-family="'Helvetica Neue', Arial, sans-serif" letter-spacing="6" text-transform="uppercase">
+    CERTIFICATE OF COMPLETION
+  </text>
+
+  <!-- Divider -->
+  <line x1="200" y1="190" x2="856" y2="190" stroke="#4f9eff" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- "This certifies that" -->
+  <text x="528" y="240" text-anchor="middle" font-size="15" fill="#8892a4"
+        font-style="italic" font-family="Georgia, serif">
+    This certifies that
+  </text>
+
+  <!-- Student name -->
+  <text x="528" y="300" text-anchor="middle" font-size="42" fill="#eef0f4"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="bold">
+    {{student}}
+  </text>
+
+  <!-- "has successfully completed" -->
+  <text x="528" y="350" text-anchor="middle" font-size="15" fill="#8892a4"
+        font-style="italic" font-family="Georgia, serif">
+    has successfully completed all 5 stages of
+  </text>
+
+  <!-- Course name -->
+  <text x="528" y="420" text-anchor="middle" font-size="32" fill="#4f9eff"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="bold">
+    {{courseTitle}}
+  </text>
+
+  <!-- Divider -->
+  <line x1="200" y1="450" x2="856" y2="450" stroke="#4f9eff" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- Seal placeholder -->
+  <circle cx="528" cy="530" r="44" fill="none" stroke="#4f9eff" stroke-width="1.5" opacity="0.5"/>
+  <text x="528" y="520" text-anchor="middle" font-size="28" fill="#4f9eff">🎓</text>
+  <text x="528" y="548" text-anchor="middle" font-size="9" fill="#4f9eff" letter-spacing="2" opacity="0.7">
+    OPENCOURSES
+  </text>
+
+  <!-- Left signature block -->
+  <line x1="180" y1="650" x2="380" y2="650" stroke="#8892a4" stroke-width="0.5" opacity="0.5"/>
+  <text x="280" y="668" text-anchor="middle" font-size="11" fill="#8892a4" font-family="sans-serif">
+    Issued: {{issuedAt}}
+  </text>
+
+  <!-- Right signature block -->
+  <line x1="676" y1="650" x2="876" y2="650" stroke="#8892a4" stroke-width="0.5" opacity="0.5"/>
+  <text x="776" y="668" text-anchor="middle" font-size="11" fill="#8892a4" font-family="sans-serif">
+    OpenCourses Platform
+  </text>
+
+  <!-- Certificate ID -->
+  <text x="528" y="710" text-anchor="middle" font-size="10" fill="#4d5566"
+        font-family="monospace" letter-spacing="1">
+    ID: {{certId}} · v{{version}} · Verify: {{repoUrl}}/releases
+  </text>
+</svg>

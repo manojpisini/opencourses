@@ -1,0 +1,5 @@
+---
+interface Props { level: string; }
+const { level } = Astro.props;
+---
+<span class="difficulty-badge" data-level={level}>[{level.toUpperCase()}]</span>

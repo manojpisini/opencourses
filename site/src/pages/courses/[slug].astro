@@ -1,0 +1,388 @@
+---
+import Base from '../../layouts/Base.astro';
+import TrackBadge from '../../components/TrackBadge.astro';
+import DifficultyBadge from '../../components/DifficultyBadge.astro';
+import GitStatus from '../../components/GitStatus.astro';
+import VersionTag from '../../components/VersionTag.astro';
+import Avatar from '../../components/Avatar.astro';
+import Sparkline from '../../components/Sparkline.astro';
+import OC from '../../data/oc';
+import type { Course } from '../../data/oc';
+
+export function getStaticPaths() {
+  return OC.COURSES.map(c => ({ params: { slug: c.slug }, props: { course: c } }));
+}
+
+interface Props { course: Course; }
+const { course } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const related = OC.COURSES.filter(c => c.track === course.track && c.slug !== course.slug).slice(0, 3);
+
+// Module list — real template for rust-fundamentals, heuristic for others
+const MODULE_TITLES = ['Introduction','Core concepts','Hands-on: first project','Common patterns','Edge cases & pitfalls','Performance considerations','Testing strategies','Real-world examples','Capstone exercise','Going further','Reference & resources','Conclusion','Appendix A','Appendix B','Glossary','Index'];
+const MODULE_DURATIONS = [20,45,40,50,55,35,40,30,40,60,50,10,25,25,15,10];
+
+const tpl = OC.MODULE_TEMPLATES[course.slug];
+const modules = tpl
+  ? tpl.slice(0, course.modules)
+  : Array.from({ length: course.modules }, (_, i) => ({
+      title: MODULE_TITLES[i] || `Module ${i + 1}`,
+      duration: `${20 + ((i * 13) % 50)}min`,
+      body: 'An overview of this module\'s content. Covers key ideas, links to relevant code, and points to additional reading.',
+    }));
+
+const diffLines = [
+  { type: 'context', text: `# ${course.title} — Changelog` },
+  { type: 'context', text: '' },
+  { type: 'context', text: `## ${course.version} (${course.updatedAt.slice(0, 10)})` },
+  { type: 'added', text: 'Added new module with worked examples' },
+  { type: 'added', text: 'Updated all code samples to latest version' },
+  { type: 'removed', text: 'Removed outdated deprecated patterns' },
+  { type: 'added', text: 'New: cleaner explanation throughout' },
+];
+---
+
+<Base title={course.title} description={course.description} currentPath={`/courses/${course.slug}`}>
+  <div class="container">
+    <!-- Breadcrumb + title -->
+    <header class="course-hero">
+      <div class="course-hero__top">
+        <a href={`${base}/`} style="color:var(--text-muted)">~</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="m9 18 6-6-6-6"/></svg>
+        <a href={`${base}/courses`} style="color:var(--text-muted)">courses</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="m9 18 6-6-6-6"/></svg>
+        <span style="color:var(--text-secondary)">{course.slug}</span>
+        <span style="margin-left:auto"><VersionTag version={course.version} /></span>
+      </div>
+
+      <h1 class="course-hero__title">{course.title}</h1>
+      <p style="font-size:var(--text-lg);color:var(--text-secondary);max-width:720px;margin:0 0 24px">{course.description}</p>
+
+      <div class="course-hero__meta">
+        <TrackBadge track={course.track} />
+        <DifficultyBadge level={course.difficulty} />
+        <span class="course-card__sep">·</span>
+        <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          {course.modules} modules
+        </span>
+        <span class="course-card__sep">·</span>
+        <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {course.duration}
+        </span>
+        <span class="course-card__sep">·</span>
+        <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
+          Updated {OC.relativeTime(course.updatedAt)}
+        </span>
+        <span style="margin-left:auto;display:inline-flex;align-items:center;gap:16px;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            {course.stars}
+          </span>
+          <span>{course.forks} forks</span>
+          <span>{course.openIssues} issues</span>
+        </span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        {course.tags.map(t => <span class="tag-chip">{t}</span>)}
+      </div>
+
+      <div class="course-hero__actions">
+        <div class="source-toggle">
+          <button class="source-toggle__btn" data-active="true" data-view-toggle="rendered">Rendered</button>
+          <button class="source-toggle__btn" data-view-toggle="source">Source</button>
+        </div>
+        <a href={`https://github.com/${course.repo}`} class="btn btn-primary" target="_blank" rel="noopener">
+          Start course
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a href={`https://github.com/${course.repo}`} class="btn btn-secondary" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.68-1.27-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.34.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
+          Suggest edit on GitHub
+        </a>
+      </div>
+    </header>
+
+    <div class="course-detail-layout">
+      <!-- MAIN -->
+      <main>
+        <!-- Rendered content (shown by default) -->
+        <div id="view-rendered" class="prose">
+          <p><strong>{course.title}</strong> teaches you {course.description.toLowerCase()}</p>
+          <p>
+            Maintained by <a href={`https://github.com/${course.maintainer}`} target="_blank">@{course.maintainer}</a>
+            {course.contributors.length > 1 && ` and ${course.contributors.length - 1} other contributor${course.contributors.length === 2 ? '' : 's'}`}.
+            Currently at <code>{course.version}</code>, last updated <strong>{OC.relativeTime(course.updatedAt)}</strong>.
+          </p>
+          <h2>Prerequisites</h2>
+          {course.prerequisites.length > 0 ? (
+            <ul>
+              {course.prerequisites.map(p => {
+                const pre = OC.COURSES.find(c => c.slug === p);
+                return <li><a href={`${base}/courses/${p}`}>{pre?.title || p}</a></li>;
+              })}
+            </ul>
+          ) : (
+            <p>No formal prerequisites. Basic familiarity with the command line is helpful.</p>
+          )}
+          <h2>What you'll learn</h2>
+          <ul>
+            <li>The core model the rest of the field is built on — and why it's shaped that way</li>
+            <li>Common patterns, when to use each, and how to recognize them in the wild</li>
+            <li>Failure modes: what breaks, why, and what to do about it</li>
+            <li>How professionals actually structure work in this domain</li>
+          </ul>
+          <h2>How this course works</h2>
+          <p>Each module is a markdown file in <code>{course.repo}</code>. Read it, do the worked example, attempt the take-home prompts. Open an issue if anything is unclear — we'll fix it and credit you.</p>
+        </div>
+
+        <!-- Source view (hidden by default) -->
+        <div id="view-source" hidden>
+          <pre class="source-pre"><code>{`---
+title: ${course.title}
+track: ${course.track}
+difficulty: ${course.difficulty}
+duration: ${course.duration}
+modules: ${course.modules}
+maintainer: ${course.maintainer}
+version: ${course.version}
+license: MIT
+---
+
+# ${course.title}
+
+${course.description}
+
+## Prerequisites
+
+${course.prerequisites.length === 0 ? 'None — basic CLI familiarity helps.' : course.prerequisites.map(p => `- [${OC.COURSES.find(c => c.slug === p)?.title || p}](/courses/${p})`).join('\n')}
+
+## What you'll learn
+
+- The core model the rest of the field is built on
+- Common patterns and when to use each
+- Failure modes and how to debug them
+- How professionals structure work
+
+## How this course works
+
+Each module is a markdown file in \`${course.repo}\`.
+Read it, do the example, attempt the prompts.`}</code></pre>
+        </div>
+
+        <!-- Modules accordion -->
+        <section style="margin-top:48px">
+          <h2 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--text-primary);margin:0 0 16px">Modules</h2>
+          <div class="module-accordion" id="module-accordion">
+            {modules.map((m, i) => {
+              const blame = course.contributors[i % course.contributors.length];
+              return (
+                <div class="module-item" data-module={i}>
+                  <button class="module-item__head" data-accordion-btn={i}>
+                    <svg class="module-item__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    <span class="module-item__num">{String(i + 1).padStart(2, '0')}</span>
+                    <span style="flex:1">{m.title}</span>
+                    <span class="module-item__blame">
+                      @{blame} · {((i * 7) % 30) + 1}d ago
+                    </span>
+                    <span class="module-item__dur">{m.duration}</span>
+                  </button>
+                  <div class="module-item__body" hidden>
+                    <p style="margin:0">{m.body}</p>
+                    <ul>
+                      <li>Read the linked reference material before the exercises</li>
+                      <li>Try the worked example, then attempt the take-home prompts</li>
+                      <li>Open an issue if anything is unclear — we'll fix it</li>
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <!-- Diff view -->
+        <section style="margin-top:48px">
+          <h2 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--text-primary);margin:0 0 16px">What changed</h2>
+          <div class="diff-view">
+            <div class="diff-view__head">
+              <span style="font-weight:700;color:var(--text-primary)">What changed</span>
+              <VersionTag version="v2.0.0 → v2.1.0" />
+              <span style="margin-left:auto">+8 −3 across 4 files</span>
+            </div>
+            <div style="padding-block:8px">
+              {diffLines.map((l, i) => (
+                <div class={`diff-line diff-line--${l.type}`}>
+                  <span class="diff-line__marker">{l.type === 'added' ? '+' : l.type === 'removed' ? '-' : ' '}</span>
+                  <span>{l.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <!-- Contribute -->
+        <section style="margin-top:48px">
+          <h2 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--text-primary);margin:0 0 16px">Contribute</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+            <a href={`https://github.com/${course.repo}`} class="detail-card" style="display:flex;flex-direction:column;gap:8px;text-decoration:none" target="_blank" rel="noopener">
+              <strong style="color:var(--text-primary)">Fork this course</strong>
+              <span style="font-size:13px;color:var(--text-secondary)">Make your own version. Send improvements back upstream.</span>
+              <span style="margin-top:8px;color:var(--accent-blue);font-family:var(--font-mono);font-size:12px">$ git clone {course.repo}</span>
+            </a>
+            <a href={`https://github.com/${course.repo}/issues`} class="detail-card" style="display:flex;flex-direction:column;gap:8px;text-decoration:none" target="_blank" rel="noopener">
+              <strong style="color:var(--text-primary)">Open an issue</strong>
+              <span style="font-size:13px;color:var(--text-secondary)">Spotted something off? Tell us. We'll fix it and credit you.</span>
+              <span style="margin-top:8px;color:var(--accent-blue);font-family:var(--font-mono);font-size:12px">{course.openIssues} open issues</span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <!-- SIDEBAR -->
+      <aside class="detail-sidebar">
+        <!-- YAML panel -->
+        <div class="yaml-panel">
+          <button class="yaml-panel__head" id="yaml-panel-toggle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(90deg)"><path d="m9 18 6-6-6-6"/></svg>
+            <span>course.yml</span>
+            <span style="margin-left:auto;color:var(--text-muted)">collapse</span>
+          </button>
+          <div class="yaml-panel__body" id="yaml-panel-body">
+            <div><span class="yaml-comment"># {course.slug}</span></div>
+            <div><span class="yaml-key">title:</span> <span class="yaml-val">{course.title}</span></div>
+            <div><span class="yaml-key">track:</span> <span class="yaml-val">{course.track}</span></div>
+            <div><span class="yaml-key">difficulty:</span> <span class="yaml-val">{course.difficulty}</span></div>
+            <div><span class="yaml-key">duration:</span> <span class="yaml-val">{course.duration}</span></div>
+            <div><span class="yaml-key">modules:</span> <span class="yaml-num">{course.modules}</span></div>
+            <div><span class="yaml-key">maintainer:</span> <span class="yaml-tag">@{course.maintainer}</span></div>
+            <div><span class="yaml-key">version:</span> <span class="yaml-tag">{course.version}</span></div>
+            <div><span class="yaml-key">license:</span> <span class="yaml-val">MIT</span></div>
+            <div><span class="yaml-key">repo:</span> <span class="yaml-val">{course.repo}</span></div>
+          </div>
+        </div>
+
+        <!-- Module list -->
+        <div class="detail-card">
+          <h4 class="detail-card__title">Modules</h4>
+          <div class="module-list">
+            {modules.map((m, i) => (
+              <div class="module-list__item">
+                <span class="module-list__num">{String(i + 1).padStart(2, '0')}</span>
+                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{m.title}</span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">{m.duration}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Contributors -->
+        <div class="detail-card">
+          <h4 class="detail-card__title">Contributors</h4>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            {course.contributors.map(login => {
+              const c = OC.CONTRIBUTORS.find(x => x.login === login);
+              return (
+                <div style="display:flex;align-items:center;gap:10px">
+                  <Avatar login={login} size="sm" />
+                  <div style="min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary)">@{login}</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">{c ? `${c.commits} commits` : 'Contributor'}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <!-- Related -->
+        {related.length > 0 && (
+          <div class="detail-card">
+            <h4 class="detail-card__title">Related</h4>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              {related.map(r => (
+                <a href={`${base}/courses/${r.slug}`} class="related-link" style="display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:6px;text-decoration:none">
+                  <span style="font-size:13px;font-weight:500;color:var(--text-primary)">{r.title}</span>
+                  <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">{r.modules} modules · {r.duration}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Last commit -->
+        <div class="detail-card">
+          <h4 class="detail-card__title">Last commit</h4>
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <Avatar login={course.maintainer} size="sm" />
+            <div style="min-width:0;flex:1">
+              <div style="font-size:13px;color:var(--text-primary);margin-bottom:4px">{course.lastCommit}</div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">
+                @{course.maintainer} · {OC.relativeTime(course.updatedAt)} · <span style="color:var(--accent-blue)">3a8f1c2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Source / rendered toggle
+    (function(){
+      var btns = document.querySelectorAll('[data-view-toggle]');
+      var rendered = document.getElementById('view-rendered');
+      var source = document.getElementById('view-source');
+      btns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var v = btn.dataset.viewToggle;
+          btns.forEach(function(b){ b.removeAttribute('data-active'); });
+          btn.setAttribute('data-active','true');
+          if(rendered) rendered.hidden = v !== 'rendered';
+          if(source) source.hidden = v !== 'source';
+        });
+      });
+      // Module accordion
+      document.querySelectorAll('[data-accordion-btn]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var item = btn.closest('.module-item');
+          var body = item && item.querySelector('.module-item__body');
+          var chevron = item && item.querySelector('.module-item__chevron');
+          var isOpen = item && item.hasAttribute('data-open');
+          // Close all
+          document.querySelectorAll('.module-item').forEach(function(m){
+            m.removeAttribute('data-open');
+            var b = m.querySelector('.module-item__body');
+            if(b) b.hidden = true;
+          });
+          // Open clicked if it was closed
+          if(!isOpen && body && item){
+            item.setAttribute('data-open','');
+            body.hidden = false;
+          }
+        });
+      });
+      // YAML panel toggle
+      var yamlBtn = document.getElementById('yaml-panel-toggle');
+      var yamlBody = document.getElementById('yaml-panel-body');
+      yamlBtn && yamlBtn.addEventListener('click', function(){
+        var open = !yamlBody.hidden;
+        yamlBody.hidden = open;
+        var lbl = yamlBtn.querySelector('span:last-child');
+        if(lbl) lbl.textContent = open ? 'expand' : 'collapse';
+        var chevron = yamlBtn.querySelector('svg');
+        if(chevron) chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+      });
+      // Open first module
+      var first = document.querySelector('.module-item');
+      if(first){
+        first.setAttribute('data-open','');
+        var firstBody = first.querySelector('.module-item__body');
+        if(firstBody) firstBody.hidden = false;
+      }
+    })();
+  </script>
+</Base>

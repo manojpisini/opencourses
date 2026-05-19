@@ -1,0 +1,91 @@
+name: Advance Stage
+
+on:
+  workflow_dispatch:
+    inputs:
+      student:
+        description: 'GitHub username'
+        required: true
+      stage:
+        description: 'Stage just completed (01-05)'
+        required: true
+      trigger:
+        description: 'What triggered this (assignment|quiz)'
+        required: true
+        default: 'assignment'
+      score:
+        description: 'Score percentage'
+        required: false
+        default: '100'
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  advance:
+    name: Advance @${{ inputs.student }} past Stage ${{ inputs.stage }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.COURSE_BOT_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Advance stage
+        id: advance
+        run: bun run scripts/advance.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}
+          REPO: ${{ github.repository }}
+          STUDENT: ${{ inputs.student }}
+          STAGE: ${{ inputs.stage }}
+          TRIGGER: ${{ inputs.trigger }}
+          SCORE: ${{ inputs.score }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Issue certificate if all stages complete
+        if: steps.advance.outputs.all_complete == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner, repo: context.repo.repo,
+              workflow_id: 'issue-cert.yml', ref: 'main',
+              inputs: {
+                student: '${{ inputs.student }}',
+                course: 'git-mastery'
+              }
+            });
+
+      - name: Update leaderboard
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner, repo: context.repo.repo,
+              workflow_id: 'leaderboard.yml', ref: 'main'
+            });
+
+      - name: Commit audit log
+        run: |
+          git config user.name "opencourse-bot[bot]"
+          git config user.email "opencourse-bot[bot]@users.noreply.github.com"
+          git add engine/audit/log.jsonl
+          git diff --staged --quiet || git commit -m "audit: stage advance ${{ inputs.stage }} by ${{ inputs.student }} [skip ci]"
+          git push
+        working-directory: ${{ github.workspace }}

@@ -1,0 +1,39 @@
+{
+  "name": "opencourse-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub-native course engine automation scripts",
+  "scripts": {
+    "enroll": "bun run scripts/enroll.ts",
+    "grade": "bun run scripts/grade.ts",
+    "quiz": "bun run scripts/quiz-engine.ts",
+    "advance": "bun run scripts/advance.ts",
+    "certify": "bun run scripts/certify.ts",
+    "leaderboard": "bun run scripts/leaderboard.ts",
+    "dashboard": "bun run scripts/dashboard.ts",
+    "plagiarism": "bun run scripts/plagiarism.ts",
+    "audit": "bun run scripts/audit.ts",
+    "cohort": "bun run scripts/cohort.ts",
+    "mentorship": "bun run scripts/mentorship.ts",
+    "notify": "bun run scripts/notify.ts",
+    "validate": "bun run scripts/validate.ts",
+    "build": "bun run scripts/build.ts",
+    "check-links": "bun run scripts/check-links.ts",
+    "validate-videos": "bun run scripts/validate-videos.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.26.0",
+    "@octokit/rest": "^21.0.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "js-yaml": "^4.1.0",
+    "natural": "^8.0.1",
+    "puppeteer": "^22.15.0",
+    "yaml": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.5.4",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,10 @@
+---
+import OC from '../data/oc';
+interface Props { track: string; withDot?: boolean; }
+const { track, withDot = true } = Astro.props;
+const name = OC.TRACKS.find(t => t.slug === track)?.name || track;
+---
+<span class="track-badge" data-track={track}>
+  {withDot && <span class="track-badge__dot" />}
+  {name}
+</span>

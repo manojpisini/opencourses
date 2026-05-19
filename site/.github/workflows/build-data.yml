@@ -1,0 +1,43 @@
+name: Refresh GitHub Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  refresh-data:
+    name: Fetch & commit updated data
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch GitHub data
+        run: |
+          node scripts/fetch-github-data.js
+          node scripts/build-search-index.js
+          node scripts/build-graph.js
+          node scripts/generate-sparklines.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/ public/search-index.json
+          git diff --staged --quiet || git commit -m "chore: refresh GitHub data [skip ci]"
+          git push

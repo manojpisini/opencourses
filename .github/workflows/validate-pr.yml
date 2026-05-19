@@ -1,0 +1,40 @@
+name: Validate PR
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+    paths:
+      - 'engine/curriculum/**'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  validate:
+    name: Check title format & tamper detection
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Validate PR
+        run: bun run scripts/validate.ts --mode pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}

@@ -1,0 +1,83 @@
+name: Validate PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: read
+  contents: read
+
+jobs:
+  validate:
+    name: Validate submission format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Validate PR format and eligibility
+        id: validate
+        run: bun run scripts/validate.ts --mode pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
+
+      - name: Check for test file tampering
+        id: tamper
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+          PROTECTED="tests/ .github/ scripts/graders/"
+          TAMPERED=""
+          for pattern in $PROTECTED; do
+            if echo "$CHANGED" | grep -q "^${pattern}"; then
+              TAMPERED="${TAMPERED} ${pattern}"
+            fi
+          done
+          if [ -n "$TAMPERED" ]; then
+            echo "tampered=true" >> $GITHUB_OUTPUT
+            echo "files=$TAMPERED" >> $GITHUB_OUTPUT
+          else
+            echo "tampered=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fail on tampering
+        if: steps.tamper.outputs.tampered == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## ❌ Submission Rejected — Tampered Files\n\nThis submission modifies protected files:\n\n\`\`\`\n${{ steps.tamper.outputs.files }}\n\`\`\`\n\nTest files, grader scripts, and workflow files may not be modified. This submission cannot be graded.\n\nIf you believe this is an error, contact an instructor.`
+            });
+            core.setFailed('Protected files were modified');
+
+      - name: Post validation result
+        if: steps.validate.outputs.valid == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## ❌ Validation Failed\n\n${{ steps.validate.outputs.error }}\n\n**Required PR title format:** \`[Stage 0N] @your-username\`\n\nFix these issues and push an update.`
+            });
+            core.setFailed('PR validation failed');

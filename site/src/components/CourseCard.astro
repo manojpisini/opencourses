@@ -1,0 +1,65 @@
+---
+import type { Course } from '../data/oc';
+import TrackBadge from './TrackBadge.astro';
+import DifficultyBadge from './DifficultyBadge.astro';
+import GitStatus from './GitStatus.astro';
+import Sparkline from './Sparkline.astro';
+import OC from '../data/oc';
+
+interface Props { course: Course; dense?: boolean; }
+const { course, dense = false } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const difficultyColor: Record<string,string> = {
+  beginner: 'var(--color-beginner)',
+  intermediate: 'var(--color-intermediate)',
+  advanced: 'var(--color-advanced)',
+  draft: 'var(--color-draft)',
+};
+---
+<a
+  href={`${base}/courses/${course.slug}`}
+  class={`course-card${dense ? ' course-card--dense' : ''}`}
+  style={`--difficulty-color:${difficultyColor[course.difficulty] || 'var(--text-muted)'}`}
+  data-catalog-card
+  data-slug={course.slug}
+  data-track={course.track}
+  data-difficulty={course.difficulty}
+  data-status={course.status}
+  data-duration-h={parseFloat(course.duration)}
+  data-title={course.title}
+  data-tags={(course.tags || []).join(' ')}
+  data-updated={course.updatedAt}
+  data-stars={course.stars}
+  data-search-text={`${course.title} ${(course.tags||[]).join(' ')} ${course.description}`}
+>
+  <div class="course-card__head">
+    <GitStatus status={course.status} />
+    <div class="course-card__head-text">
+      <h3 class="course-card__title">{course.title}</h3>
+      {!dense && <p class="course-card__desc">{course.description}</p>}
+    </div>
+    <DifficultyBadge level={course.difficulty} />
+  </div>
+  <div class="course-card__meta">
+    <TrackBadge track={course.track} />
+    <span class="course-card__sep">·</span>
+    <span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      {course.modules}
+    </span>
+    <span class="course-card__sep">·</span>
+    <span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      {course.duration}
+    </span>
+    <span class="course-card__sep">·</span>
+    <span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+      {OC.relativeTime(course.updatedAt)}
+    </span>
+    <span style="margin-left:auto">
+      <Sparkline svg={course.sparklineSvg || ''} />
+    </span>
+  </div>
+</a>

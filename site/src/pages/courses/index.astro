@@ -1,0 +1,156 @@
+---
+import Base from '../../layouts/Base.astro';
+import CourseCard from '../../components/CourseCard.astro';
+import CourseRow from '../../components/CourseRow.astro';
+import OC from '../../data/oc';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const countByDiff: Record<string, number> = { beginner: 0, intermediate: 0, advanced: 0, draft: 0 };
+OC.COURSES.forEach(c => { if (c.difficulty in countByDiff) countByDiff[c.difficulty]++; });
+
+const countByTrack: Record<string, number> = {};
+OC.TRACKS.forEach(t => { countByTrack[t.slug] = OC.COURSES.filter(c => c.track === t.slug).length; });
+
+const tagCounts: Record<string, number> = {};
+OC.COURSES.forEach(c => c.tags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+---
+
+<Base title="Course Catalog" currentPath="/courses">
+  <div class="container">
+    <!-- Page header -->
+    <div class="page-head">
+      <div class="page-head__crumbs">
+        <a href={`${base}/`}>~</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span>courses</span>
+      </div>
+      <h1 class="page-head__title">Course Catalog</h1>
+      <p class="page-head__sub">{OC.COURSES.length} courses, version-controlled. Filter by track, difficulty, status, or duration.</p>
+    </div>
+
+    <div class="catalog-layout">
+      <!-- FILTER SIDEBAR -->
+      <aside class="filter-sidebar">
+        <div class="filter-group">
+          <input id="catalog-search" class="search-input" placeholder="Search catalog…" autocomplete="off" />
+        </div>
+
+        <div class="filter-group">
+          <h4 class="filter-group__title">Difficulty</h4>
+          {(['all', 'beginner', 'intermediate', 'advanced'] as const).map(d => (
+            <button class="filter-row" data-diff={d} data-active={d === 'all' ? 'true' : undefined} style="width:100%;text-align:left">
+              <span class="filter-radio"></span>
+              <span>{d === 'all' ? 'All levels' : d[0].toUpperCase() + d.slice(1)}</span>
+              {d !== 'all' && <span class="filter-row__count">{countByDiff[d] || 0}</span>}
+            </button>
+          ))}
+        </div>
+
+        <div class="filter-group">
+          <h4 class="filter-group__title">Track</h4>
+          {OC.TRACKS.map(t => (
+            <button class="filter-row" data-track-filter={t.slug} style="width:100%;text-align:left">
+              <span class="filter-row__check">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:6px">
+                <span style={`width:6px;height:6px;border-radius:50%;background:${OC.TRACK_COLORS[t.slug]}`}></span>
+                {t.name}
+              </span>
+              <span class="filter-row__count">{countByTrack[t.slug]}</span>
+            </button>
+          ))}
+        </div>
+
+        <div class="filter-group">
+          <h4 class="filter-group__title">Status</h4>
+          <label class="filter-row" style="width:100%;cursor:pointer">
+            <span class="filter-row__check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <input id="filter-status-added" type="checkbox" style="display:none" />
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span style="color:var(--git-added);font-family:var(--font-mono)">+</span>
+              Recently updated
+            </span>
+          </label>
+          <label class="filter-row" style="width:100%;cursor:pointer">
+            <span class="filter-row__check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <input id="filter-status-attention" type="checkbox" style="display:none" />
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span style="color:var(--git-attention);font-family:var(--font-mono)">!</span>
+              Needs contributor
+            </span>
+          </label>
+        </div>
+
+        <div class="filter-group">
+          <h4 class="filter-group__title">Duration</h4>
+          {([['all','Any'],['short','< 4 hours'],['medium','4–8 hours'],['long','8+ hours']] as [string,string][]).map(([v, l]) => (
+            <button class="filter-row" data-duration={v} data-active={v === 'all' ? 'true' : undefined} style="width:100%;text-align:left">
+              <span class="filter-radio"></span>
+              <span>{l}</span>
+            </button>
+          ))}
+        </div>
+
+        <div class="filter-group">
+          <h4 class="filter-group__title">Popular tags</h4>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            {topTags.map(([tag, count]) => (
+              <button class="tag-chip" data-tag-chip={tag}>
+                {tag} <span style="opacity:0.6;margin-left:4px">{count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <div>
+        <!-- Toolbar -->
+        <div class="catalog-toolbar">
+          <span class="catalog-toolbar__count">
+            <strong id="catalog-count">{OC.COURSES.length}</strong> courses
+          </span>
+          <div style="display:flex;gap:8px">
+            <div class="view-toggle">
+              <button class="view-toggle__btn" id="view-grid" data-active="true" aria-label="Grid view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              </button>
+              <button class="view-toggle__btn" id="view-list" aria-label="List view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </button>
+            </div>
+            <select id="catalog-sort" class="sort-dropdown" style="appearance:none">
+              <option value="recent">Sort: Recently updated</option>
+              <option value="popular">Sort: Most popular</option>
+              <option value="title">Sort: A → Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Active filter chips (JS-rendered) -->
+        <div id="active-filters" class="active-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+
+        <!-- GRID VIEW -->
+        <div id="course-grid" class="course-grid">
+          {OC.COURSES.map(c => <CourseCard course={c} />)}
+        </div>
+
+        <!-- LIST VIEW (hidden by default) -->
+        <div id="course-list" style="display:flex;flex-direction:column;gap:8px" hidden>
+          {OC.COURSES.map(c => <CourseRow course={c} />)}
+        </div>
+
+        <!-- Empty state -->
+        <div id="catalog-empty" class="empty-state" hidden>
+          No courses match your filters.
+          <button class="btn btn-ghost btn-sm" id="catalog-reset">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<script is:inline src={`${base}/js/catalog-filter.js`}></script>

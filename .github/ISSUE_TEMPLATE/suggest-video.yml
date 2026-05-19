@@ -1,0 +1,67 @@
+name: 📺 Suggest a Video
+description: Suggest a replacement for a dead or low-quality video
+title: "[Video] Stage 0N — Suggest replacement"
+labels:
+  - content-fix
+  - video-suggestion
+assignees: []
+
+body:
+  - type: input
+    id: stage
+    attributes:
+      label: Stage
+      placeholder: "e.g. Stage 03"
+    validations:
+      required: true
+
+  - type: input
+    id: current_url
+    attributes:
+      label: Current (dead/bad) video URL
+      placeholder: "https://youtube.com/watch?v=..."
+    validations:
+      required: false
+
+  - type: input
+    id: suggested_url
+    attributes:
+      label: Suggested replacement URL
+      placeholder: "https://youtube.com/watch?v=..."
+    validations:
+      required: true
+
+  - type: input
+    id: title
+    attributes:
+      label: Video title
+    validations:
+      required: true
+
+  - type: input
+    id: duration
+    attributes:
+      label: Video duration
+      placeholder: "e.g. 12:34"
+    validations:
+      required: false
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why is this a good replacement?
+      description: Explain why this video covers the topic well
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have watched the video and confirmed it is relevant
+          required: true
+        - label: The video is in English or has English subtitles
+          required: true
+        - label: The video is freely accessible (not behind a paywall)
+          required: true

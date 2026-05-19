@@ -1,0 +1,49 @@
+name: Enroll Student
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  enroll:
+    name: Process enrollment request
+    if: github.event.label.name == 'enrollment-request'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.COURSE_BOT_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Process enrollment
+        run: bun run scripts/enroll.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+
+      - name: Commit audit log
+        run: |
+          git config user.name "opencourse-bot[bot]"
+          git config user.email "opencourse-bot[bot]@users.noreply.github.com"
+          git add audit/log.jsonl
+          git diff --staged --quiet || git commit -m "audit: enrollment by ${{ github.event.issue.user.login }} [skip ci]"
+          git push
+        working-directory: ${{ github.workspace }}

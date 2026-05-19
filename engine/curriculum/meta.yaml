@@ -1,0 +1,20 @@
+title: "Git Mastery"
+slug: "git-mastery"
+version: "1.2.0"
+track: "foundations"
+difficulty: "beginner"
+description: >
+  Master Git from first principles. Learn branching strategies, conflict
+  resolution, interactive rebase, hooks, and team workflows used at top
+  open-source projects and companies.
+total_duration: "12-18 hours"
+maintainer: "manoj"
+tags:
+  - git
+  - version-control
+  - cli
+  - collaboration
+  - open-source
+repo: "opencourse/git-mastery"
+prerequisites: []
+language: "Any"

@@ -1,0 +1,64 @@
+name: Check Links
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'   # every Monday at 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    name: Scan for dead links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run link checker
+        id: links
+        run: bun run scripts/check-links.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
+      - name: Open issue if dead links found
+        if: steps.links.outputs.dead_count != '0'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const deadCount = '${{ steps.links.outputs.dead_count }}';
+            const report = `${{ steps.links.outputs.report }}`;
+            const today = new Date().toISOString().split('T')[0];
+
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              labels: 'dead-link', state: 'open'
+            });
+
+            const body = `## 🔗 Dead Links Detected — ${today}\n\n${deadCount} link${deadCount !== '1' ? 's are' : ' is'} no longer accessible.\n\n${report}\n\n### Action Required\nUpdate or remove broken links in the affected files and open a PR.\nLabel this issue \`dead-link\` when resolved.`;
+
+            if (issues.data.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issues.data[0].number, body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: `🔗 Dead Links Detected — ${today}`,
+                body, labels: ['dead-link', 'content-fix']
+              });
+            }

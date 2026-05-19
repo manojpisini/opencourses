@@ -1,0 +1,46 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<footer class="app-footer">
+  <div class="container">
+    <div class="app-footer__grid">
+      <div>
+        <a href={`${base}/`} class="wordmark">
+          <span class="wordmark__icon">&lt;&gt;</span>
+          <span><span class="wordmark__open">Open</span>Courses</span>
+        </a>
+        <p style="color:var(--text-secondary);font-size:14px;margin-top:12px;max-width:320px">
+          Open-source curriculum, version-controlled. Built by the community, for the community.
+        </p>
+      </div>
+      <div>
+        <h4>Learn</h4>
+        <ul>
+          <li><a href={`${base}/courses`}>All courses</a></li>
+          <li><a href={`${base}/tracks`}>Tracks</a></li>
+          <li><a href={`${base}/changelog`}>Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href={`${base}/contributors`}>Contributors</a></li>
+          <li><a href={`${base}/about`}>About</a></li>
+          <li><a href="https://github.com/opencourses-org/opencourses" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Meta</h4>
+        <ul>
+          <li><a href="https://github.com/opencourses-org/opencourses/blob/main/engine/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="#">RSS</a></li>
+          <li><a href="#">Style guide</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="app-footer__bar">
+      <span class="deploy-badge">Live · Built 2h ago</span>
+      <span>opencourses.github.io · MIT · v1.0.0</span>
+    </div>
+  </div>
+</footer>

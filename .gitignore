@@ -1,0 +1,62 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+site/dist/
+site/.astro/
+engine/dist/
+engine/dist/certs/
+
+# ── Lock files (keep bun.lockb) ───────────────────────────────────────────────
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ── Secrets — NEVER commit ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+*.pem
+*.key
+secring.gpg
+
+# ── OS artifacts ─────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+Thumbs.db
+Desktop.ini
+
+# ── Editor ───────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Test & coverage ───────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Puppeteer / Playwright ───────────────────────────────────────────────────
+.cache/puppeteer/
+
+# ── Grading (CI only) ─────────────────────────────────────────────────────────
+/tmp/test-results.json
+
+# ── Spec files (not shipped) ─────────────────────────────────────────────────
+GITHUB-COURSE-ENGINE.md
+OPENCOURSES-WEBSITE-SPEC.md
+
+# ── Reference / design prototype (not shipped) ───────────────────────────────
+opencourses/
+
+# ── Site lock file (bun.lockb is canonical) ──────────────────────────────────
+site/package-lock.json

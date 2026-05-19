@@ -1,0 +1,81 @@
+---
+import Base from '../../layouts/Base.astro';
+import ContributorAvatar from '../../components/ui/ContributorAvatar.astro';
+import CourseCard from '../../components/ui/CourseCard.astro';
+import contributors from '../../data/contributors.json';
+import courses from '../../data/courses.json';
+
+export async function getStaticPaths() {
+  return contributors.map(c => ({
+    params: { login: c.login },
+    props: { contributor: c },
+  }));
+}
+
+interface Props {
+  contributor: (typeof contributors)[number];
+}
+
+const { contributor } = Astro.props;
+const maintainedCourses = courses.filter(c => c.maintainer === contributor.login);
+const joinedDate = new Date(contributor.joinedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+---
+
+<Base title={`@${contributor.login}`} description={`${contributor.name} — OpenCourses contributor`}>
+  <div class="container py-10">
+    <!-- Profile header -->
+    <div class="flex items-start gap-6 mb-10 flex-wrap">
+      <ContributorAvatar login={contributor.login} avatarUrl={contributor.avatarUrl} size="xl" showTooltip={false} />
+      <div>
+        <h1 class="font-display text-3xl font-bold text-[var(--text-primary)] mb-1">{contributor.name}</h1>
+        <div class="font-mono text-sm text-[var(--text-muted)] mb-2">@{contributor.login}</div>
+        {contributor.bio && <p class="text-[var(--text-secondary)] mb-4">{contributor.bio}</p>}
+        <div class="flex flex-wrap gap-4 text-sm font-mono text-[var(--text-muted)]">
+          <span>📦 {contributor.courses} courses</span>
+          <span>⚡ {contributor.commits} commits</span>
+          <span>🗓 Joined {joinedDate}</span>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+          {contributor.tracks.map(track => (
+            <a href={`/courses?track=${track}`} class="tag-chip capitalize">{track}</a>
+          ))}
+        </div>
+        <a
+          href={contributor.profileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-secondary !py-1.5 !px-3 !text-sm mt-4 inline-flex"
+        >
+          View on GitHub ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Maintained courses -->
+    {maintainedCourses.length > 0 && (
+      <div>
+        <h2 class="font-display text-xl font-bold text-[var(--text-primary)] mb-4">
+          Courses by @{contributor.login}
+        </h2>
+        <div class="course-grid">
+          {maintainedCourses.map((course, i) => (
+            <CourseCard
+              title={course.title}
+              description={course.description}
+              slug={course.slug}
+              difficulty={course.difficulty as any}
+              modules={course.modules}
+              duration={course.duration}
+              updatedAt={course.updatedAt}
+              status={course.status as any}
+              tags={course.tags}
+              track={course.track}
+              stars={course.stars}
+              index={i}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</Base>

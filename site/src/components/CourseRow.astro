@@ -1,0 +1,29 @@
+---
+import type { Course } from '../data/oc';
+import TrackBadge from './TrackBadge.astro';
+import DifficultyBadge from './DifficultyBadge.astro';
+import GitStatus from './GitStatus.astro';
+import Sparkline from './Sparkline.astro';
+
+interface Props { course: Course; }
+const { course } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<a
+  href={`${base}/courses/${course.slug}`}
+  class="course-row"
+  data-catalog-row
+  data-slug={course.slug}
+>
+  <GitStatus status={course.status} />
+  <div style="min-width:0">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
+      <span style="font-weight:600;color:var(--text-primary)">{course.title}</span>
+      <TrackBadge track={course.track} />
+    </div>
+    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">{course.repo} · {course.lastCommit}</div>
+  </div>
+  <DifficultyBadge level={course.difficulty} />
+  <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);white-space:nowrap">{course.modules}m · {course.duration}</span>
+  <Sparkline svg={course.sparklineSvg || ''} />
+</a>

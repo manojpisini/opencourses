@@ -1,0 +1,32 @@
+---
+interface Props {
+  track: string;
+  href?: string;
+}
+
+const { track, href } = Astro.props;
+
+const trackColors: Record<string, string> = {
+  foundations: '#4f9eff',
+  languages:   '#a78bfa',
+  web:         '#4f9eff',
+  devops:      '#34d399',
+  data:        '#f5c542',
+  craft:       '#fb923c',
+  architecture:'#e879f9',
+  security:    '#f87171',
+  emerging:    '#22d3ee',
+};
+
+const color = trackColors[track] ?? '#4f9eff';
+const Tag = href ? 'a' : 'span';
+---
+
+<Tag
+  href={href}
+  class="track-badge"
+  data-track={track}
+  style={`--track-color: ${color}; background: ${color}18; color: ${color}; border-color: ${color}33;`}
+>
+  {track}
+</Tag>

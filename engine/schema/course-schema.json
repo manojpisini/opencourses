@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://opencourses.dev/schema/course-meta",
+  "title": "Course Stage Metadata",
+  "description": "Schema for curriculum/stage-NN/meta.yaml files",
+  "type": "object",
+  "required": ["id", "title", "description", "type", "difficulty", "duration", "xp"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^stage-0[1-9]$",
+      "description": "Stage identifier, e.g. stage-01"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 500
+    },
+    "type": {
+      "type": "string",
+      "enum": ["assignment", "debugging", "code-review", "project", "quiz"]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"]
+    },
+    "duration": {
+      "type": "string",
+      "pattern": "^\\d+[-–]\\d+ hours?$|^\\d+ hours?$|^\\d+ days?$",
+      "description": "e.g. '3-5 hours' or '1 day'"
+    },
+    "xp": {
+      "type": "integer",
+      "minimum": 50,
+      "maximum": 1000
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "url"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "type": {
+            "type": "string",
+            "enum": ["video", "article", "docs", "book", "interactive"]
+          }
+        }
+      }
+    },
+    "quiz": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "pass_score": { "type": "integer", "minimum": 50, "maximum": 100 },
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "time_limit_minutes": { "type": "integer", "minimum": 5 }
+      }
+    },
+    "grader": {
+      "type": "string",
+      "description": "Path to grader script, e.g. scripts/graders/stage-01.ts"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+---
+interface Props { status: string; }
+const { status } = Astro.props;
+const glyphs: Record<string,string> = { added: '+', modified: '~', attention: '!', stable: '·' };
+---
+<span class="git-status" data-status={status} title={`Status: ${status}`}>{glyphs[status] ?? '·'}</span>

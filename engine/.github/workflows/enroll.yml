@@ -1,0 +1,120 @@
+name: Enrollment
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  enroll:
+    name: Process enrollment
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'enrollment-request')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.COURSE_BOT_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Process enrollment
+        id: enroll
+        run: bun run scripts/enroll.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_USER: ${{ github.event.issue.user.login }}
+          REPO: ${{ github.repository }}
+
+      - name: Post welcome comment
+        if: steps.enroll.outputs.status == 'enrolled'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.COURSE_BOT_TOKEN }}
+          script: |
+            const username = context.payload.issue.user.login;
+            const name = '${{ steps.enroll.outputs.display_name }}';
+            const cohort = '${{ steps.enroll.outputs.cohort }}';
+            const branch = `students/@${username}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## 🎉 Welcome, ${name}! You're enrolled in Git Mastery.
+
+**Your student branch:** \`${branch}\`
+**Cohort:** ${cohort}
+**Cert name will read:** ${name}
+
+---
+
+### 🗺️ Your Learning Path
+
+Stage 01 → Quiz 01 → Stage 02 → Quiz 02 → Stage 03 → Quiz 03
+→ Stage 04 → Quiz 04 → Stage 05 (Final Project) → 🎓 Certificate
+
+**Current:** Stage 01 is unlocked and ready.
+
+---
+
+### 📺 Start Here
+
+1. Read [Stage 01 Content](curriculum/stage-01/README.md)
+2. Watch the [required videos](curriculum/stage-01/meta.yaml)
+3. Read the [assignment instructions](curriculum/stage-01/assignment/instructions.md)
+4. Work in your branch: \`${branch}\`
+5. Open a PR titled: \`[Stage 01] @${username}\`
+
+---
+
+### 📋 Quick Reference
+
+| Action | How |
+|---|---|
+| Submit assignment | Open PR from your branch |
+| Take a quiz | Open Issue → Quiz Attempt |
+| Ask for help | Open Issue → Support Request |
+| Check progress | Labels on this issue |
+| Leaderboard | [LEADERBOARD.md](LEADERBOARD.md) |
+
+Good luck! 🚀`
+            });
+
+      - name: Handle duplicate enrollment
+        if: steps.enroll.outputs.status == 'duplicate'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.COURSE_BOT_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `⚠️ @${context.payload.issue.user.login} — you are already enrolled in this course.\n\nFind your enrollment issue by searching for issues with the \`enrolled\` label created by you.`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, state: 'closed'
+            });
+
+      - name: Append audit log
+        run: bun run scripts/audit.ts
+        env:
+          EVENT_TYPE: enrollment
+          ACTOR: ${{ github.event.issue.user.login }}
+          ISSUE: ${{ github.event.issue.number }}
+          STATUS: ${{ steps.enroll.outputs.status }}
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}

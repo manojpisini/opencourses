@@ -1,0 +1,90 @@
+[
+  {
+    "login": "manoj",
+    "name": "Manoj Kumar",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/1?v=4",
+    "profileUrl": "https://github.com/manoj",
+    "courses": 6,
+    "commits": 847,
+    "tracks": ["foundations", "languages", "web", "emerging"],
+    "joinedAt": "2025-01-15T00:00:00Z",
+    "bio": "Platform founder. TypeScript, Rust, LLMs."
+  },
+  {
+    "login": "sarah",
+    "name": "Sarah Chen",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/2?v=4",
+    "profileUrl": "https://github.com/sarah",
+    "courses": 4,
+    "commits": 612,
+    "tracks": ["languages", "craft", "security"],
+    "joinedAt": "2025-02-10T00:00:00Z",
+    "bio": "Security researcher. Rust enthusiast."
+  },
+  {
+    "login": "alex",
+    "name": "Alex Rivera",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/3?v=4",
+    "profileUrl": "https://github.com/alex",
+    "courses": 4,
+    "commits": 498,
+    "tracks": ["devops", "foundations"],
+    "joinedAt": "2025-03-01T00:00:00Z",
+    "bio": "DevOps engineer. Docker, CI/CD, Linux."
+  },
+  {
+    "login": "priya",
+    "name": "Priya Patel",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/4?v=4",
+    "profileUrl": "https://github.com/priya",
+    "courses": 3,
+    "commits": 387,
+    "tracks": ["languages", "architecture", "data"],
+    "joinedAt": "2025-03-20T00:00:00Z",
+    "bio": "Systems architect. Python, distributed systems."
+  },
+  {
+    "login": "carlos",
+    "name": "Carlos Mendoza",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/5?v=4",
+    "profileUrl": "https://github.com/carlos",
+    "courses": 3,
+    "commits": 256,
+    "tracks": ["devops", "data", "craft"],
+    "joinedAt": "2025-04-05T00:00:00Z",
+    "bio": "Linux admin, SQL, open source contributor."
+  },
+  {
+    "login": "yuki",
+    "name": "Yuki Tanaka",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/6?v=4",
+    "profileUrl": "https://github.com/yuki",
+    "courses": 2,
+    "commits": 189,
+    "tracks": ["web", "craft"],
+    "joinedAt": "2025-05-01T00:00:00Z",
+    "bio": "CSS wizard, accessibility advocate."
+  },
+  {
+    "login": "fatima",
+    "name": "Fatima Al-Hassan",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/7?v=4",
+    "profileUrl": "https://github.com/fatima",
+    "courses": 1,
+    "commits": 143,
+    "tracks": ["foundations"],
+    "joinedAt": "2025-06-01T00:00:00Z",
+    "bio": "HTTP internals, network engineering."
+  },
+  {
+    "login": "luca",
+    "name": "Luca Romano",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/8?v=4",
+    "profileUrl": "https://github.com/luca",
+    "courses": 1,
+    "commits": 98,
+    "tracks": ["data"],
+    "joinedAt": "2025-07-15T00:00:00Z",
+    "bio": "Data engineer, PostgreSQL maintainer."
+  }
+]

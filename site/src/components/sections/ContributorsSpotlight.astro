@@ -1,0 +1,46 @@
+---
+import ContributorAvatar from '../ui/ContributorAvatar.astro';
+import contributors from '../../data/contributors.json';
+
+const top = contributors.slice(0, 6);
+---
+
+<section>
+  <div class="container">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="font-display text-2xl font-bold text-[var(--text-primary)]">Contributors</h2>
+      <a href="/contributors" class="text-sm font-mono text-[var(--accent-blue)] hover:underline">
+        View all {contributors.length} →
+      </a>
+    </div>
+
+    <div class="flex items-center gap-4 mb-6">
+      <div class="avatar-stack">
+        {contributors.map(c => (
+          <ContributorAvatar login={c.login} avatarUrl={c.avatarUrl} size="sm" />
+        ))}
+      </div>
+      <p class="text-sm text-[var(--text-secondary)]">
+        {contributors.length} contributors have built this curriculum.
+        <a href="/about#contribute" class="text-[var(--accent-blue)] hover:underline ml-1">Join them →</a>
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+      {top.map(c => (
+        <a
+          href={`/contributors/${c.login}`}
+          class="flex flex-col items-center gap-2 p-3 rounded-card border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--accent-blue)] hover:bg-[var(--bg-raised)] transition-all text-center group"
+        >
+          <ContributorAvatar login={c.login} avatarUrl={c.avatarUrl} size="lg" showTooltip={false} />
+          <div>
+            <div class="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-blue)] transition-colors">
+              @{c.login}
+            </div>
+            <div class="text-xs font-mono text-[var(--text-muted)]">{c.courses} courses</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

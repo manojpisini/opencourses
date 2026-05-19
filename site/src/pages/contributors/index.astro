@@ -1,0 +1,92 @@
+---
+import Base from '../../layouts/Base.astro';
+import Avatar from '../../components/Avatar.astro';
+import Heatmap from '../../components/Heatmap.astro';
+import OC from '../../data/oc';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const sorted = [...OC.CONTRIBUTORS].sort((a, b) => b.commits - a.commits);
+const top3 = sorted.slice(0, 3);
+const rest = sorted.slice(3);
+---
+
+<Base title="Contributors" description="The community behind OpenCourses — developers building free, open-source curriculum.">
+  <div class="container">
+    <div class="page-head">
+      <div class="page-head__crumbs">
+        <a href={`${base}/`}>~</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span>contributors</span>
+      </div>
+      <h1 class="page-head__title">{OC.CONTRIBUTORS.length} Contributors</h1>
+      <p class="page-head__sub">The developers who build this curriculum. Every commit, every course, every review.</p>
+    </div>
+
+    <!-- Top 3 podium -->
+    <div class="section">
+      <div class="section-head">
+        <h2 class="section-head__title">Top Contributors</h2>
+      </div>
+
+      <div class="contributors-podium">
+        <!-- 2nd place -->
+        <a href={`${base}/contributors/${top3[1].login}`} class="podium-step podium-step--2">
+          <Avatar login={top3[1].login} size="lg" />
+          <div class="contributor-card__name">@{top3[1].login}</div>
+          <div class="contributor-card__role">{top3[1].commits} commits</div>
+          <div class="podium-step__rank">2</div>
+        </a>
+
+        <!-- 1st place -->
+        <a href={`${base}/contributors/${top3[0].login}`} class="podium-step podium-step--1">
+          <Avatar login={top3[0].login} size="xl" />
+          <div class="contributor-card__name">@{top3[0].login}</div>
+          <div class="contributor-card__role">{top3[0].commits} commits</div>
+          <div class="podium-step__rank">1</div>
+        </a>
+
+        <!-- 3rd place -->
+        <a href={`${base}/contributors/${top3[2].login}`} class="podium-step podium-step--3">
+          <Avatar login={top3[2].login} size="lg" />
+          <div class="contributor-card__name">@{top3[2].login}</div>
+          <div class="contributor-card__role">{top3[2].commits} commits</div>
+          <div class="podium-step__rank">3</div>
+        </a>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- All contributors grid -->
+    <div class="section">
+      <div class="section-head">
+        <h2 class="section-head__title">All Contributors</h2>
+      </div>
+
+      <div class="contributors-grid">
+        {sorted.map(c => (
+          <a href={`${base}/contributors/${c.login}`} class="contributor-card">
+            <Avatar login={c.login} size="md" />
+            <div>
+              <div class="contributor-card__name">@{c.login}</div>
+              <div class="contributor-card__role">{c.role}</div>
+              <div class="contributor-card__role" style="margin-top:2px">{c.courses} courses · {c.commits} commits</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Activity heatmap -->
+    <div class="section">
+      <div class="section-head">
+        <h2 class="section-head__title">Combined Activity</h2>
+        <p class="section-head__sub">Aggregated contribution activity across all course repos</p>
+      </div>
+      <Heatmap />
+    </div>
+  </div>
+</Base>

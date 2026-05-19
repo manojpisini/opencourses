@@ -1,0 +1,72 @@
+name: ❓ Quiz Attempt
+description: Submit your answers for a stage quiz
+title: "[Quiz] Stage 0N — @YOUR_USERNAME"
+labels:
+  - quiz-attempt
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Stage Quiz Submission
+        Answer each question below. For MCQ questions, write the letter (A/B/C/D).
+        For short-answer and code questions, write your full answer.
+
+        > ⏰ You have **3 attempts** per quiz. Once submitted, the grader runs automatically.
+
+  - type: input
+    id: stage
+    attributes:
+      label: Stage Number
+      placeholder: "e.g. 01, 02, 03, 04, 05"
+    validations:
+      required: true
+
+  - type: textarea
+    id: q1
+    attributes:
+      label: "### Q1"
+      description: Answer to Question 1
+    validations:
+      required: true
+
+  - type: textarea
+    id: q2
+    attributes:
+      label: "### Q2"
+      description: Answer to Question 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: q3
+    attributes:
+      label: "### Q3"
+      description: Answer to Question 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: q4
+    attributes:
+      label: "### Q4"
+      description: Answer to Question 4 (if applicable)
+    validations:
+      required: false
+
+  - type: textarea
+    id: q5
+    attributes:
+      label: "### Q5"
+      description: Answer to Question 5 (if applicable)
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: These are my own answers and I have not copied from other students
+          required: true

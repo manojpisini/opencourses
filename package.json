@@ -1,0 +1,16 @@
+{
+  "name": "opencourse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenCourses — free developer education built on GitHub",
+  "workspaces": [
+    "site",
+    "engine"
+  ],
+  "scripts": {
+    "dev": "cd site && bun run dev",
+    "build:site": "cd site && bun run build",
+    "build:engine": "cd engine && bun run build",
+    "install:all": "bun install --filter '*'"
+  }
+}

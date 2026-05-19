@@ -1,0 +1,19 @@
+---
+// Command palette — JS-driven, starts hidden
+---
+<div id="cmdp-overlay" class="cmdp-overlay" hidden>
+  <div id="cmdp" class="cmdp">
+    <div class="cmdp__input-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="cmdp-input" class="cmdp__input" placeholder="Search courses, tracks, contributors…" autocomplete="off" />
+      <span id="cmdp-count" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">0 results</span>
+    </div>
+    <div id="cmdp-results" class="cmdp__results"></div>
+    <div class="cmdp__footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+      <span><kbd>↵</kbd> Open</span>
+      <span><kbd>Esc</kbd> Dismiss</span>
+      <span style="margin-left:auto">Powered by client-side fuzzy match</span>
+    </div>
+  </div>
+</div>

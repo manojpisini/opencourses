@@ -1,0 +1,39 @@
+{
+  "nodes": [
+    { "id": "git-mastery",              "title": "Git Mastery",              "track": "foundations", "difficulty": "beginner",     "popularity": 312 },
+    { "id": "terminal-fundamentals",    "title": "Terminal Fundamentals",    "track": "foundations", "difficulty": "beginner",     "popularity": 198 },
+    { "id": "http-fundamentals",        "title": "HTTP Fundamentals",        "track": "foundations", "difficulty": "beginner",     "popularity": 176 },
+    { "id": "rust-fundamentals",        "title": "Rust Fundamentals",        "track": "languages",   "difficulty": "advanced",     "popularity": 487 },
+    { "id": "typescript-mastery",       "title": "TypeScript Mastery",       "track": "languages",   "difficulty": "intermediate", "popularity": 341 },
+    { "id": "python-mastery",           "title": "Python Mastery",           "track": "languages",   "difficulty": "intermediate", "popularity": 293 },
+    { "id": "docker-fundamentals",      "title": "Docker Fundamentals",      "track": "devops",      "difficulty": "intermediate", "popularity": 256 },
+    { "id": "linux-administration",     "title": "Linux Administration",     "track": "devops",      "difficulty": "intermediate", "popularity": 189 },
+    { "id": "ci-cd-fundamentals",       "title": "CI/CD Fundamentals",       "track": "devops",      "difficulty": "intermediate", "popularity": 214 },
+    { "id": "css-mastery",              "title": "CSS Mastery",              "track": "web",         "difficulty": "intermediate", "popularity": 167 },
+    { "id": "security-fundamentals",    "title": "Security Fundamentals",    "track": "craft",       "difficulty": "advanced",     "popularity": 398 },
+    { "id": "system-design",            "title": "System Design",            "track": "architecture","difficulty": "advanced",     "popularity": 521 },
+    { "id": "sql-fundamentals",         "title": "SQL Fundamentals",         "track": "data",        "difficulty": "beginner",     "popularity": 234 },
+    { "id": "testing-fundamentals",     "title": "Testing Fundamentals",     "track": "craft",       "difficulty": "intermediate", "popularity": 178 },
+    { "id": "llm-fundamentals",         "title": "LLM Fundamentals",         "track": "emerging",    "difficulty": "intermediate", "popularity": 612 },
+    { "id": "open-source-contribution", "title": "Open Source Contribution", "track": "craft",       "difficulty": "beginner",     "popularity": 143 }
+  ],
+  "links": [
+    { "source": "terminal-fundamentals", "target": "rust-fundamentals",        "type": "prerequisite" },
+    { "source": "terminal-fundamentals", "target": "python-mastery",           "type": "prerequisite" },
+    { "source": "terminal-fundamentals", "target": "linux-administration",     "type": "prerequisite" },
+    { "source": "terminal-fundamentals", "target": "docker-fundamentals",      "type": "prerequisite" },
+    { "source": "http-fundamentals",     "target": "typescript-mastery",       "type": "prerequisite" },
+    { "source": "http-fundamentals",     "target": "css-mastery",              "type": "prerequisite" },
+    { "source": "http-fundamentals",     "target": "security-fundamentals",    "type": "prerequisite" },
+    { "source": "http-fundamentals",     "target": "system-design",            "type": "prerequisite" },
+    { "source": "http-fundamentals",     "target": "llm-fundamentals",         "type": "prerequisite" },
+    { "source": "linux-administration",  "target": "docker-fundamentals",      "type": "prerequisite" },
+    { "source": "docker-fundamentals",   "target": "ci-cd-fundamentals",       "type": "prerequisite" },
+    { "source": "docker-fundamentals",   "target": "system-design",            "type": "prerequisite" },
+    { "source": "git-mastery",           "target": "ci-cd-fundamentals",       "type": "prerequisite" },
+    { "source": "git-mastery",           "target": "open-source-contribution", "type": "prerequisite" },
+    { "source": "python-mastery",        "target": "llm-fundamentals",         "type": "prerequisite" },
+    { "source": "rust-fundamentals",     "target": "system-design",            "type": "often-taken" },
+    { "source": "typescript-mastery",    "target": "css-mastery",              "type": "often-taken" }
+  ]
+}

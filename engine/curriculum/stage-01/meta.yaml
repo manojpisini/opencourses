@@ -1,0 +1,36 @@
+id: "stage-01"
+title: "Git Foundations"
+description: >
+  Set up your Git environment and learn the core workflow: init, add, commit,
+  log, diff, and status. Build a small project with at least 5 meaningful
+  commits, a feature branch, and a clean .gitignore.
+type: "assignment"
+difficulty: "beginner"
+duration: "2-3 hours"
+xp: 100
+grader: "scripts/graders/stage-01.ts"
+prerequisites: []
+tags:
+  - git
+  - cli
+  - version-control
+
+resources:
+  - title: "Git - The Simple Guide"
+    url: "https://rogerdudler.github.io/git-guide/"
+    type: "article"
+  - title: "Pro Git — Chapters 1 & 2"
+    url: "https://git-scm.com/book/en/v2"
+    type: "book"
+  - title: "Learn Git Branching (interactive)"
+    url: "https://learngitbranching.js.org/"
+    type: "interactive"
+  - title: "Git in 100 Seconds"
+    url: "https://www.youtube.com/watch?v=hwP7WQkmECE"
+    type: "video"
+
+quiz:
+  enabled: true
+  pass_score: 70
+  max_attempts: 3
+  time_limit_minutes: 15

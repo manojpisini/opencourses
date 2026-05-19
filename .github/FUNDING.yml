@@ -1,0 +1,7 @@
+# Support OpenCourses development
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+github: [opencourse]
+open_collective: opencourses
+ko_fi: opencourses
+custom: ["https://opencourses.dev/sponsor"]

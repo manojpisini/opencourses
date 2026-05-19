@@ -1,0 +1,37 @@
+name: Cohort Nudge
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  nudge:
+    name: Nudge inactive students
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Find inactive students and send nudges
+        run: bun run scripts/cohort.ts --mode nudge
+        env:
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}
+          REPO: ${{ github.repository }}
+          INACTIVITY_DAYS: '5'

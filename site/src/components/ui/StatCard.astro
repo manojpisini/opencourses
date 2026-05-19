@@ -1,0 +1,17 @@
+---
+interface Props {
+  number: string | number;
+  label: string;
+  prefix?: string;
+  suffix?: string;
+}
+
+const { number, label, prefix = '', suffix = '' } = Astro.props;
+---
+
+<div class="stat-card" data-animate-count={typeof number === 'number' ? number : undefined}>
+  <div class="stat-card__number">
+    {prefix}{number}{suffix}
+  </div>
+  <div class="stat-card__label">{label}</div>
+</div>

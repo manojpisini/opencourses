@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+
+# Bun lockfile (keep bun.lockb, ignore others)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment variables — NEVER commit secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Certificate output (generated at runtime)
+dist/certs/
+
+# OS artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Desktop.ini
+
+# Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Puppeteer cache
+.cache/puppeteer/
+
+# GPG runtime files
+*.gpg
+secring.gpg
+
+# Temporary grading output (only exists in CI)
+/tmp/test-results.json

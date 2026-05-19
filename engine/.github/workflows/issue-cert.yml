@@ -1,0 +1,160 @@
+name: Issue Certificate
+
+on:
+  workflow_dispatch:
+    inputs:
+      student:
+        description: GitHub username
+        required: true
+      enrollment_issue:
+        description: Enrollment issue number
+        required: true
+
+permissions:
+  issues: write
+  contents: write
+  id-token: write
+
+jobs:
+  certify:
+    name: Issue certificate for @${{ inputs.student }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.COURSE_BOT_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Puppeteer + GPG deps
+        run: |
+          sudo apt-get install -y gnupg2 ghostscript
+          bun add puppeteer
+
+      - name: Generate certificate
+        id: cert
+        run: bun run scripts/certify.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}
+          STUDENT: ${{ inputs.student }}
+          ENROLLMENT_ISSUE: ${{ inputs.enrollment_issue }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          REPO: ${{ github.repository }}
+
+      - name: Create GitHub Release with certificate
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.COURSE_BOT_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const student = '${{ inputs.student }}';
+            const certId = '${{ steps.cert.outputs.cert_id }}';
+            const displayName = '${{ steps.cert.outputs.display_name }}';
+
+            // Create release
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner, repo: context.repo.repo,
+              tag_name: `cert-${student}-${certId}`,
+              name: `Certificate — ${displayName} — ${certId}`,
+              body: `## 🎓 Certificate of Completion\n\n**Recipient:** ${displayName} (@${student})\n**Certificate ID:** \`${certId}\`\n**Course:** Git Mastery\n**Issued:** ${new Date().toISOString().split('T')[0]}\n\n### Verify\n\`\`\`bash\ngpg --verify cert-${certId}.svg.asc\n\`\`\`\n\n[Verification instructions](CERTIFIED.md#verification)`,
+              prerelease: false
+            });
+
+            // Upload SVG
+            const svgContent = fs.readFileSync(`dist/cert-${certId}.svg`);
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner, repo: context.repo.repo,
+              release_id: release.data.id,
+              name: `cert-${certId}.svg`,
+              data: svgContent
+            });
+
+            // Upload GPG signature
+            const sigContent = fs.readFileSync(`dist/cert-${certId}.svg.asc`, 'utf8');
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner, repo: context.repo.repo,
+              release_id: release.data.id,
+              name: `cert-${certId}.svg.asc`,
+              data: sigContent
+            });
+
+            // Upload Open Badges JSON
+            const badgeContent = fs.readFileSync(`dist/cert-${certId}.json`, 'utf8');
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner, repo: context.repo.repo,
+              release_id: release.data.id,
+              name: `cert-${certId}.json`,
+              data: badgeContent
+            });
+
+      - name: Update enrollment issue — certified
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.COURSE_BOT_TOKEN }}
+          script: |
+            const student = '${{ inputs.student }}';
+            const certId = '${{ steps.cert.outputs.cert_id }}';
+            const releaseUrl = '${{ steps.cert.outputs.release_url }}';
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: parseInt('${{ inputs.enrollment_issue }}'),
+              labels: ['certified']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: parseInt('${{ inputs.enrollment_issue }}'),
+              body: `## 🎓 Congratulations, @${student}! You are certified.
+
+**Certificate ID:** \`${certId}\`
+**Download:** [${releaseUrl}](${releaseUrl})
+
+Your certificate includes:
+- 📜 SVG certificate (the credential)
+- 🔐 GPG signature (cryptographic proof)
+- 🏅 Open Badges 3.0 JSON (machine-readable)
+
+**Add to your GitHub profile README:**
+\`\`\`markdown
+[![Git Mastery](https://img.shields.io/badge/Git_Mastery-Certified-6e40c9?style=flat-square&logo=github)](${releaseUrl})
+\`\`\`
+
+**Verify your certificate:**
+\`\`\`bash
+gpg --verify cert-${certId}.svg.asc
+\`\`\`
+
+*Skills forged in code.* 🔥`
+            });
+
+            await github.rest.issues.update({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: parseInt('${{ inputs.enrollment_issue }}'),
+              state: 'closed', state_reason: 'completed'
+            });
+
+      - name: Update CERTIFIED.md
+        run: bun run scripts/certify.ts --mode update-hall-of-fame
+        env:
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN }}
+          STUDENT: ${{ inputs.student }}
+          CERT_ID: ${{ steps.cert.outputs.cert_id }}
+          DISPLAY_NAME: ${{ steps.cert.outputs.display_name }}
+
+      - name: Append audit log
+        run: bun run scripts/audit.ts
+        env:
+          EVENT_TYPE: certificate-issued
+          ACTOR: ${{ inputs.student }}
+          CERT_ID: ${{ steps.cert.outputs.cert_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
