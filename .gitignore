@@ -54,9 +54,11 @@ coverage/
 # ── Spec files (not shipped) ─────────────────────────────────────────────────
 GITHUB-COURSE-ENGINE.md
 OPENCOURSES-WEBSITE-SPEC.md
+SETUP.md
 
 # ── Reference / design prototype (not shipped) ───────────────────────────────
 opencourses/
 
 # ── Site lock file (bun.lockb is canonical) ──────────────────────────────────
 site/package-lock.json
+
