@@ -405,30 +405,15 @@ Trigger manually: **Actions → Deploy Site to GitHub Pages → Run workflow**
 
 ## ✦ License
 
-This project uses a two-tier licensing model.
+This repository uses two licenses depending on the type of content:
 
-<br/>
+[MIT License](./LICENSE)
+[CC BY-SA 4.0](./LICENSE-CONTENT)
 
-**Platform code** — [OpenCourses Community License](LICENSE)
-
-Source-available, contributions welcome, ownership retained by opencourses-org.<br/>
-Fork, study, contribute, and self-host for non-commercial use.<br/>
-Redistribution as a competing product is not permitted.
-
-<br/>
-
-**Course content** — [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
-
-Free to use, adapt, and share with attribution for non-commercial purposes.
-
-<br/>
-
-> The name **"OpenCourses"**, the wordmark, and the visual identity are owned by opencourses-org<br/>
-> and may not be used in derived works without written permission.
-
-<br/>
-
-For commercial licensing: **legal@opencourses.dev**
+Course content is built from curated open-source videos, repositories, and
+public resources. Original authors retain their respective copyrights.
+When adapting or redistributing, attribution to both manojpisini and the
+original sources is required.
 
 <br/>
 
@@ -439,7 +424,7 @@ For commercial licensing: **legal@opencourses.dev**
 Found a vulnerability? **Do not open a public issue.**
 
 Report privately via [GitHub Security Advisories](https://github.com/manojpisini/opencourses/security/advisories/new).<br/>
-We respond within 72 hours. See [SECURITY.md](.github/SECURITY.md) for our full disclosure policy.
+We respond within 72 hours. See [SECURITY.md](SECURITY.md) for our full disclosure policy.
 
 <br/>
 
@@ -457,4 +442,4 @@ Built in the open.  Shipped like software.  Free, forever.
 
 <br/>
 
-<sub>Copyright © 2026 manojpisini &nbsp;·&nbsp; <a href="LICENSE">OpenCourses Community License</a> &nbsp;·&nbsp; <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> for content</sub>
+<sub>Copyright © 2026 manojpisini &nbsp;·&nbsp; <a href="LICENSE">MIT</a> for code &nbsp;·&nbsp; <a href="LICENSE-CONTENT">CC BY-SA 4.0</a> for content</sub>

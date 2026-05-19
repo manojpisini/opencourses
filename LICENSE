@@ -1,89 +1,21 @@
-OpenCourses Community License
-Version 1.0, May 2026
+MIT License
 
-Copyright (c) 2026 manojpisini. All rights reserved.
+Copyright (c) 2026 manojpisini
 
-DEFINITIONS
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-"The Software" refers to the OpenCourses platform, including all source code,
-scripts, workflows, site templates, design system, and automation tooling
-contained in this repository.
-
-"Content" refers to course material, curriculum, exercises, quizzes, and
-documentation contained in site/src/content/ and engine/curriculum/.
-
-"You" refers to any individual or organization accessing or using The Software.
-
-"Commercial Use" means any use primarily intended for commercial advantage or
-monetary compensation, including running a competing paid education platform,
-sublicensing the engine, or selling access to derived works.
-
-────────────────────────────────────────────────────────────────────────────────
-
-GRANT OF RIGHTS — PLATFORM CODE
-
-Subject to the terms below, manojpisini grants You a worldwide,
-royalty-free, non-exclusive license to:
-
-  1. View, download, and study the source code.
-  2. Fork and modify the source code for personal or internal use.
-  3. Contribute improvements back via pull request.
-  4. Run a private instance for educational, research, or non-commercial use.
-
-This license does NOT grant You the right to:
-
-  1. Redistribute or sublicense The Software, in whole or in part, as a
-     competing product or commercial service.
-  2. Remove or alter copyright notices, license headers, or attribution.
-  3. Use the name "OpenCourses", the wordmark, or the logo in any derived
-     work without prior written permission from manojpisini.
-  4. Claim ownership or authorship of The Software or any substantial portion.
-
-────────────────────────────────────────────────────────────────────────────────
-
-GRANT OF RIGHTS — COURSE CONTENT
-
-Course content (site/src/content/, engine/curriculum/) is licensed separately
-under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
-
-  https://creativecommons.org/licenses/by-nc/4.0/
-
-You are free to share and adapt the content for non-commercial purposes,
-provided you give appropriate credit to manojpisini and the original
-course authors.
-
-────────────────────────────────────────────────────────────────────────────────
-
-CONTRIBUTIONS
-
-By submitting a pull request or contribution to this repository, You agree that:
-
-  1. Your contribution is Your original work or You have the right to submit it.
-  2. You grant manojpisini a perpetual, irrevocable, worldwide, royalty-free
-     license to use, modify, and distribute Your contribution as part of
-     The Software under this license.
-  3. You retain copyright to Your contribution but transfer no exclusive rights.
-
-────────────────────────────────────────────────────────────────────────────────
-
-OWNERSHIP & TRADEMARKS
-
-manojpisini retains full ownership of:
-  — The OpenCourses platform and brand
-  — The "OpenCourses" name and wordmark
-  — The site design system and visual identity
-  — All GitHub Actions automation and engine architecture
-
-Nothing in this license transfers ownership of The Software to You.
-
-────────────────────────────────────────────────────────────────────────────────
-
-DISCLAIMER
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED. IN NO EVENT SHALL OPENCOURSES-ORG BE LIABLE FOR ANY CLAIM, DAMAGES,
-OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
-
-────────────────────────────────────────────────────────────────────────────────
-
-For commercial licensing inquiries, contact: manojpisini@users.noreply.github.com
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
