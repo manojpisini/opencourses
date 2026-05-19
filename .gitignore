@@ -9,7 +9,8 @@ site/.astro/
 engine/dist/
 engine/dist/certs/
 
-# ── Lock files (keep bun.lockb) ───────────────────────────────────────────────
+# ── Lock files ───────────────────────────────────────────────────────────────
+bun.lock
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
@@ -54,11 +55,10 @@ coverage/
 # ── Spec files (not shipped) ─────────────────────────────────────────────────
 GITHUB-COURSE-ENGINE.md
 OPENCOURSES-WEBSITE-SPEC.md
-SETUP.md
+SETUP_AND_TESTING.md
 
 # ── Reference / design prototype (not shipped) ───────────────────────────────
 opencourses/
 
 # ── Site lock file (bun.lockb is canonical) ──────────────────────────────────
 site/package-lock.json
-
