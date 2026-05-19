@@ -14,16 +14,52 @@ export function repoFromEnv(): { owner: string; repo: string } {
   return { owner, repo };
 }
 
+// ─── GitHub profile ───────────────────────────────────────────────────────────
+
+export interface GitHubProfile {
+  login:      string;
+  name:       string;      // display name (falls back to login)
+  avatarUrl:  string;
+  profileUrl: string;
+  email?:     string;      // only set if the user has made it public
+  company?:   string;
+  location?:  string;
+  bio?:       string;
+}
+
+/**
+ * Fetch a GitHub user's public profile.
+ * The name is used for certificate generation when the enrollment form
+ * does not include a separate "Full Name" field.
+ */
+export async function fetchGitHubProfile(
+  octokit: Octokit,
+  login: string,
+): Promise<GitHubProfile> {
+  const { data } = await octokit.users.getByUsername({ username: login });
+  return {
+    login:      data.login,
+    name:       data.name?.trim() || data.login,   // fall back to username
+    avatarUrl:  data.avatar_url,
+    profileUrl: data.html_url,
+    email:      data.email ?? undefined,
+    company:    data.company ?? undefined,
+    location:   data.location ?? undefined,
+    bio:        data.bio ?? undefined,
+  };
+}
+
 // ─── Labels ───────────────────────────────────────────────────────────────────
 
 const LABEL_COLORS: Record<string, string> = {
-  enrolled:               '2ea44f',
-  certified:              'f5c542',
-  'quiz-submit':          '0075ca',
-  'project-submit':       'e4e669',
-  'chapter-complete':     '0e8a16',
-  'course-complete':      'fbca04',
-  'pending-review':       'd93f0b',
+  enrolled:           '2ea44f',
+  certified:          'f5c542',
+  'quiz-submit':      '0075ca',
+  'project-submit':   'e4e669',
+  'chapter-complete': '0e8a16',
+  'course-complete':  'fbca04',
+  'pending-review':   'd93f0b',
+  'final-test':       '8250df',
 };
 
 function labelColor(name: string): string {
@@ -57,6 +93,18 @@ export async function addLabels(
   await octokit.issues.addLabels({ owner, repo, issue_number: issueNumber, labels });
 }
 
+export async function removeLabel(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  issueNumber: number,
+  label: string,
+): Promise<void> {
+  try {
+    await octokit.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: label });
+  } catch { /* already absent — ignore */ }
+}
+
 // ─── Comments ─────────────────────────────────────────────────────────────────
 
 export async function postComment(
@@ -88,9 +136,20 @@ function escapeRegex(s: string): string {
 
 // ─── Enrollment issue helpers ─────────────────────────────────────────────────
 
+export interface EnrollmentIssue {
+  number:      number;
+  labels:      string[];
+  /** Name stored in issue body (for cert). Falls back to GitHub login. */
+  displayName: string;
+  /** Email stored in issue body (for cert delivery). May be empty. */
+  certEmail:   string;
+  createdAt:   string;
+}
+
 /**
  * Find the open enrollment issue for a given student + course.
- * Returns null if not found.
+ * The enrollment issue is the SINGLE progress record for that GitHub user.
+ * Returns null if the user is not enrolled.
  */
 export async function findEnrollmentIssue(
   octokit: Octokit,
@@ -98,7 +157,7 @@ export async function findEnrollmentIssue(
   repo: string,
   login: string,
   courseSlug: string,
-): Promise<{ number: number; labels: string[] } | null> {
+): Promise<EnrollmentIssue | null> {
   let page = 1;
   while (true) {
     const { data } = await octokit.issues.listForRepo({
@@ -109,9 +168,17 @@ export async function findEnrollmentIssue(
     if (data.length === 0) break;
     for (const issue of data) {
       if (issue.user?.login === login) {
+        const body       = issue.body ?? '';
+        const certEmail  = parseIssueField(body, 'Email Address');
+        // Name stored in issue body metadata comment (first line after "<!-- name: ... -->")
+        const nameMatch  = body.match(/<!--\s*name:\s*(.+?)\s*-->/);
+        const displayName = nameMatch?.[1] ?? login;
         return {
-          number: issue.number,
-          labels: issue.labels.map((l) => (typeof l === 'string' ? l : l.name ?? '')),
+          number:      issue.number,
+          labels:      issue.labels.map((l) => (typeof l === 'string' ? l : l.name ?? '')),
+          displayName,
+          certEmail,
+          createdAt:   issue.created_at,
         };
       }
     }

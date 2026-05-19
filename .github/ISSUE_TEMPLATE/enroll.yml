@@ -1,6 +1,6 @@
 name: 📚 Enroll in a Course
 description: Start your learning journey — enroll in an OpenCourse
-title: "[Enrollment] @YOUR_USERNAME — COURSE_SLUG"
+title: "[Enrolled] @YOUR_GITHUB_USERNAME — COURSE_SLUG"
 labels:
   - enrollment-request
 assignees: []
@@ -10,15 +10,21 @@ body:
     attributes:
       value: |
         ## Welcome to OpenCourses! 🎉
-        Fill in this form to enroll. An automated welcome message with your full curriculum will be posted within minutes.
-        **Keep this issue open** — it tracks your entire progress.
+
+        Your **GitHub account** (`@your-username`) is your identity for everything:
+        enrollment tracking, chapter tests, the final test, and certificate issuance.
+        No separate account needed — just your GitHub profile.
+
+        Fill in the two fields below and submit. An automated welcome message with your full curriculum will appear within minutes.
+
+        > **Keep this issue open** — it is your progress record. Every chapter test pass, project pass, and the final certificate will be tracked here as GitHub labels.
 
   - type: input
-    id: full_name
+    id: course
     attributes:
-      label: Full Name
-      description: Your real name (used for certificate generation)
-      placeholder: "Jane Doe"
+      label: Course Slug
+      description: The exact slug of the course you want to enroll in (check the course catalog)
+      placeholder: "git-mastery"
     validations:
       required: true
 
@@ -26,34 +32,26 @@ body:
     id: email
     attributes:
       label: Email Address
-      description: Used for certificate delivery only — not shown publicly
-      placeholder: "jane@example.com"
+      description: |
+        Used **only** for certificate delivery — stored privately in this issue body, never shown publicly.
+        Leave blank if you prefer to receive the certificate only via GitHub.
+      placeholder: "you@example.com"
     validations:
-      required: true
-
-  - type: input
-    id: course
-    attributes:
-      label: Course
-      description: The course slug you want to enroll in
-      placeholder: "git-mastery"
-    validations:
-      required: true
+      required: false
 
   - type: textarea
     id: goal
     attributes:
-      label: Your Goal
-      description: What do you hope to achieve? (optional)
-      placeholder: "I want to be comfortable contributing to open-source projects using Git."
+      label: Your Goal (optional)
+      description: What do you hope to achieve by completing this course?
+      placeholder: "I want to contribute to open-source projects confidently using Git."
     validations:
       required: false
 
   - type: dropdown
     id: experience
     attributes:
-      label: Experience Level
-      description: Your current level with this topic
+      label: Current Experience Level
       options:
         - Complete beginner
         - Some exposure
@@ -67,9 +65,9 @@ body:
     attributes:
       label: Agreements
       options:
+        - label: I understand my GitHub username is my identity for all tests and the certificate
+          required: true
         - label: I will submit my own original work
           required: true
         - label: I have read and agree to the [Code of Conduct](../CODE_OF_CONDUCT.md)
-          required: true
-        - label: I understand progress is tracked via GitHub labels on this issue
           required: true

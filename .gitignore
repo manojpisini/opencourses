@@ -52,6 +52,10 @@ coverage/
 # ── Grading (CI only) ─────────────────────────────────────────────────────────
 /tmp/test-results.json
 
+# ── Course reference solutions (keep private) ─────────────────────────────────
+engine/courses/*/assets/solutions/**
+!engine/courses/*/assets/solutions/.gitkeep
+
 # ── Spec files (not shipped) ─────────────────────────────────────────────────
 GITHUB-COURSE-ENGINE.md
 OPENCOURSES-WEBSITE-SPEC.md

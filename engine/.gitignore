@@ -54,3 +54,8 @@ secring.gpg
 
 # Temporary grading output (only exists in CI)
 /tmp/test-results.json
+
+# Course reference solutions — keep out of public repo
+# Authors: put real solutions in a private branch or a private repo
+engine/courses/*/assets/solutions/**
+!engine/courses/*/assets/solutions/.gitkeep
