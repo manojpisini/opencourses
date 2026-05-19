@@ -214,7 +214,7 @@
     if (detailTitle) detailTitle.textContent = n.title;
     if (detailMeta) detailMeta.textContent = `${course?.modules || ''} modules · ${course?.duration || ''} · ★ ${n.popularity}`;
     if (detailDesc) detailDesc.textContent = course?.description || '';
-    if (detailLink) { detailLink.href = `/courses/${n.id}`; }
+    if (detailLink) { detailLink.href = `${window.OC_BASE || ''}/courses/${n.id}`; }
     detail?.removeAttribute('hidden');
     render();
   }

@@ -11,6 +11,7 @@
   const COURSES      = window.OC_COURSES      || [];
   const TRACKS       = window.OC_TRACKS       || [];
   const CONTRIBUTORS = window.OC_CONTRIBUTORS || [];
+  const BASE         = window.OC_BASE         || '';
 
   let selected = 0;
   let flatItems = [];
@@ -57,9 +58,9 @@
     const contributors = scored(CONTRIBUTORS, c => `${c.login} ${c.name}`, 4);
 
     flatItems = [];
-    courses.forEach(c => flatItems.push({ kind: 'course', item: c, url: `/courses/${c.slug}` }));
-    tracks.forEach(t => flatItems.push({ kind: 'track', item: t, url: `/tracks#${t.slug}` }));
-    contributors.forEach(c => flatItems.push({ kind: 'contributor', item: c, url: `/contributors` }));
+    courses.forEach(c => flatItems.push({ kind: 'course', item: c, url: `${BASE}/courses/${c.slug}` }));
+    tracks.forEach(t => flatItems.push({ kind: 'track', item: t, url: `${BASE}/tracks#${t.slug}` }));
+    contributors.forEach(c => flatItems.push({ kind: 'contributor', item: c, url: `${BASE}/contributors/${c.login}` }));
 
     if (countEl) countEl.textContent = `${flatItems.length} result${flatItems.length !== 1 ? 's' : ''}`;
 

@@ -30,6 +30,7 @@
 
 // ── Keyboard shortcut Ctrl/Cmd+K ──────────────────────────────
 function openCmdPalette() {
+  if (window._ocCmdOpen) { window._ocCmdOpen(); return; }
   const overlay = document.getElementById('cmdp-overlay');
   const input = document.getElementById('cmdp-input');
   if (!overlay) return;

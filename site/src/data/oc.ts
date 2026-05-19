@@ -419,7 +419,6 @@ export const STATS = {
 // Track colors (mirrors CSS)
 // ============================================================
 export const TRACK_COLORS: Record<string, string> = {
-  rust: "#f74c00",
   web: "#4f9eff",
   systems: "#a78bfa",
   devops: "#34d399",

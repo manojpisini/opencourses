@@ -33,6 +33,7 @@ const ocData = {
   CONTRIBUTORS: OC.CONTRIBUTORS,
   TRACK_COLORS: OC.TRACK_COLORS,
   GRAPH: OC.GRAPH,
+  BASE_URL: base,
 };
 ---
 
@@ -48,7 +49,9 @@ const ocData = {
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OpenCourses" />
+    <meta property="og:image" content={`${siteUrl}${base}/og-image.svg`} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={`${siteUrl}${base}/og-image.svg`} />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -73,6 +76,7 @@ const ocData = {
       window.OC_CONTRIBUTORS = ocData.CONTRIBUTORS;
       window.OC_TRACK_COLORS = ocData.TRACK_COLORS;
       window.OC_GRAPH        = ocData.GRAPH;
+      window.OC_BASE         = ocData.BASE_URL;
     </script>
     <!-- Global JS (theme, Ctrl+K, build bar) -->
     <script is:inline src={`${base}/js/oc.js`}></script>

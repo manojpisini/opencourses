@@ -1,80 +1,85 @@
 ---
 import Base from '../../layouts/Base.astro';
-import ContributorAvatar from '../../components/ui/ContributorAvatar.astro';
-import CourseCard from '../../components/ui/CourseCard.astro';
-import contributors from '../../data/contributors.json';
-import courses from '../../data/courses.json';
+import Avatar from '../../components/Avatar.astro';
+import CourseCard from '../../components/CourseCard.astro';
+import OC from '../../data/oc';
 
-export async function getStaticPaths() {
-  return contributors.map(c => ({
+export function getStaticPaths() {
+  return OC.CONTRIBUTORS.map(c => ({
     params: { login: c.login },
     props: { contributor: c },
   }));
 }
 
 interface Props {
-  contributor: (typeof contributors)[number];
+  contributor: (typeof OC.CONTRIBUTORS)[number];
 }
 
 const { contributor } = Astro.props;
-const maintainedCourses = courses.filter(c => c.maintainer === contributor.login);
-const joinedDate = new Date(contributor.joinedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const maintainedCourses = OC.COURSES.filter(c =>
+  c.maintainer === contributor.login || c.contributors.includes(contributor.login)
+);
+const tracks = [...new Set(maintainedCourses.map(c => c.track))];
 ---
 
 <Base title={`@${contributor.login}`} description={`${contributor.name} — OpenCourses contributor`}>
-  <div class="container py-10">
+  <div class="container" style="padding-top:2.5rem;padding-bottom:3rem">
+
+    <!-- Breadcrumb -->
+    <div class="page-head__crumbs" style="margin-bottom:1.5rem">
+      <a href={`${base}/`}>~</a>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      <a href={`${base}/contributors`}>contributors</a>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      <span>{contributor.login}</span>
+    </div>
+
     <!-- Profile header -->
-    <div class="flex items-start gap-6 mb-10 flex-wrap">
-      <ContributorAvatar login={contributor.login} avatarUrl={contributor.avatarUrl} size="xl" showTooltip={false} />
+    <div style="display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap;margin-bottom:2.5rem">
+      <Avatar login={contributor.login} size="2xl" />
       <div>
-        <h1 class="font-display text-3xl font-bold text-[var(--text-primary)] mb-1">{contributor.name}</h1>
-        <div class="font-mono text-sm text-[var(--text-muted)] mb-2">@{contributor.login}</div>
-        {contributor.bio && <p class="text-[var(--text-secondary)] mb-4">{contributor.bio}</p>}
-        <div class="flex flex-wrap gap-4 text-sm font-mono text-[var(--text-muted)]">
-          <span>📦 {contributor.courses} courses</span>
-          <span>⚡ {contributor.commits} commits</span>
-          <span>🗓 Joined {joinedDate}</span>
+        <h1 style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;color:var(--text-primary);margin:0 0 0.25rem">{contributor.name}</h1>
+        <div style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem">@{contributor.login}</div>
+        <div style="font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);background:var(--bg-raised);display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:0.75rem">{contributor.role}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:1.25rem;font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">
+          <span>{contributor.commits} commits</span>
+          <span>{contributor.courses} courses</span>
         </div>
-        <div class="flex flex-wrap gap-2 mt-3">
-          {contributor.tracks.map(track => (
-            <a href={`/courses?track=${track}`} class="tag-chip capitalize">{track}</a>
-          ))}
-        </div>
+        {tracks.length > 0 && (
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem">
+            {tracks.map(track => (
+              <a href={`${base}/courses?track=${track}`} class="tag-chip" style="text-transform:capitalize">{track}</a>
+            ))}
+          </div>
+        )}
         <a
-          href={contributor.profileUrl}
+          href={`https://github.com/${contributor.login}`}
           target="_blank"
           rel="noopener noreferrer"
-          class="btn-secondary !py-1.5 !px-3 !text-sm mt-4 inline-flex"
+          class="btn btn-secondary btn-sm"
+          style="margin-top:0.25rem;display:inline-flex;align-items:center;gap:0.4rem"
         >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
           View on GitHub ↗
         </a>
       </div>
     </div>
 
     <!-- Maintained courses -->
-    {maintainedCourses.length > 0 && (
+    {maintainedCourses.length > 0 ? (
       <div>
-        <h2 class="font-display text-xl font-bold text-[var(--text-primary)] mb-4">
-          Courses by @{contributor.login}
-        </h2>
-        <div class="course-grid">
-          {maintainedCourses.map((course, i) => (
-            <CourseCard
-              title={course.title}
-              description={course.description}
-              slug={course.slug}
-              difficulty={course.difficulty as any}
-              modules={course.modules}
-              duration={course.duration}
-              updatedAt={course.updatedAt}
-              status={course.status as any}
-              tags={course.tags}
-              track={course.track}
-              stars={course.stars}
-              index={i}
-            />
-          ))}
+        <div class="section-head" style="margin-bottom:1.25rem">
+          <h2 class="section-head__title">Courses by @{contributor.login}</h2>
+          <span style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted)">{maintainedCourses.length} course{maintainedCourses.length !== 1 ? 's' : ''}</span>
         </div>
+        <div class="course-grid">
+          {maintainedCourses.map(course => <CourseCard course={course} />)}
+        </div>
+      </div>
+    ) : (
+      <div style="text-align:center;padding:3rem 0;color:var(--text-muted);font-family:var(--font-mono);font-size:0.9rem">
+        No courses yet.
       </div>
     )}
   </div>

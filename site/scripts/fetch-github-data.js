@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(__dirname, '..', 'src', 'data');
-const org = 'opencourse';
+const org = process.env.ORG || 'opencourses-org';
 
 const headers = {
   Accept: 'application/vnd.github+json',

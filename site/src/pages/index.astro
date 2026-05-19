@@ -162,7 +162,7 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px">
         {topContributors.map(c => (
-          <a href={`${base}/contributors`} class="contributor-card">
+          <a href={`${base}/contributors/${c.login}`} class="contributor-card">
             <Avatar login={c.login} size="md" />
             <div class="contributor-card__name">@{c.login}</div>
             <div class="contributor-card__role">{c.role}</div>
