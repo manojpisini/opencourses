@@ -85,23 +85,22 @@ export function gradeShort(q: ShortQuestion, raw: string): QuestionResult {
  * sandbox and results are written to a JSON file.  Here we compare
  * expected vs actual outputs reported by the sandbox.
  */
+/**
+ * Grade a code question from sandbox output.
+ * Works for both static test_cases and dynamic test_generator results —
+ * the caller passes the sandbox output directly; this function just maps
+ * it to a QuestionResult with proportional partial credit.
+ */
 export function gradeCode(
   q: CodeQuestion,
-  testResults: Array<{ input: string; actual: string; passed: boolean }>,
+  sandboxResults: Array<{ passed: boolean; hidden?: boolean }>,
 ): QuestionResult {
-  const visible = q.test_cases.filter((tc) => !tc.hidden);
-  const hidden  = q.test_cases.filter((tc) => tc.hidden);
-
-  const totalCases = q.test_cases.length;
-  const passedVisible = testResults
-    .filter((r) => visible.some((tc) => tc.input === r.input) && r.passed).length;
-  const passedHidden = testResults
-    .filter((r) => hidden.some((tc) => tc.input === r.input) && r.passed).length;
-
-  const totalPassed = passedVisible + passedHidden;
-  const ratio       = totalCases > 0 ? totalPassed / totalCases : 0;
-  const earned      = Math.round(q.points * ratio);
-  const correct     = ratio === 1;
+  const total   = sandboxResults.length;
+  const passed  = sandboxResults.filter((r) => r.passed).length;
+  const ratio   = total > 0 ? passed / total : 0;
+  const earned  = Math.round(q.points * ratio);
+  const correct = ratio === 1;
+  const mode    = q.test_generator ? `dynamic (seed-based)` : `static`;
 
   return {
     questionId: q.id,
@@ -110,7 +109,7 @@ export function gradeCode(
     correct,
     feedback:   correct
       ? undefined
-      : `${totalPassed}/${totalCases} test cases passed.`,
+      : `${passed}/${total} test cases passed (${mode}).`,
   };
 }
 

@@ -1,52 +1,49 @@
 # OpenCourses Grading Sandbox
-# Hardened container for running student assignment submissions
+# Generic multi-language code runner with dynamic test-case generation.
 #
-# Security properties:
+# Security hardening applied at runtime:
 #   --network none          no network access during grading
-#   --memory 128m           memory cap
-#   --cpus 0.5              CPU cap
+#   --memory 256m           memory cap
+#   --cpus 1                CPU cap
 #   --read-only             immutable root filesystem
-#   --tmpfs /tmp            writable scratch space only
+#   --tmpfs /tmp:size=100m  writable scratch space only
 #   --user 1001:1001        non-root execution
 #   --security-opt no-new-privileges
 
-FROM debian:bookworm-slim AS base
+FROM debian:bookworm-slim
 
-# Install runtimes without recommends to keep image minimal
+# ── System runtimes ────────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
-    python3-pytest \
     nodejs \
     npm \
+    default-jdk-headless \
+    golang-go \
+    gcc \
+    g++ \
+    bash \
     curl \
-    git \
-    unzip \
     ca-certificates \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Bun
-RUN curl -fsSL https://bun.sh/install | bash && \
-    mv /root/.bun/bin/bun /usr/local/bin/bun
+# ── Python packages ────────────────────────────────────────────────────────────
+RUN pip3 install --no-cache-dir pytest 2>/dev/null || true
 
-# Install common Python test tooling
-RUN pip3 install --no-cache-dir pytest pytest-cov 2>/dev/null || true
+# ── Non-root grader user ───────────────────────────────────────────────────────
+RUN groupadd -g 1001 grader && \
+    useradd -u 1001 -g 1001 -m -s /bin/bash grader && \
+    mkdir -p /tmp/results && chown grader:grader /tmp/results
 
-# Create non-root grader user
-RUN groupadd -g 1001 grader && useradd -u 1001 -g 1001 -m -s /bin/bash grader
-
-# Create writable scratch space
-RUN mkdir -p /tmp/results && chown grader:grader /tmp/results
-
-# Copy graders into image (read-only mount in production via --read-only)
+# ── Grader scripts ─────────────────────────────────────────────────────────────
 WORKDIR /grader
-COPY scripts/graders/ ./graders/
-COPY package.json ./
-RUN bun install --production 2>/dev/null || npm ci --production 2>/dev/null || true
+COPY sandbox/run_and_compare.py ./run_and_compare.py
+COPY sandbox/grade.sh           ./grade.sh
+RUN chmod +x /grader/grade.sh
 
-# Switch to non-root
 USER grader
 
-# Default: run stage-01 grader. Override with:
-# docker run ... -e STAGE=02 opencourse-sandbox
-ENTRYPOINT ["sh", "-c", "bun run /grader/graders/stage-${STAGE:-01}.ts"]
+# ── Entrypoint ─────────────────────────────────────────────────────────────────
+# All configuration is passed via environment variables — see grade.sh.
+ENTRYPOINT ["/grader/grade.sh"]

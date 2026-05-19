@@ -186,24 +186,57 @@ chapters:
             would produce a different hash — a new object — leaving the original intact.
           points: 20
 
-        # Code — test cases run in Docker sandbox
+        # ── Code question — STATIC test cases ──────────────────────────────
+        # Use when all correct implementations produce identical output for
+        # a known set of inputs (e.g. "create this file and stage it").
+        # Students CAN see these in course.md — hardcoding is still caught
+        # because the sandbox runs their actual code, not just checks a string.
         - id: q5
           type: code
           question: |
             Write a single shell command that creates `hello.txt` containing the text
-            "Hello, Git!" and stages it.
+            "Hello, Git!" and stages it for commit.
           language: bash
           starter_code: "# Your command here"
           test_cases:
-            - input: "cat hello.txt"
+            - input: ""
               expected_output: "Hello, Git!"
               description: "File content is correct"
               hidden: false
-            - input: "git status --short"
+            - input: ""
               expected_output: "A  hello.txt"
-              description: "File is staged"
+              description: "File is staged (git status --short)"
               hidden: false
           points: 20
+
+        # ── Code question — DYNAMIC test generator ───────────────────────
+        # Use when the problem is algorithmic and static inputs would let
+        # students hardcode answers. The generator script runs with a fresh
+        # random seed each submission — students never see the same inputs twice.
+        #
+        # The generator:
+        #   - lives in ./assets/tests/<id>-gen.py  (or .js)
+        #   - accepts --seed <int> --count <int>
+        #   - prints a JSON array of {input, expected_output, description?, hidden?}
+        #   - computes expected_output algorithmically from input
+        #
+        # Reference solutions in assets/solutions/ are for the instructor only;
+        # grading is done by comparing student stdout to generator output — no
+        # reference solution is ever executed or compared.
+        - id: q6
+          type: code
+          question: |
+            Read a JSON array of integers from stdin.
+            Print the sorted array as JSON on a single line.
+            Example — input: [3,1,2]  output: [1,2,3]
+          language: python
+          starter_code: |
+            import json, sys
+            data = json.load(sys.stdin)
+            # TODO: sort and print
+          test_generator: "./assets/tests/q5-sort-gen.py"
+          test_count: 10        # 10 random cases per submission (last 2 hidden)
+          points: 25
 
     # ── Chapter Project (optional) ─────────────────────────────────────────────
     project:

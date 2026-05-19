@@ -3,72 +3,156 @@
  * quiz-engine.ts — Grade quiz / chapter-test / final-test submissions.
  * Zero AI — pure algorithmic grading.
  *
- * Identity model:
- *   The GitHub username (@student) IS the identity.
- *   Before grading we verify an open enrollment issue exists for that user
- *   on the requested course.  The final test is only unlocked after all
- *   chapter tests on the same enrollment issue are passed.
+ * Question types and how they are graded:
+ *   mcq        → exact letter match              (no sandbox)
+ *   multi      → sorted-array exact match        (no sandbox)
+ *   true-false → exact boolean match             (no sandbox)
+ *   short      → keyword presence (min N of M)   (no sandbox)
+ *   code       → Docker sandbox, two modes:
+ *                  static:  test_cases in course.md  → deterministic I/O
+ *                  dynamic: test_generator script    → random inputs each run
+ *
+ * Identity / enrollment model:
+ *   The submitter's GitHub @username must have an open enrollment issue for
+ *   the requested course. All chapter tests + final test + certificate are
+ *   tied to that same GitHub account.
  *
  * Triggered by: .github/workflows/run-quiz.yml
  * Env vars: GITHUB_TOKEN, REPO, ISSUE_NUMBER, STUDENT
+ *           SANDBOX_IMAGE  (default: opencourse-sandbox)
+ *           COURSE_DIR     (default: engine/courses)
  */
 
-import * as fs   from 'fs';
-import * as path from 'path';
+import * as fs            from 'fs';
+import * as path          from 'path';
+import { execSync }       from 'child_process';
 import { parseCourseFile } from '../lib/course-parser.ts';
-import { gradeTest, parseAnswersFromIssueBody, progressBar } from '../lib/scoring.ts';
+import { gradeMCQ, gradeMulti, gradeTrueFalse, gradeShort, gradeCode, parseAnswersFromIssueBody, progressBar } from '../lib/scoring.ts';
 import {
   makeOctokit, repoFromEnv, parseIssueField, postComment,
   addLabels, findEnrollmentIssue, setOutput,
 } from '../lib/github.ts';
-import type { Question, ChapterTest, Course } from '../types/course.ts';
+import type { Question, ChapterTest, Course, CodeQuestion, QuestionResult, SandboxOutput } from '../types/course.ts';
 
 const octokit         = makeOctokit();
 const { owner, repo } = repoFromEnv();
 const issueNumber     = parseInt(process.env['ISSUE_NUMBER'] ?? '0', 10);
 const student         = process.env['STUDENT'] ?? '';
+const SANDBOX_IMAGE   = process.env['SANDBOX_IMAGE'] ?? 'opencourse-sandbox';
+const COURSE_BASE_DIR = process.env['COURSE_DIR'] ?? 'engine/courses';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function findCoursePath(slug: string): string | null {
-  return [`engine/courses/${slug}/course.md`, `courses/${slug}/course.md`]
+  return [`${COURSE_BASE_DIR}/${slug}/course.md`, `courses/${slug}/course.md`]
     .find((p) => fs.existsSync(p)) ?? null;
 }
 
-type FoundTest = { test: ChapterTest; chapterId?: string; isFinalTest: boolean };
-
-function findTest(course: Course, id: string): FoundTest | null {
+function findTest(course: Course, id: string): { test: ChapterTest; chapterId?: string; isFinalTest: boolean } | null {
   for (const ch of course.chapters) {
-    if (ch.chapter_test.id === id)
-      return { test: ch.chapter_test, chapterId: ch.id, isFinalTest: false };
+    if (ch.chapter_test.id === id) return { test: ch.chapter_test, chapterId: ch.id, isFinalTest: false };
     for (const l of ch.lessons) {
-      if (l.quiz?.id === id)
-        return { test: l.quiz as unknown as ChapterTest, chapterId: ch.id, isFinalTest: false };
+      if (l.quiz?.id === id) return { test: l.quiz as unknown as ChapterTest, chapterId: ch.id, isFinalTest: false };
     }
   }
-  if (course.certificate.final_test?.id === id)
-    return { test: course.certificate.final_test, isFinalTest: true };
+  if (course.certificate.final_test?.id === id) return { test: course.certificate.final_test, isFinalTest: true };
   return null;
 }
 
-/** Count how many grading result comments already exist on this issue. */
 async function getAttemptCount(): Promise<number> {
   const { data } = await octokit.issues.listComments({ owner, repo, issue_number: issueNumber });
-  return data.filter((c) =>
-    c.body?.includes('PASSED') || c.body?.includes('FAILED'),
-  ).length + 1;
+  return data.filter((c) => c.body?.includes('PASSED') || c.body?.includes('FAILED')).length + 1;
 }
 
-// ─── Chapter-completion check ─────────────────────────────────────────────────
+function allChaptersPassed(course: Course, labels: string[]): boolean {
+  return course.chapters.every((ch) => labels.includes(`chapter-${ch.id}-passed`));
+}
 
-/**
- * Returns true if all chapter tests on the enrollment issue are labelled
- * as passed — used to gate the final test.
- */
-function allChaptersPassed(course: Course, enrollmentLabels: string[]): boolean {
-  return course.chapters.every((ch) =>
-    enrollmentLabels.includes(`chapter-${ch.id}-passed`),
-  );
+// ─── Code question grading (Docker sandbox) ───────────────────────────────────
+
+const LANG_EXT: Record<string, string> = {
+  python: '.py', python3: '.py',
+  javascript: '.js', js: '.js', node: '.js',
+  bash: '.sh', sh: '.sh',
+  java: '.java', go: '.go',
+  c: '.c', cpp: '.cpp', 'c++': '.cpp',
+};
+
+function runSandbox(q: CodeQuestion, studentCode: string, courseDir: string): QuestionResult {
+  const seed    = Math.floor(Math.random() * 2 ** 31);
+  const ext     = LANG_EXT[q.language.toLowerCase()] ?? '.txt';
+  const codeFile = `/tmp/oc_student_${q.id}${ext}`;
+  const outFile  = `/tmp/oc_result_${q.id}.json`;
+
+  // Write student code to a temp file
+  fs.writeFileSync(codeFile, studentCode);
+
+  // Prepare Docker args
+  const baseArgs = [
+    `--rm`,
+    `--network none`,
+    `--memory 256m --cpus 1`,
+    `--read-only`,
+    `--tmpfs /tmp:size=100m`,
+    `--user 1001:1001`,
+    `--security-opt no-new-privileges`,
+    `-v ${path.resolve(courseDir)}:/workspace/course:ro`,
+    `-v ${codeFile}:${codeFile}:ro`,
+    `-v /tmp:/tmp`,
+    `-e LANGUAGE=${q.language}`,
+    `-e STUDENT_CODE_FILE=${codeFile}`,
+    `-e TEST_OUTPUT_FILE=${outFile}`,
+    `-e COURSE_DIR=/workspace/course`,
+  ];
+
+  if (q.test_generator) {
+    baseArgs.push(
+      `-e TEST_GENERATOR=${q.test_generator}`,
+      `-e SEED=${seed}`,
+      `-e TEST_COUNT=${q.test_count ?? 10}`,
+    );
+  } else if (q.test_cases && q.test_cases.length > 0) {
+    const casesFile = `/tmp/oc_cases_${q.id}.json`;
+    fs.writeFileSync(casesFile, JSON.stringify(q.test_cases));
+    baseArgs.push(`-e TEST_CASES_FILE=${casesFile}`, `-v ${casesFile}:${casesFile}:ro`);
+  }
+
+  try {
+    console.log(`  Running sandbox for code question "${q.id}" (${q.language}, seed=${seed})`);
+    execSync(`docker run ${baseArgs.join(' ')} ${SANDBOX_IMAGE}`, { stdio: 'inherit', timeout: 60_000 });
+  } catch (e) {
+    console.error(`  Sandbox error for "${q.id}":`, (e as Error).message);
+    return { questionId: q.id, earned: 0, max: q.points, correct: false, feedback: 'Sandbox execution failed.' };
+  }
+
+  if (!fs.existsSync(outFile)) {
+    return { questionId: q.id, earned: 0, max: q.points, correct: false, feedback: 'No output from sandbox.' };
+  }
+
+  const out: SandboxOutput = JSON.parse(fs.readFileSync(outFile, 'utf-8'));
+  const result = gradeCode(q, out.tests);
+
+  // Append seed to feedback for dynamic questions (reproducibility)
+  if (q.test_generator && !result.correct) {
+    return { ...result, feedback: `${result.feedback ?? ''} Seed: ${seed} (share with maintainer to reproduce).`.trim() };
+  }
+  return result;
+}
+
+// ─── Per-question grade dispatcher ───────────────────────────────────────────
+
+function gradeQuestion(
+  q: Question,
+  rawAnswer: string,
+  courseDir: string,
+): QuestionResult {
+  switch (q.type) {
+    case 'mcq':        return gradeMCQ(q, rawAnswer);
+    case 'multi':      return gradeMulti(q, rawAnswer);
+    case 'true-false': return gradeTrueFalse(q, rawAnswer);
+    case 'short':      return gradeShort(q, rawAnswer);
+    case 'code':       return runSandbox(q, rawAnswer, courseDir);
+  }
 }
 
 // ─── Result comment ───────────────────────────────────────────────────────────
@@ -77,37 +161,41 @@ function buildResultComment(
   testTitle: string,
   isFinalTest: boolean,
   courseSlug: string,
-  report: ReturnType<typeof gradeTest>,
+  results: QuestionResult[],
+  passScore: number,
   attempt: number,
   maxAttempts: number,
 ): string {
-  const pct    = report.percentage.toFixed(1);
-  const status = report.passed ? '✅ PASSED' : '❌ FAILED';
-  const bar    = progressBar(report.percentage);
-  const label  = isFinalTest ? 'Final Test' : 'Chapter Test';
+  const totalEarned = results.reduce((s, r) => s + r.earned, 0);
+  const totalMax    = results.reduce((s, r) => s + r.max, 0);
+  const pct         = totalMax > 0 ? (totalEarned / totalMax) * 100 : 0;
+  const passed      = pct >= passScore;
+  const status      = passed ? '✅ PASSED' : '❌ FAILED';
+  const bar         = progressBar(pct);
+  const label       = isFinalTest ? 'Final Test' : 'Chapter Test';
 
-  const rows = report.results.map((r) => {
+  const rows = results.map((r) => {
     const icon = r.correct ? '✅' : '❌';
     const fb   = r.feedback ? ` — _${r.feedback}_` : '';
     return `| ${icon} | \`${r.questionId}\` | ${r.earned}/${r.max} |${fb} |`;
   }).join('\n');
 
   const remaining = maxAttempts - attempt;
-  const retryNote = !report.passed
+  const retryNote = !passed
     ? (attempt < maxAttempts
-        ? `\n> **${remaining} attempt(s) remaining.** Review the material and try again by opening a new quiz submit issue.`
-        : `\n> **Maximum attempts (${maxAttempts}) reached.** Contact a maintainer for a manual review.`)
+        ? `\n> **${remaining} attempt(s) remaining.** Open a new quiz-submit issue to try again.`
+        : `\n> **Maximum attempts (${maxAttempts}) reached.** Contact a maintainer.`)
     : '';
 
-  const nextStep = report.passed
+  const nextStep = passed
     ? isFinalTest
-      ? `\n\n## 🏆 Final Test Passed!\n\nYour certificate is being processed. Check your enrollment issue shortly.`
-      : `\n\n## ✅ Chapter Complete!\n\nYour enrollment issue has been updated. Continue to the next chapter, then [submit the next chapter test](../../issues/new?template=quiz-submit.yml).`
+      ? `\n\n## 🏆 Final Test Passed!\nYour certificate is being processed.`
+      : `\n\n## ✅ Chapter Complete!\nContinue to the next chapter, then [submit your next chapter test](../../issues/new?template=quiz-submit.yml).`
     : '';
 
   return `## ${status} — ${label}: ${testTitle}
 
-**Student:** @${student} · **Course:** \`${courseSlug}\` · **Score:** ${report.totalEarned}/${report.totalMax} (${pct}%)
+**Student:** @${student} · **Course:** \`${courseSlug}\` · **Score:** ${totalEarned}/${totalMax} (${pct.toFixed(1)}%)
 
 ${bar}
 
@@ -123,12 +211,9 @@ _Graded automatically · Attempt ${attempt}/${maxAttempts} · [@${student}](http
 // ─── Certificate trigger ──────────────────────────────────────────────────────
 
 async function triggerCertificate(enrollmentIssueNumber: number, courseSlug: string) {
-  // Add the certified label — issue-cert.yml workflow watches for this
-  await addLabels(octokit, owner, repo, enrollmentIssueNumber, ['certified', `course:${courseSlug}`]);
-  console.log(`✓ Labeled enrollment issue #${enrollmentIssueNumber} with "certified"`);
-  // Post a note on the enrollment issue
+  await addLabels(octokit, owner, repo, enrollmentIssueNumber, ['certified']);
   await postComment(octokit, owner, repo, enrollmentIssueNumber,
-    `## 🎓 Certificate Unlocked!\n\n@${student} has passed all requirements for **\`${courseSlug}\`**.\n\nA certificate is being generated and will be posted here shortly.`);
+    `## 🎓 Certificate Unlocked!\n\n@${student} has met all requirements for **\`${courseSlug}\`**.\n\nA certificate is being generated and will appear here shortly.`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -139,18 +224,16 @@ async function main() {
   const { data: issue } = await octokit.issues.get({ owner, repo, issue_number: issueNumber });
   const body = issue.body ?? '';
 
-  // ── Resolve course + test from issue body ────────────────────────────────
   const resolvedCourse = parseIssueField(body, 'Course').toLowerCase().trim().replace(/\s+/g, '-');
   const resolvedTestId = parseIssueField(body, 'Test ID').trim();
 
   if (!resolvedCourse || !resolvedTestId) {
     await postComment(octokit, owner, repo, issueNumber,
-      `@${student} — Could not find **Course** or **Test ID** in this issue.\n\nPlease use the [quiz submit template](../../issues/new?template=quiz-submit.yml).`);
+      `@${student} — Could not find **Course** or **Test ID** fields.\n\nPlease use the [quiz submit template](../../issues/new?template=quiz-submit.yml).`);
     process.exit(1);
   }
 
   // ── Verify enrollment ────────────────────────────────────────────────────
-  // The submitter's GitHub username MUST have an open enrollment issue for this course.
   const enrollment = await findEnrollmentIssue(octokit, owner, repo, student, resolvedCourse);
   if (!enrollment) {
     await postComment(octokit, owner, repo, issueNumber,
@@ -159,27 +242,23 @@ async function main() {
     process.exit(1);
   }
 
-  // ── Load course + find test ──────────────────────────────────────────────
+  // ── Load course ──────────────────────────────────────────────────────────
   const coursePath = findCoursePath(resolvedCourse);
   if (!coursePath) {
-    await postComment(octokit, owner, repo, issueNumber,
-      `@${student} — Course \`${resolvedCourse}\` not found on the server.`);
+    await postComment(octokit, owner, repo, issueNumber, `@${student} — Course \`${resolvedCourse}\` not found.`);
     process.exit(1);
   }
-
+  const courseDir  = path.dirname(path.resolve(coursePath));
   const { course } = parseCourseFile(coursePath);
+
   const found = findTest(course, resolvedTestId);
   if (!found) {
     const validIds = [
-      ...course.chapters.flatMap((ch) => [
-        ch.chapter_test.id,
-        ...ch.lessons.map((l) => l.quiz?.id).filter(Boolean),
-      ]),
+      ...course.chapters.flatMap((ch) => [ch.chapter_test.id, ...ch.lessons.map((l) => l.quiz?.id).filter(Boolean)]),
       course.certificate.final_test?.id,
     ].filter(Boolean).map((id) => `\`${id}\``).join(', ');
-
     await postComment(octokit, owner, repo, issueNumber,
-      `@${student} — Test ID \`${resolvedTestId}\` not found in **\`${resolvedCourse}\`**.\n\nValid IDs: ${validIds}`);
+      `@${student} — Test \`${resolvedTestId}\` not found.\n\nValid test IDs: ${validIds}`);
     process.exit(1);
   }
 
@@ -189,10 +268,9 @@ async function main() {
   if (isFinalTest && !allChaptersPassed(course, enrollment.labels)) {
     const missing = course.chapters
       .filter((ch) => !enrollment.labels.includes(`chapter-${ch.id}-passed`))
-      .map((ch) => `- Chapter ${ch.id}: ${ch.title}`)
-      .join('\n');
+      .map((ch) => `- \`${ch.id}\`: ${ch.title}`).join('\n');
     await postComment(octokit, owner, repo, issueNumber,
-      `@${student} — The final test is only available after **all chapter tests are passed**.\n\nRemaining chapters:\n${missing}`);
+      `@${student} — The final test requires all chapter tests to be passed first.\n\nRemaining:\n${missing}`);
     await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
     process.exit(1);
   }
@@ -201,90 +279,82 @@ async function main() {
   const attempt = await getAttemptCount();
   if (attempt > test.max_attempts) {
     await postComment(octokit, owner, repo, issueNumber,
-      `@${student} — Maximum attempts (${test.max_attempts}) reached for \`${resolvedTestId}\`. Contact a maintainer.`);
+      `@${student} — Max attempts (${test.max_attempts}) reached for \`${resolvedTestId}\`.`);
     process.exit(1);
   }
 
-  // ── Grade ────────────────────────────────────────────────────────────────
+  // ── Grade each question ──────────────────────────────────────────────────
   const answers = parseAnswersFromIssueBody(body);
-  const report  = gradeTest({
-    testId:     resolvedTestId,
-    courseSlug: resolvedCourse,
-    student,
-    questions:  test.questions as Question[],
-    answers,
-    passScore:  test.pass_score,
-  });
+  const results: QuestionResult[] = [];
 
-  console.log(`Score: ${report.totalEarned}/${report.totalMax} (${report.percentage.toFixed(1)}%) — ${report.passed ? 'PASSED' : 'FAILED'}`);
+  for (const q of test.questions as Question[]) {
+    console.log(`  Grading ${q.type} question "${q.id}"…`);
+    const result = gradeQuestion(q, answers[q.id] ?? '', courseDir);
+    results.push(result);
+  }
+
+  const totalEarned = results.reduce((s, r) => s + r.earned, 0);
+  const totalMax    = results.reduce((s, r) => s + r.max, 0);
+  const pct         = totalMax > 0 ? (totalEarned / totalMax) * 100 : 0;
+  const passed      = pct >= test.pass_score;
+
+  console.log(`Score: ${totalEarned}/${totalMax} (${pct.toFixed(1)}%) — ${passed ? 'PASSED' : 'FAILED'}`);
 
   // ── Post result comment ──────────────────────────────────────────────────
-  const comment = buildResultComment(test.title, isFinalTest, resolvedCourse, report, attempt, test.max_attempts);
+  const comment = buildResultComment(test.title, isFinalTest, resolvedCourse, results, test.pass_score, attempt, test.max_attempts);
   await postComment(octokit, owner, repo, issueNumber, comment);
 
   // ── Update enrollment issue on pass ─────────────────────────────────────
-  if (report.passed) {
+  if (passed) {
     if (!isFinalTest && chapterId) {
-      // Mark chapter passed on enrollment issue
       await addLabels(octokit, owner, repo, enrollment.number, [`chapter-${chapterId}-passed`]);
       console.log(`✓ Enrollment #${enrollment.number}: chapter-${chapterId}-passed`);
 
-      // Re-fetch labels to check course completion
-      const refreshed = await findEnrollmentIssue(octokit, owner, repo, student, resolvedCourse);
+      const refreshed    = await findEnrollmentIssue(octokit, owner, repo, student, resolvedCourse);
       const currentLabels = refreshed?.labels ?? [...enrollment.labels, `chapter-${chapterId}-passed`];
 
       if (allChaptersPassed(course, currentLabels)) {
         if (!course.certificate.final_test && !course.certificate.requires_final_project) {
-          // No final test and no final project → mark course complete + trigger cert
           await addLabels(octokit, owner, repo, enrollment.number, ['course-complete']);
           await triggerCertificate(enrollment.number, resolvedCourse);
         } else {
-          // Final test/project still required
+          const nextStep = course.certificate.final_test
+            ? `Submit the **final test** (\`${course.certificate.final_test.id}\`) via [quiz submit](../../issues/new?template=quiz-submit.yml).`
+            : `Submit your **final project** via [project submit](../../issues/new?template=project-submit.yml).`;
           await postComment(octokit, owner, repo, enrollment.number,
-            `## 🎯 All Chapter Tests Passed!\n\n@${student} — all chapter tests in **\`${resolvedCourse}\`** are complete.\n\n${course.certificate.final_test ? `Next: submit the **final test** (\`${course.certificate.final_test.id}\`) via [quiz submit](../../issues/new?template=quiz-submit.yml).` : 'Next: submit your **final project** via [project submit](../../issues/new?template=project-submit.yml).'}`);
+            `## 🎯 All Chapter Tests Passed!\n\n@${student} — all chapters complete in **\`${resolvedCourse}\`**.\n\nNext: ${nextStep}`);
         }
       }
     }
 
     if (isFinalTest) {
-      // Mark final test passed, check all requirements, issue certificate
       await addLabels(octokit, owner, repo, enrollment.number, ['final-test-passed', 'course-complete']);
-
-      const requirementsOk =
+      const reqOk =
         (!course.certificate.requires_all_chapter_tests || allChaptersPassed(course, enrollment.labels)) &&
-        (!course.certificate.requires_final_project || enrollment.labels.includes('project-final-passed'));
-
-      if (requirementsOk) {
-        await triggerCertificate(enrollment.number, resolvedCourse);
-      }
+        (!course.certificate.requires_final_project     || enrollment.labels.includes('project-final-passed'));
+      if (reqOk) await triggerCertificate(enrollment.number, resolvedCourse);
     }
   }
 
-  // ── Close the quiz submit issue ──────────────────────────────────────────
-  await octokit.issues.update({
-    owner, repo, issue_number: issueNumber,
-    state: 'closed', state_reason: 'completed',
-  });
+  // ── Close quiz submit issue ──────────────────────────────────────────────
+  await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed', state_reason: 'completed' });
 
-  // ── Audit log ────────────────────────────────────────────────────────────
-  const entry = JSON.stringify({
+  // ── Audit ────────────────────────────────────────────────────────────────
+  fs.mkdirSync('audit', { recursive: true });
+  fs.appendFileSync(path.join('audit', 'log.jsonl'), JSON.stringify({
     ts: new Date().toISOString(), event: isFinalTest ? 'final-test-grade' : 'quiz-grade',
     actor: student, subject: `issue:${issueNumber}`,
     course: resolvedCourse, test: resolvedTestId, chapterId: chapterId ?? null,
-    score: report.totalEarned, max_score: report.totalMax,
-    percentage: report.percentage, passed: report.passed,
-    attempt, run_id: process.env['GITHUB_RUN_ID'],
-  });
-  fs.mkdirSync('audit', { recursive: true });
-  fs.appendFileSync(path.join('audit', 'log.jsonl'), entry + '\n');
+    score: totalEarned, max_score: totalMax, percentage: pct, passed, attempt,
+    run_id: process.env['GITHUB_RUN_ID'],
+  }) + '\n');
 
-  setOutput('passed',     report.passed);
-  setOutput('score',      report.totalEarned);
-  setOutput('max_score',  report.totalMax);
-  setOutput('percentage', report.percentage.toFixed(1));
-  setOutput('course',     resolvedCourse);
-  setOutput('is_final',   isFinalTest);
-
+  setOutput('passed',    passed);
+  setOutput('score',     totalEarned);
+  setOutput('max_score', totalMax);
+  setOutput('percentage', pct.toFixed(1));
+  setOutput('course',    resolvedCourse);
+  setOutput('is_final',  isFinalTest);
   console.log(`✓ Quiz graded for @${student}`);
 }
 

@@ -1,5 +1,10 @@
 name: Grade Quiz / Chapter Test
 
+# Triggered when a student opens a quiz-submit issue.
+# Objective questions (MCQ, multi, true-false, short) are graded inline.
+# Code questions are graded in an isolated Docker sandbox with static or
+# dynamically-generated test cases (no AI, no static answer lookup).
+
 on:
   issues:
     types: [opened, reopened]
@@ -11,7 +16,6 @@ permissions:
 jobs:
   quiz:
     name: Grade quiz submission
-    # Triggered when a quiz-submit issue is opened
     if: contains(github.event.issue.labels.*.name, 'quiz-submit')
     runs-on: ubuntu-latest
     defaults:
@@ -31,6 +35,12 @@ jobs:
         run: bun install
         working-directory: ${{ github.workspace }}
 
+      # Build the grading sandbox image.
+      # This is a no-op cost if the quiz has no code questions, but
+      # we build unconditionally to keep the workflow simple.
+      - name: Build grading sandbox
+        run: docker build -t opencourse-sandbox -f sandbox/Dockerfile ..
+
       - name: Grade quiz
         id: quiz
         run: bun run scripts/quiz-engine.ts
@@ -39,6 +49,8 @@ jobs:
           REPO: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           STUDENT: ${{ github.event.issue.user.login }}
+          SANDBOX_IMAGE: opencourse-sandbox
+          COURSE_DIR: engine/courses
 
       - name: Trigger leaderboard rebuild on pass
         if: steps.quiz.outputs.passed == 'true'

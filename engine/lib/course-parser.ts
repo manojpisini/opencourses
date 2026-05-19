@@ -73,13 +73,21 @@ function parseQuestion(raw: Record<string, unknown>, ctx: string): Question {
         points: pts,
       };
     }
-    case 'code': return {
-      id, type: 'code', question: q,
-      language: requireStr(raw, 'language', ctx),
-      starter_code: raw['starter_code'] as string | undefined,
-      test_cases: requireArr(raw, 'test_cases', ctx),
-      points: pts,
-    };
+    case 'code': {
+      const hasCases = Array.isArray(raw['test_cases']) && (raw['test_cases'] as unknown[]).length > 0;
+      const hasGen   = typeof raw['test_generator'] === 'string' && raw['test_generator'];
+      if (!hasCases && !hasGen)
+        err(`${ctx}: code question must have either "test_cases" or "test_generator"`);
+      return {
+        id, type: 'code', question: q,
+        language:       requireStr(raw, 'language', ctx),
+        starter_code:   raw['starter_code']   as string | undefined,
+        test_cases:     hasCases ? requireArr(raw, 'test_cases', ctx) : undefined,
+        test_generator: hasGen   ? raw['test_generator'] as string    : undefined,
+        test_count:     typeof raw['test_count'] === 'number' ? raw['test_count'] : 10,
+        points: pts,
+      };
+    }
     default:
       err(`${ctx}: unknown question type "${type}"`);
   }

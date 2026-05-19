@@ -55,10 +55,49 @@ export interface CodeQuestion {
   id: string;
   type: 'code';
   question: string;
-  language: string;
+  language: string;           // python | javascript | bash | java | go | rust | c | cpp
   starter_code?: string;
-  test_cases: TestCase[];
+
+  // ── Grading mode: use ONE of the two below ─────────────────────────────
+  //
+  // STATIC — fixed input/output pairs embedded in course.md.
+  // Simple, transparent. Use when all valid answers produce identical output.
+  test_cases?: TestCase[];
+
+  // DYNAMIC — path to a generator script (relative to the course directory).
+  // The script is called with --seed <int> --count <int> and must print a
+  // JSON array of { input, expected_output, description?, hidden? } to stdout.
+  // A fresh random seed is used every submission, so students cannot
+  // memorise expected outputs.
+  // e.g.  test_generator: "./assets/tests/ch-01-q5-gen.py"
+  test_generator?: string;
+  test_count?: number;        // how many cases to generate (default: 10)
+
   points: number;
+}
+
+/** Result produced by one dynamic/static test case run in the sandbox. */
+export interface CodeTestResult {
+  name:       string;
+  passed:     boolean;
+  score:      number;
+  maxScore:   number;
+  hidden:     boolean;
+  input?:     string;
+  expected?:  string;
+  actual?:    string;
+  error?:     string;
+}
+
+/** Full sandbox output written to /tmp/test-results.json */
+export interface SandboxOutput {
+  passed:    boolean;
+  score:     number;
+  maxScore:  number;
+  seed?:     number;          // present when test_generator was used
+  language:  string;
+  tests:     CodeTestResult[];
+  duration?: number;          // ms
 }
 
 export type Question =
