@@ -2163,11 +2163,13 @@ body[data-nav="side"] .app-main {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 9999;
-  display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: 12vh;
   animation: fadeIn 150ms ease;
+}
+.cmdp-overlay:not([hidden]) {
+  display: flex;
 }
 .cmdp {
   width: min(640px, 92vw);

@@ -1,7 +1,7 @@
 OpenCourses Community License
 Version 1.0, May 2026
 
-Copyright (c) 2026 opencourses-org. All rights reserved.
+Copyright (c) 2026 manojpisini. All rights reserved.
 
 DEFINITIONS
 
@@ -22,7 +22,7 @@ sublicensing the engine, or selling access to derived works.
 
 GRANT OF RIGHTS — PLATFORM CODE
 
-Subject to the terms below, opencourses-org grants You a worldwide,
+Subject to the terms below, manojpisini grants You a worldwide,
 royalty-free, non-exclusive license to:
 
   1. View, download, and study the source code.
@@ -36,7 +36,7 @@ This license does NOT grant You the right to:
      competing product or commercial service.
   2. Remove or alter copyright notices, license headers, or attribution.
   3. Use the name "OpenCourses", the wordmark, or the logo in any derived
-     work without prior written permission from opencourses-org.
+     work without prior written permission from manojpisini.
   4. Claim ownership or authorship of The Software or any substantial portion.
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0
   https://creativecommons.org/licenses/by-nc/4.0/
 
 You are free to share and adapt the content for non-commercial purposes,
-provided you give appropriate credit to opencourses-org and the original
+provided you give appropriate credit to manojpisini and the original
 course authors.
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ CONTRIBUTIONS
 By submitting a pull request or contribution to this repository, You agree that:
 
   1. Your contribution is Your original work or You have the right to submit it.
-  2. You grant opencourses-org a perpetual, irrevocable, worldwide, royalty-free
+  2. You grant manojpisini a perpetual, irrevocable, worldwide, royalty-free
      license to use, modify, and distribute Your contribution as part of
      The Software under this license.
   3. You retain copyright to Your contribution but transfer no exclusive rights.
@@ -68,7 +68,7 @@ By submitting a pull request or contribution to this repository, You agree that:
 
 OWNERSHIP & TRADEMARKS
 
-opencourses-org retains full ownership of:
+manojpisini retains full ownership of:
   — The OpenCourses platform and brand
   — The "OpenCourses" name and wordmark
   — The site design system and visual identity
@@ -86,4 +86,4 @@ OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
 
 ────────────────────────────────────────────────────────────────────────────────
 
-For commercial licensing inquiries, contact: legal@opencourses.dev
+For commercial licensing inquiries, contact: manojpisini@users.noreply.github.com
