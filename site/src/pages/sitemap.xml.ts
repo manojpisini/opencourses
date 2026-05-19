@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import OC from '../data/oc';
 
 export const GET: APIRoute = ({ site }) => {
-  const base = (site?.toString() ?? 'https://opencourses-org.github.io').replace(/\/$/, '');
+  const base = (site?.toString() ?? 'https://manojpisini.github.io').replace(/\/$/, '');
 
   const staticPages = ['', '/courses', '/tracks', '/contributors', '/changelog', '/about'];
   const coursePages = OC.COURSES.map(c => `/courses/${c.slug}`);

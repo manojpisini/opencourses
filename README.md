@@ -5,10 +5,10 @@
 <br/>
 <br/>
 
-[![Site](https://img.shields.io/badge/Website-Live-0075ca?style=for-the-badge&logo=github&logoColor=white)](https://opencourses-org.github.io/opencourses)
-[![Courses](https://img.shields.io/badge/Courses-16-2ea44f?style=for-the-badge&logo=bookstack&logoColor=white)](https://opencourses-org.github.io/opencourses/courses)
-[![Contributors](https://img.shields.io/badge/Contributors-18-a78bfa?style=for-the-badge&logo=github&logoColor=white)](https://opencourses-org.github.io/opencourses/contributors)
-[![Deploy](https://img.shields.io/github/actions/workflow/status/opencourses-org/opencourses/deploy-site.yml?label=Deploy&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/opencourses-org/opencourses/actions)
+[![Site](https://img.shields.io/badge/Website-Live-0075ca?style=for-the-badge&logo=github&logoColor=white)](https://manojpisini.github.io/opencourses)
+[![Courses](https://img.shields.io/badge/Courses-16-2ea44f?style=for-the-badge&logo=bookstack&logoColor=white)](https://manojpisini.github.io/opencourses/courses)
+[![Contributors](https://img.shields.io/badge/Contributors-18-a78bfa?style=for-the-badge&logo=github&logoColor=white)](https://manojpisini.github.io/opencourses/contributors)
+[![Deploy](https://img.shields.io/github/actions/workflow/status/manojpisini/opencourses/deploy-site.yml?label=Deploy&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/manojpisini/opencourses/actions)
 [![License](https://img.shields.io/badge/License-Community-f5c542?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -92,7 +92,7 @@ The leaderboard rebuilds itself every night.
 └────────┬────────┘          └────────┬─────────┘        └────────┬─────────┘
          │                           │                            │
          ▼                           ▼                            ▼
-opencourses-org         Grades code in < 60s          Enrolls · Certifies
+manojpisini             Grades code in < 60s          Enrolls · Certifies
 .github.io/opencourses  GPG signs certificates        Nudges · Ranks
 ```
 
@@ -147,9 +147,9 @@ opencourses-org         Grades code in < 60s          Enrolls · Certifies
 
 <br/>
 
-**[Browse all 16 courses →](https://opencourses-org.github.io/opencourses/courses)**
+**[Browse all 16 courses →](https://manojpisini.github.io/opencourses/courses)**
 &nbsp;&nbsp;·&nbsp;&nbsp;
-**[Explore the knowledge graph →](https://opencourses-org.github.io/opencourses/tracks)**
+**[Explore the knowledge graph →](https://manojpisini.github.io/opencourses/tracks)**
 
 <br/>
 
@@ -251,7 +251,7 @@ Open **[`site/src/data/oc.ts`](site/src/data/oc.ts)** and add to the `COURSES` a
   contributors: ["your-github-login"],
   tags: ["tag1", "tag2"],
   prerequisites: [],
-  repo: "opencourses-org/opencourses",
+  repo: "manojpisini/opencourses",
   version: "v1.0.0",
   updatedAt: "2026-05-19T00:00:00Z",
   featured: false,
@@ -281,7 +281,7 @@ tags: ["tag1", "tag2"]
 stars: 0
 version: "v1.0.0"
 maintainer: "your-github-login"
-repo: "opencourses-org/opencourses"
+repo: "manojpisini/opencourses"
 prerequisites: []
 ---
 
@@ -384,7 +384,7 @@ push to main  →  deploy-site.yml triggers
                        │
                site/dist/ uploaded to GitHub Pages
                        │
-               Live at: https://opencourses-org.github.io/opencourses
+               Live at: https://manojpisini.github.io/opencourses
 ```
 
 Trigger manually: **Actions → Deploy Site to GitHub Pages → Run workflow**
@@ -395,10 +395,10 @@ Trigger manually: **Actions → Deploy Site to GitHub Pages → Run workflow**
 
 ## ✦ Quick Links
 
-| 🌐 [Website](https://opencourses-org.github.io/opencourses) | 📚 [Courses](https://opencourses-org.github.io/opencourses/courses) | 🗺️ [Knowledge Graph](https://opencourses-org.github.io/opencourses/tracks) |
+| 🌐 [Website](https://manojpisini.github.io/opencourses) | 📚 [Courses](https://manojpisini.github.io/opencourses/courses) | 🗺️ [Knowledge Graph](https://manojpisini.github.io/opencourses/tracks) |
 |:---:|:---:|:---:|
-| **👥 [Contributors](https://opencourses-org.github.io/opencourses/contributors)** | **📋 [Curriculum](engine/CURRICULUM.md)** | **🏆 [Leaderboard](engine/LEADERBOARD.md)** |
-| **📅 [Changelog](https://opencourses-org.github.io/opencourses/changelog)** | **🎓 [Certified](engine/CERTIFIED.md)** | **🛠️ [Setup Guide](SETUP.md)** |
+| **👥 [Contributors](https://manojpisini.github.io/opencourses/contributors)** | **📋 [Curriculum](engine/CURRICULUM.md)** | **🏆 [Leaderboard](engine/LEADERBOARD.md)** |
+| **📅 [Changelog](https://manojpisini.github.io/opencourses/changelog)** | **🎓 [Certified](engine/CERTIFIED.md)** | **🛠️ [Setup Guide](SETUP.md)** |
 
 <br/>
 
@@ -439,7 +439,7 @@ For commercial licensing: **legal@opencourses.dev**
 
 Found a vulnerability? **Do not open a public issue.**
 
-Report privately via [GitHub Security Advisories](https://github.com/opencourses-org/opencourses/security/advisories/new).<br/>
+Report privately via [GitHub Security Advisories](https://github.com/manojpisini/opencourses/security/advisories/new).<br/>
 We respond within 72 hours. See [SECURITY.md](.github/SECURITY.md) for our full disclosure policy.
 
 <br/>
@@ -454,10 +454,10 @@ Built in the open.  Shipped like software.  Free, forever.
 
 <br/>
 
-**[opencourses-org.github.io/opencourses](https://opencourses-org.github.io/opencourses)**
+**[manojpisini.github.io/opencourses](https://manojpisini.github.io/opencourses)**
 
 <br/>
 
-<sub>Copyright © 2026 opencourses-org &nbsp;·&nbsp; <a href="LICENSE">OpenCourses Community License</a> &nbsp;·&nbsp; <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> for content</sub>
+<sub>Copyright © 2026 manojpisini &nbsp;·&nbsp; <a href="LICENSE">OpenCourses Community License</a> &nbsp;·&nbsp; <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> for content</sub>
 
 </div>

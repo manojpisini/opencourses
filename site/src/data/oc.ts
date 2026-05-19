@@ -1,6 +1,6 @@
 /* OpenCourses — Data Layer (ported from data.js → ES module) */
 
-export const today = new Date("2026-05-18");
+export const today = new Date();
 
 const daysAgo = (n: number): string => {
   const d = new Date(today);

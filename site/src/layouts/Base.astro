@@ -19,7 +19,7 @@ const {
 } = Astro.props;
 
 const fullTitle = title === 'OpenCourses' ? title : `${title} — OpenCourses`;
-const siteUrl = Astro.site?.toString() ?? 'https://opencourses-org.github.io/opencourses';
+const siteUrl = Astro.site?.toString() ?? 'https://manojpisini.github.io/opencourses';
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
