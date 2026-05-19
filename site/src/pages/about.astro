@@ -5,43 +5,22 @@ import OC from '../data/oc';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-const maintainers = OC.CONTRIBUTORS.filter(c => c.role.startsWith('Maintainer')).slice(0, 4);
-
-const howItWorks = [
-  { step: '01', title: 'Enroll',    desc: 'Open an enrollment issue. Your GitHub @username is your sole identity — no separate login needed.' },
-  { step: '02', title: 'Learn',     desc: 'Work through the course content: lessons, readings, and exercises defined in course.md.' },
-  { step: '03', title: 'Test',      desc: 'Open a quiz-submit issue with your answers. Supports MCQ, multi-select, true/false, short-answer, and code.' },
-  { step: '04', title: 'Graded',    desc: 'GitHub Actions scores your submission algorithmically — no AI. Code questions run in an isolated Docker sandbox.' },
-  { step: '05', title: 'Complete',  desc: 'Pass all chapter tests. If a final exam is required, it unlocks automatically. Your rank appears on the leaderboard.' },
-  { step: '06', title: 'Certified', desc: 'Receive a GPG-signed SVG certificate as a GitHub Release, compliant with Open Badges 3.0.' },
-];
-
-const contributeSteps = [
-  'Copy engine/courses/template/ to engine/courses/<your-slug>/ and edit course.md.',
-  'Define lessons, chapter tests, and optional projects. course.md is the single source of truth.',
-  'Add dynamic test generators to assets/tests/ for code questions — students never see the same inputs twice.',
-  'Keep reference solutions in assets/solutions/ (gitignored — never used by the grader).',
-  'Open a PR — the course-publish workflow validates course.md on merge and emits course.json.',
-];
-
-const improveSteps = [
-  'Find an issue at github.com/manojpisini/opencourses — look for "help wanted".',
-  'Fork the repo and make changes on a feature branch.',
-  'Open a PR with a clear description of what changed and why.',
-  'A maintainer will review within 7 days.',
-];
+const maintainers = OC.CONTRIBUTORS.filter(c => c.role.startsWith('Maintainer') || c.role === 'Lead Maintainer');
+const showLeadCard = !maintainers.find(m => m.login === 'manojpisini');
 
 const stack = [
-  { name: 'Astro 4', role: 'Site framework — zero-JS by default, islands architecture' },
-  { name: 'Custom CSS', role: 'Styling — design token system, no utility framework' },
-  { name: 'Vanilla JS', role: 'Knowledge graph, catalog filter, command palette' },
-  { name: 'GitHub Actions', role: 'Data pipeline, OG image generation, deploy' },
-  { name: 'GitHub Pages', role: 'Hosting — free, native org pages support' },
-  { name: 'GitHub API', role: 'Live data — stars, forks, contributors, build status' },
+  { name: 'Astro 4',        role: 'Site framework — zero-JS by default, islands architecture' },
+  { name: 'Custom CSS',     role: 'Styling — design token system, no utility framework' },
+  { name: 'Vanilla JS',     role: 'Track map, catalog filter, command palette' },
+  { name: 'Bun',            role: 'Runtime & package manager for the engine scripts' },
+  { name: 'GitHub Actions', role: 'Data pipeline, grading, certification, deploy' },
+  { name: 'GitHub Pages',   role: 'Hosting — free, native org pages support' },
+  { name: 'GitHub API',     role: 'Live data — stars, forks, contributors, commit activity' },
+  { name: 'Docker',         role: 'Isolated sandbox for grading code submissions' },
 ];
 ---
 
-<Base title="About" description="What OpenCourses is, how it works, and how to contribute.">
+<Base title="About" description="What OpenCourses is, how it works, and who builds it.">
   <div class="container">
     <div class="page-head">
       <div class="page-head__crumbs">
@@ -51,6 +30,15 @@ const stack = [
       </div>
       <h1 class="page-head__title">About OpenCourses</h1>
       <p class="page-head__sub">Free, open-source developer education. Version-controlled by design.</p>
+    </div>
+
+    <!-- Docs callout -->
+    <div class="about-docs-callout">
+      <span class="about-docs-callout__label">📖 Looking for guides?</span>
+      <span class="about-docs-callout__text">
+        Step-by-step instructions for students, course creators, and code contributors are in the
+        <a href={`${base}/docs`}>Documentation →</a>
+      </span>
     </div>
 
     <div class="container-narrow">
@@ -70,60 +58,11 @@ const stack = [
             The entire site regenerates automatically on every push.
           </p>
           <p>
-            It is not a MOOC. It is not a wiki. It is the first course platform that feels
-            <em>version-controlled by design</em>.
+            Enrollment, grading, certification, and the leaderboard all run through GitHub Issues and Actions —
+            your GitHub <code>@username</code> is the only identity you need.
+            It is the first course platform that feels <em>version-controlled by design</em>.
           </p>
         </div>
-      </section>
-
-      <div class="section-divider"></div>
-
-      <!-- How it works -->
-      <section class="section" id="how-it-works">
-        <div class="section-head">
-          <h2 class="section-head__title">How It Works</h2>
-        </div>
-        <ol class="prose" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:1rem">
-          {howItWorks.map(item => (
-            <li style="display:flex;gap:1rem;align-items:flex-start">
-              <code style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);background:var(--bg-raised);border:1px solid var(--border-default);border-radius:4px;padding:2px 8px;flex-shrink:0;margin-top:2px">
-                {item.step}
-              </code>
-              <div>
-                <strong style="color:var(--text-primary)">{item.title}</strong>
-                <span style="color:var(--text-secondary);margin-left:0.5rem">— {item.desc}</span>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <div class="section-divider"></div>
-
-      <!-- Contribute a course -->
-      <section class="section" id="contribute">
-        <div class="section-head">
-          <h2 class="section-head__title">How to Contribute a Course</h2>
-        </div>
-        <ol class="prose">
-          {contributeSteps.map(step => (
-            <li style="color:var(--text-secondary)">{step}</li>
-          ))}
-        </ol>
-      </section>
-
-      <div class="section-divider"></div>
-
-      <!-- Improve existing -->
-      <section class="section" id="improve">
-        <div class="section-head">
-          <h2 class="section-head__title">How to Improve an Existing Course</h2>
-        </div>
-        <ol class="prose">
-          {improveSteps.map(step => (
-            <li style="color:var(--text-secondary)">{step}</li>
-          ))}
-        </ol>
       </section>
 
       <div class="section-divider"></div>
@@ -134,6 +73,20 @@ const stack = [
           <h2 class="section-head__title">Maintainers</h2>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:12px">
+          {/* Lead maintainer is always shown, even when CONTRIBUTORS is empty */}
+          {showLeadCard && (
+            <a
+              href={`${base}/contributors/manojpisini`}
+              class="contributor-card"
+              style="text-decoration:none"
+            >
+              <Avatar login="manojpisini" size="md" />
+              <div>
+                <div class="contributor-card__name">Manoj Pisini</div>
+                <div class="contributor-card__role">@manojpisini · Lead Maintainer</div>
+              </div>
+            </a>
+          )}
           {maintainers.map(m => (
             <a
               href={`${base}/contributors/${m.login}`}
@@ -143,7 +96,7 @@ const stack = [
               <Avatar login={m.login} size="md" />
               <div>
                 <div class="contributor-card__name">{m.name}</div>
-                <div class="contributor-card__role">@{m.login}</div>
+                <div class="contributor-card__role">@{m.login} · {m.role}</div>
               </div>
             </a>
           ))}
@@ -183,7 +136,7 @@ const stack = [
             Use it, fork it, translate it. Credit required.
           </p>
           <p>
-            <strong>Engine code</strong> —
+            <strong>Engine &amp; site code</strong> —
             <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT</a>.
             Fork it, run your own instance.
           </p>
@@ -192,3 +145,33 @@ const stack = [
     </div>
   </div>
 </Base>
+
+<style>
+  .about-docs-callout {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 2rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-left: 3px solid var(--accent-blue, #4f9eff);
+    border-radius: 6px;
+    font-size: 0.875rem;
+  }
+  .about-docs-callout__label {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .about-docs-callout__text {
+    color: var(--text-secondary);
+  }
+  .about-docs-callout__text a {
+    color: var(--accent-blue, #4f9eff);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .about-docs-callout__text a:hover { text-decoration: underline; }
+</style>

@@ -1,6 +1,10 @@
 /* OpenCourses — Data Layer */
 
-import leaderboardRaw from './leaderboard.json';
+import leaderboardRaw  from './leaderboard.json';
+import coursesRaw      from './courses.json';
+import contributorsRaw from './contributors.json';
+import changelogRaw    from './changelog.json';
+import activityRaw     from './activity.json';
 
 export const today = new Date();
 
@@ -110,28 +114,93 @@ export interface LeaderboardData {
 }
 
 // ============================================================
-// Course catalog — populated by course-publish workflow
+// Course catalog — auto-populated by sync-site-data workflow
 // ============================================================
-const COURSES: Course[] = [];
+const COURSES = coursesRaw as unknown as Course[];
 
 // ============================================================
-// Tracks
+// Tracks — 12 broad categories covering all CS domains
 // ============================================================
 export const TRACKS: Track[] = [
-  { slug: "foundations", name: "Foundations",  icon: "Fn", description: "Core tools every developer needs — Git, the terminal, HTTP, and how the web works." },
-  { slug: "systems",     name: "Systems",      icon: "Sy", description: "Operating systems, low-level languages, runtimes. How things work under the surface." },
-  { slug: "web",         name: "Web",          icon: "Wb", description: "HTML, CSS, JS, TS. Building for the browser, well." },
-  { slug: "devops",      name: "DevOps",       icon: "Do", description: "Containers, orchestration, observability. Operating software in production." },
-  { slug: "data",        name: "Data",         icon: "Da", description: "SQL, data pipelines, and analytics engineering." },
-  { slug: "security",    name: "Security",     icon: "Se", description: "Threat modeling, cryptography, auth. Defending against real attacks." },
-  { slug: "ai-ml",       name: "AI / ML",      icon: "Ai", description: "LLMs, ML fundamentals, and production AI engineering." },
-  { slug: "open-source", name: "Open Source",  icon: "Os", description: "Navigate real codebases, write good issues, and contribute effectively." },
+  {
+    slug: "foundations",
+    name: "Foundations & Theory",
+    icon: "Fn",
+    description: "Core dev tools, algorithms, data structures, complexity theory, discrete math, logic, linear algebra, and automata — everything before you specialize.",
+  },
+  {
+    slug: "languages",
+    name: "Languages & Paradigms",
+    icon: "Lp",
+    description: "Low-level (C, C++, Rust, Assembly), OOP (Java, Python, C#, Swift, Kotlin), functional (Haskell, Elixir, Scala), scripting (Bash, Ruby, Lua), logic, and query languages.",
+  },
+  {
+    slug: "web",
+    name: "Web & Mobile",
+    icon: "Wm",
+    description: "HTML, CSS, JS/TS, web frameworks (React, Vue, Angular, Svelte), PWAs, iOS, Android, React Native, Flutter, and WebAssembly.",
+  },
+  {
+    slug: "backend",
+    name: "Backend & Databases",
+    icon: "Bd",
+    description: "Server-side frameworks, REST, GraphQL, gRPC, SQL (PostgreSQL, SQLite), NoSQL (MongoDB, Redis, Cassandra), graph DBs, search engines, and data modeling.",
+  },
+  {
+    slug: "systems",
+    name: "Systems & Infrastructure",
+    icon: "Si",
+    description: "OS internals, compilers, runtimes, memory management, CI/CD, Docker, Kubernetes, Terraform, AWS, GCP, Azure, serverless, IaC, and SRE/observability.",
+  },
+  {
+    slug: "networks",
+    name: "Networks & Protocols",
+    icon: "Np",
+    description: "TCP/IP stack, DNS, HTTP/1–3, QUIC, TLS, BGP, OSPF, WebSockets, WebRTC, SDN, 5G, MPLS, and advanced networking protocols.",
+  },
+  {
+    slug: "data",
+    name: "Data & AI",
+    icon: "Da",
+    description: "ETL/ELT, data lakes, Spark, dbt, Airflow, ML fundamentals, deep learning, transformers, LLMs, reinforcement learning, computer vision, and MLOps.",
+  },
+  {
+    slug: "security",
+    name: "Security & Cryptography",
+    icon: "Sc",
+    description: "Threat modeling, auth (OAuth, OIDC, JWT), TLS, symmetric/asymmetric crypto, OWASP, pentesting, CTF, reverse engineering, post-quantum cryptography, and zero-knowledge proofs.",
+  },
+  {
+    slug: "architecture",
+    name: "Architecture & Engineering",
+    icon: "Ae",
+    description: "System design, distributed systems, microservices, event-driven patterns, CQRS, CAP theorem, GoF patterns, SOLID, DDD, TDD, clean code, and open-source contribution.",
+  },
+  {
+    slug: "creative",
+    name: "Creative Computing",
+    icon: "Cc",
+    description: "Computer graphics (OpenGL, Vulkan, WebGL), shaders (GLSL, HLSL), game engines (Unity, Unreal, Godot), 2D/3D game dev, physics engines, procedural generation, and creative coding.",
+  },
+  {
+    slug: "emerging",
+    name: "Emerging Technologies",
+    icon: "Et",
+    description: "Quantum computing (Qiskit, quantum algorithms), neuromorphic computing, edge AI, blockchain, IPFS, P2P protocols, WebAssembly, formal verification, and advanced post-quantum standards.",
+  },
+  {
+    slug: "applied",
+    name: "Applied & Cross-Domain",
+    icon: "Ap",
+    description: "Computational physics, bioinformatics, scientific computing (NumPy/SciPy/HPC), signal processing, robotics (ROS), FPGA/digital circuits, GIS, computational chemistry, and math-meets-CS.",
+  },
 ];
 
 // ============================================================
-// Contributors — populated by detect-contributors workflow
+// Contributors — auto-populated by sync-site-data workflow
+// manojpisini is always index 0 as Lead Maintainer
 // ============================================================
-export const CONTRIBUTORS: Contributor[] = [];
+export const CONTRIBUTORS = contributorsRaw as unknown as Contributor[];
 
 // ============================================================
 // Module detail — populated per-course from course.json
@@ -139,9 +208,9 @@ export const CONTRIBUTORS: Contributor[] = [];
 export const MODULE_TEMPLATES: Record<string, ModuleItem[]> = {};
 
 // ============================================================
-// Changelog — populated by course-publish workflow
+// Changelog — auto-populated by sync-site-data workflow
 // ============================================================
-export const CHANGELOG: ChangelogMonth[] = [];
+export const CHANGELOG = changelogRaw as unknown as ChangelogMonth[];
 
 // ============================================================
 // Knowledge graph — derived from course prerequisites
@@ -163,32 +232,39 @@ export const GRAPH = {
 // Stats — derived from live data
 // ============================================================
 export const STATS = {
-  courses: COURSES.length,
+  courses:      COURSES.length,
   contributors: CONTRIBUTORS.length,
-  stars: COURSES.reduce((s, c) => s + c.stars, 0),
-  forks: COURSES.reduce((s, c) => s + c.forks, 0),
-  tracks: TRACKS.length,
+  stars:        COURSES.reduce((s, c) => s + c.stars, 0),
+  forks:        COURSES.reduce((s, c) => s + c.forks, 0),
+  tracks:       TRACKS.length,
 };
 
 // ============================================================
-// Track colors (mirrors CSS)
+// Track colors (mirrors CSS variables)
 // ============================================================
 export const TRACK_COLORS: Record<string, string> = {
-  foundations: "#60a5fa",
-  systems:     "#a78bfa",
-  web:         "#4f9eff",
-  devops:      "#34d399",
-  data:        "#fbbf24",
-  security:    "#fb923c",
-  "ai-ml":     "#f472b6",
-  "open-source": "#94a3b8",
+  foundations:  "#60a5fa",
+  languages:    "#a78bfa",
+  web:          "#4f9eff",
+  backend:      "#38bdf8",
+  systems:      "#34d399",
+  networks:     "#facc15",
+  data:         "#fb923c",
+  security:     "#ef4444",
+  architecture: "#94a3b8",
+  creative:     "#f472b6",
+  emerging:     "#818cf8",
+  applied:      "#6ee7b7",
 };
 
 // ============================================================
 // Activity heatmap — 52w × 7d
-// Returns all zeros until real commit activity is loaded
+// Loaded from activity.json (written by sync-site-data workflow).
+// Falls back to zero grid when data is not yet available.
 // ============================================================
-function generateActivity(): number[][] {
+const _actRaw = activityRaw as { weeks?: number[][] };
+function loadActivity(): number[][] {
+  if (_actRaw.weeks && _actRaw.weeks.length === 52) return _actRaw.weeks;
   return Array.from({ length: 52 }, () => Array(7).fill(0));
 }
 
@@ -196,8 +272,8 @@ function generateActivity(): number[][] {
 // Sparkline SVG
 // ============================================================
 export function sparklineSvg(days: number[]): string {
-  const max = Math.max(...days, 1);
-  const h = 16;
+  const max  = Math.max(...days, 1);
+  const h    = 16;
   const barW = 1;
   return `<svg width="96" height="${h}" viewBox="0 0 90 ${h}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">${days
     .map((c, i) => {
@@ -256,7 +332,7 @@ const OC = {
   TRACK_COLORS,
   MODULE_TEMPLATES,
   LEADERBOARD: leaderboardRaw as unknown as LeaderboardData,
-  activity: generateActivity(),
+  activity: loadActivity(),
   sparklineSvg,
   fuzzyScore,
   relativeTime,

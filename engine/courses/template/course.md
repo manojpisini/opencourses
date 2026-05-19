@@ -45,7 +45,7 @@ meta:
   description: >
     One clear paragraph that tells prospective students exactly what they will
     know or be able to do after completing this course. Keep it under 200 words.
-  track: foundations              # foundations | systems | web | devops | data | security | open-source | ai-ml
+  track: foundations              # foundations | languages | web | backend | systems | networks | data | security | architecture | creative | emerging | applied
   difficulty: beginner            # beginner | intermediate | advanced
   tags:
     - tag-one

@@ -5,9 +5,19 @@ import Heatmap from '../../components/Heatmap.astro';
 import OC from '../../data/oc';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const sorted = [...OC.CONTRIBUTORS].sort((a, b) => b.commits - a.commits);
-const top3   = sorted.slice(0, 3);
-const rest   = sorted.slice(3);
+
+// manojpisini is always Lead Maintainer at index 0 (pinned by sync-site-data).
+// If contributors list is empty (before first sync), create a guaranteed lead card.
+const hasLead   = OC.CONTRIBUTORS.some(c => c.login === 'manojpisini');
+const lead      = OC.CONTRIBUTORS.find(c => c.login === 'manojpisini');
+
+// Rest of contributors sorted by commits, lead excluded from general sort
+const others   = [...OC.CONTRIBUTORS].filter(c => c.login !== 'manojpisini').sort((a, b) => b.commits - a.commits);
+const top3Others = others.slice(0, 3);   // podium from non-lead contributors (when ≥ 3)
+const allSorted  = [
+  ...(hasLead ? [lead!] : [{ login: 'manojpisini', name: 'Manoj Pisini', role: 'Lead Maintainer', commits: 0, courses: 0, hue: 220 }]),
+  ...others,
+];
 ---
 
 <Base title="Contributors" description="The community behind OpenCourses — developers building free, open-source curriculum.">
@@ -18,45 +28,58 @@ const rest   = sorted.slice(3);
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         <span>contributors</span>
       </div>
-      <h1 class="page-head__title">{OC.CONTRIBUTORS.length} Contributor{OC.CONTRIBUTORS.length !== 1 ? 's' : ''}</h1>
+      <h1 class="page-head__title">{Math.max(OC.CONTRIBUTORS.length, 1)} Contributor{OC.CONTRIBUTORS.length !== 1 ? 's' : ''}</h1>
       <p class="page-head__sub">The developers who build this curriculum. Every commit, every course, every review.</p>
     </div>
 
-    {sorted.length === 0 ? (
-      <!-- Empty state -->
-      <div style="padding:5rem 0;text-align:center">
-        <p style="font-family:var(--font-mono);font-size:0.9rem;color:var(--text-muted)">
-          No contributors yet. They appear here automatically once courses are published.
-        </p>
-        <a href="https://github.com/manojpisini/opencourses" class="btn btn-secondary" style="margin-top:1.5rem" target="_blank" rel="noopener">
-          Contribute on GitHub ↗
-        </a>
+    <!-- Lead Maintainer spotlight — always shown -->
+    <div class="section">
+      <div class="section-head">
+        <h2 class="section-head__title">Lead Maintainer</h2>
       </div>
-    ) : (
+      <a href={`${base}/contributors/manojpisini`} class="lead-card">
+        <div class="lead-card__avatar">
+          <Avatar login="manojpisini" size="xl" />
+          <span class="lead-card__crown" title="Lead Maintainer">👑</span>
+        </div>
+        <div class="lead-card__info">
+          <div class="lead-card__name">Manoj Pisini</div>
+          <div class="lead-card__handle">@manojpisini</div>
+          <div class="lead-card__role">Lead Maintainer · Lead Developer</div>
+          {lead && lead.commits > 0 && (
+            <div class="lead-card__stats">{lead.commits} commits · {lead.courses} courses</div>
+          )}
+        </div>
+      </a>
+    </div>
+
+    {others.length > 0 && (
       <>
-        {/* Top podium — only when there are enough contributors */}
-        {top3.length >= 3 && (
+        <div class="section-divider"></div>
+
+        {/* Top podium — only when there are ≥ 3 other contributors */}
+        {top3Others.length >= 3 && (
           <div class="section">
             <div class="section-head">
               <h2 class="section-head__title">Top Contributors</h2>
             </div>
             <div class="contributors-podium">
-              <a href={`${base}/contributors/${top3[1]!.login}`} class="podium-step podium-step--2">
-                <Avatar login={top3[1]!.login} size="lg" />
-                <div class="contributor-card__name">@{top3[1]!.login}</div>
-                <div class="contributor-card__role">{top3[1]!.commits} commits</div>
+              <a href={`${base}/contributors/${top3Others[1]!.login}`} class="podium-step podium-step--2">
+                <Avatar login={top3Others[1]!.login} size="lg" />
+                <div class="contributor-card__name">@{top3Others[1]!.login}</div>
+                <div class="contributor-card__role">{top3Others[1]!.commits} commits</div>
                 <div class="podium-step__rank">2</div>
               </a>
-              <a href={`${base}/contributors/${top3[0]!.login}`} class="podium-step podium-step--1">
-                <Avatar login={top3[0]!.login} size="xl" />
-                <div class="contributor-card__name">@{top3[0]!.login}</div>
-                <div class="contributor-card__role">{top3[0]!.commits} commits</div>
+              <a href={`${base}/contributors/${top3Others[0]!.login}`} class="podium-step podium-step--1">
+                <Avatar login={top3Others[0]!.login} size="xl" />
+                <div class="contributor-card__name">@{top3Others[0]!.login}</div>
+                <div class="contributor-card__role">{top3Others[0]!.commits} commits</div>
                 <div class="podium-step__rank">1</div>
               </a>
-              <a href={`${base}/contributors/${top3[2]!.login}`} class="podium-step podium-step--3">
-                <Avatar login={top3[2]!.login} size="lg" />
-                <div class="contributor-card__name">@{top3[2]!.login}</div>
-                <div class="contributor-card__role">{top3[2]!.commits} commits</div>
+              <a href={`${base}/contributors/${top3Others[2]!.login}`} class="podium-step podium-step--3">
+                <Avatar login={top3Others[2]!.login} size="lg" />
+                <div class="contributor-card__name">@{top3Others[2]!.login}</div>
+                <div class="contributor-card__role">{top3Others[2]!.commits} commits</div>
                 <div class="podium-step__rank">3</div>
               </a>
             </div>
@@ -71,8 +94,8 @@ const rest   = sorted.slice(3);
             <h2 class="section-head__title">All Contributors</h2>
           </div>
           <div class="contributors-grid">
-            {sorted.map(c => (
-              <a href={`${base}/contributors/${c.login}`} class="contributor-card">
+            {allSorted.map(c => (
+              <a href={`${base}/contributors/${c.login}`} class={`contributor-card${c.login === 'manojpisini' ? ' contributor-card--lead' : ''}`}>
                 <Avatar login={c.login} size="sm" />
                 <div class="contributor-card__info">
                   <span class="contributor-card__name">@{c.login}</span>
@@ -83,18 +106,92 @@ const rest   = sorted.slice(3);
             ))}
           </div>
         </div>
-
-        <div class="section-divider"></div>
-
-        <!-- Activity heatmap -->
-        <div class="section">
-          <div class="section-head">
-            <h2 class="section-head__title">Combined Activity</h2>
-            <p class="section-head__sub">Aggregated contribution activity across all course repos</p>
-          </div>
-          <Heatmap />
-        </div>
       </>
+    )}
+
+    {others.length === 0 && (
+      <div class="section-divider"></div>
+    )}
+
+    <!-- Activity heatmap -->
+    <div class="section">
+      <div class="section-head">
+        <h2 class="section-head__title">Combined Activity</h2>
+        <p class="section-head__sub">Aggregated contribution activity across all course repos</p>
+      </div>
+      <Heatmap />
+    </div>
+
+    {OC.CONTRIBUTORS.length === 0 && (
+      <div style="padding:2rem 0;text-align:center">
+        <p style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-muted)">
+          More contributors appear here automatically once courses are published.
+        </p>
+        <a href="https://github.com/manojpisini/opencourses" class="btn btn-secondary" style="margin-top:1rem" target="_blank" rel="noopener">
+          Contribute on GitHub ↗
+        </a>
+      </div>
     )}
   </div>
 </Base>
+
+<style>
+  /* Lead Maintainer card */
+  .lead-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    max-width: 420px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .lead-card:hover {
+    border-color: var(--accent-blue, #4f9eff);
+    background: var(--bg-raised);
+  }
+  .lead-card__avatar {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .lead-card__crown {
+    position: absolute;
+    top: -10px;
+    right: -8px;
+    font-size: 1.2rem;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+  .lead-card__name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .lead-card__handle {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .lead-card__role {
+    font-size: 0.8rem;
+    color: var(--accent-blue, #4f9eff);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .lead-card__stats {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* Lead contributor card highlight in grid */
+  .contributor-card--lead {
+    border-color: color-mix(in srgb, var(--accent-blue, #4f9eff) 30%, var(--border-default));
+  }
+</style>
