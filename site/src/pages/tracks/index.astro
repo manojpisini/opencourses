@@ -25,33 +25,26 @@ const sorted = OC.TRACKS;
         <h2 class="section-head__title">Knowledge Graph</h2>
       </div>
 
-      <div class="graph-toolbar">
-        <select id="graph-track-filter">
-          <option value="all">All tracks</option>
-          {sorted.map(t => <option value={t.slug}>{t.name}</option>)}
-        </select>
-        <button id="graph-reset" class="btn btn-ghost btn-sm">Reset view</button>
-      </div>
-
       <div class="graph-wrap">
         <svg id="graph-svg" class="graph-svg"></svg>
-      </div>
 
-      <div id="graph-detail" class="graph-detail" hidden>
-        <button id="graph-detail-close" class="btn btn-ghost btn-sm" style="float:right">✕ close</button>
-        <h3 id="graph-detail-title"></h3>
-        <p id="graph-detail-meta" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted)"></p>
-        <p id="graph-detail-desc" style="margin-top:0.5rem;color:var(--text-secondary);font-size:0.9rem"></p>
-        <a id="graph-detail-link" class="btn btn-primary btn-sm" style="margin-top:1rem;display:inline-flex" href="#">View course →</a>
-      </div>
+        <!-- Toolbar: filter + reset — absolute inside wrap -->
+        <div class="graph-toolbar">
+          <select id="graph-track-filter">
+            <option value="all">All tracks</option>
+            {sorted.map(t => <option value={t.slug}>{t.name}</option>)}
+          </select>
+          <button id="graph-reset" class="btn btn-ghost btn-sm">Reset</button>
+        </div>
 
-      <div class="graph-legend">
-        {sorted.map(t => (
-          <div class="graph-legend__item">
-            <span class="graph-legend__dot" style={`background:${OC.TRACK_COLORS[t.slug] ?? '#4f9eff'}`}></span>
-            <span>{t.name}</span>
-          </div>
-        ))}
+        <!-- Detail card — slides in top-right on node click -->
+        <div id="graph-detail" class="graph-detail" hidden>
+          <button id="graph-detail-close" class="graph-detail__close">✕</button>
+          <h3 id="graph-detail-title" class="graph-detail__title"></h3>
+          <p id="graph-detail-meta" class="graph-detail__meta"></p>
+          <p id="graph-detail-desc" class="graph-detail__desc"></p>
+          <a id="graph-detail-link" class="btn btn-primary btn-sm" style="margin-top:0.25rem" href="#">View course →</a>
+        </div>
       </div>
     </div>
 
