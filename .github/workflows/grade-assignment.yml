@@ -1,10 +1,12 @@
-name: Grade Assignment
+name: Grade Project
 
 on:
+  issues:
+    types: [opened, reopened]
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'engine/curriculum/**'
+      - 'engine/courses/**'
 
 permissions:
   pull-requests: write
@@ -12,17 +14,16 @@ permissions:
   contents: write
 
 jobs:
-  validate:
-    name: Validate PR
+  # ── Project submission via GitHub Issue ─────────────────────────────────────
+  grade-issue:
+    name: Grade project submission (issue)
+    if: >
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'project-submit')
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: engine
-    outputs:
-      valid: ${{ steps.validate.outputs.valid }}
-      stage: ${{ steps.validate.outputs.stage }}
-      student: ${{ steps.validate.outputs.student }}
-      attempt: ${{ steps.validate.outputs.attempt }}
 
     steps:
       - name: Checkout
@@ -37,19 +38,90 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+        working-directory: ${{ github.workspace }}
 
-      - name: Validate PR
-        id: validate
-        run: bun run scripts/validate.ts --mode pr
+      - name: Parse submission details
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body   = context.payload.issue.body ?? '';
+            const course = (body.match(/###\s+Course\s*\n+([^\n]+)/i)?.[1] ?? '').trim().toLowerCase().replace(/\s+/g, '-');
+            const projId = (body.match(/###\s+Project ID\s*\n+([^\n]+)/i)?.[1] ?? '').trim();
+            core.setOutput('course', course);
+            core.setOutput('project_id', projId);
+
+      - name: Build sandbox image
+        run: |
+          docker build -t opencourse-sandbox -f sandbox/Dockerfile .
+
+      - name: Run project tests in sandbox
+        run: |
+          docker run \
+            --network none \
+            --memory 256m \
+            --cpus 1 \
+            --read-only \
+            --tmpfs /tmp:size=100m \
+            --user 1001:1001 \
+            --security-opt no-new-privileges \
+            -e COURSE_SLUG=${{ steps.parse.outputs.course }} \
+            -e PROJECT_ID=${{ steps.parse.outputs.project_id }} \
+            -e TEST_OUTPUT_FILE=/tmp/test-results.json \
+            -v $(pwd):/workspace:ro \
+            -v /tmp:/tmp \
+            opencourse-sandbox
+          cp /tmp/test-results.json . 2>/dev/null || echo '{"passed":false,"score":0,"maxScore":1,"tests":[]}' > test-results.json
+
+      - name: Post grading report
+        id: grade
+        run: bun run scripts/grade.ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          STUDENT: ${{ github.event.issue.user.login }}
+          COURSE_SLUG: ${{ steps.parse.outputs.course }}
+          PROJECT_ID: ${{ steps.parse.outputs.project_id }}
+          TEST_OUTPUT_FILE: test-results.json
+          GITHUB_RUN_ID: ${{ github.run_id }}
 
-  grade:
-    name: Run grader in sandbox
-    needs: validate
-    if: needs.validate.outputs.valid == 'true'
+      - name: Close issue on pass
+        if: steps.grade.outputs.passed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.update({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: 'closed', state_reason: 'completed',
+            });
+
+      - name: Trigger leaderboard rebuild on pass
+        if: steps.grade.outputs.passed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner, repo: context.repo.repo,
+              workflow_id: 'course-leaderboard.yml', ref: 'main',
+            });
+
+      - name: Commit audit log
+        run: |
+          git config user.name "opencourse-bot[bot]"
+          git config user.email "opencourse-bot[bot]@users.noreply.github.com"
+          git add engine/audit/log.jsonl
+          git diff --staged --quiet || git commit -m "audit: project-grade by ${{ github.event.issue.user.login }} [skip ci]"
+          git push
+        working-directory: ${{ github.workspace }}
+
+  # ── Manual project review trigger (PR path) ─────────────────────────────────
+  grade-pr:
+    name: Grade project submission (PR)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -68,76 +140,53 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+        working-directory: ${{ github.workspace }}
 
-      - name: Build sandbox image
-        run: docker build -t opencourse-sandbox -f sandbox/Dockerfile .
+      - name: Parse PR title for course/project
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title  = context.payload.pull_request.title ?? '';
+            // Expected: "[Project] @student — git-mastery/project-01"
+            const match  = title.match(/\[Project\].*?(\S+)\/(\S+)$/i);
+            const course = match?.[1] ?? '';
+            const projId = match?.[2] ?? '';
+            core.setOutput('course', course);
+            core.setOutput('project_id', projId);
 
-      - name: Run grader in sandbox
+      - name: Build sandbox and run tests
         run: |
+          docker build -t opencourse-sandbox -f sandbox/Dockerfile .
           docker run \
-            --network none \
-            --memory 128m \
-            --cpus 0.5 \
-            --read-only \
-            --tmpfs /tmp:size=50m \
-            --user 1001:1001 \
-            --security-opt no-new-privileges \
-            -e STAGE=${{ needs.validate.outputs.stage }} \
+            --network none --memory 256m --cpus 1 \
+            --read-only --tmpfs /tmp:size=100m \
+            --user 1001:1001 --security-opt no-new-privileges \
+            -e COURSE_SLUG=${{ steps.parse.outputs.course }} \
+            -e PROJECT_ID=${{ steps.parse.outputs.project_id }} \
             -e TEST_OUTPUT_FILE=/tmp/test-results.json \
-            -v $(pwd):/workspace:ro \
-            -v /tmp:/tmp \
+            -v $(pwd):/workspace:ro -v /tmp:/tmp \
             opencourse-sandbox
-          cp /tmp/test-results.json .
+          cp /tmp/test-results.json . 2>/dev/null || echo '{"passed":false,"score":0,"maxScore":1,"tests":[]}' > test-results.json
 
-      - name: Parse and post grading report
+      - name: Post grading report
         id: grade
         run: bun run scripts/grade.ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          STUDENT: ${{ needs.validate.outputs.student }}
-          STAGE: ${{ needs.validate.outputs.stage }}
-          ATTEMPT: ${{ needs.validate.outputs.attempt }}
+          STUDENT: ${{ github.event.pull_request.user.login }}
+          COURSE_SLUG: ${{ steps.parse.outputs.course }}
+          PROJECT_ID: ${{ steps.parse.outputs.project_id }}
           TEST_OUTPUT_FILE: test-results.json
           GITHUB_RUN_ID: ${{ github.run_id }}
-
-      - name: Merge PR on pass
-        if: steps.grade.outputs.passed == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.COURSE_BOT_TOKEN }}
-          script: |
-            await github.rest.pulls.merge({
-              owner: context.repo.owner, repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              merge_method: 'squash',
-              commit_title: `✅ Stage ${{ needs.validate.outputs.stage }} — @${{ needs.validate.outputs.student }} [skip ci]`
-            });
-
-      - name: Trigger stage advancement on pass
-        if: steps.grade.outputs.passed == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner, repo: context.repo.repo,
-              workflow_id: 'advance-stage.yml',
-              ref: 'main',
-              inputs: {
-                student: '${{ needs.validate.outputs.student }}',
-                stage:   '${{ needs.validate.outputs.stage }}',
-                trigger: 'assignment',
-                score:   '${{ steps.grade.outputs.percentage }}'
-              }
-            });
 
       - name: Commit audit log
         run: |
           git config user.name "opencourse-bot[bot]"
           git config user.email "opencourse-bot[bot]@users.noreply.github.com"
           git add engine/audit/log.jsonl
-          git diff --staged --quiet || git commit -m "audit: grade by ${{ needs.validate.outputs.student }} [skip ci]"
+          git diff --staged --quiet || git commit -m "audit: pr-grade by ${{ github.event.pull_request.user.login }} [skip ci]"
           git push
         working-directory: ${{ github.workspace }}

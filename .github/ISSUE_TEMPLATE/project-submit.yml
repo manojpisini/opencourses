@@ -1,0 +1,77 @@
+name: 🛠️ Submit Project
+description: Submit a course project for automated testing and/or manual review
+title: "[Project] @YOUR_USERNAME — COURSE/PROJECT_ID"
+labels:
+  - project-submit
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Project Submission
+        Submit your project for grading. If the project has automated test cases, they will run in a Docker sandbox and results will be posted here.
+        Projects without test cases are flagged for **manual review** by a maintainer.
+
+  - type: input
+    id: course
+    attributes:
+      label: Course
+      description: The course slug
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: input
+    id: project_id
+    attributes:
+      label: Project ID
+      description: The exact project ID from the course curriculum
+      placeholder: "final-project"
+    validations:
+      required: true
+
+  - type: input
+    id: repo_link
+    attributes:
+      label: Repository / Branch Link
+      description: Link to your work (public GitHub repo, branch, or Gist)
+      placeholder: "https://github.com/your-username/my-project"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What did you build?
+      description: Brief description of your implementation — what works, design decisions, challenges
+      placeholder: |
+        I implemented the Git workflow automation script using Bash.
+        Key features:
+        - Auto-commits with conventional commit messages
+        - Branch cleanup on merge
+        Known limitation: doesn't handle merge conflicts yet.
+    validations:
+      required: true
+
+  - type: textarea
+    id: self_review
+    attributes:
+      label: Self-review checklist
+      description: Which deliverables did you complete?
+      placeholder: |
+        - [x] Feature A implemented
+        - [x] Feature B implemented
+        - [ ] Stretch goal C — not attempted
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: This is my own original work
+          required: true
+        - label: My repository is public and accessible
+          required: true

@@ -1,6 +1,6 @@
 name: 📚 Enroll in a Course
 description: Start your learning journey — enroll in an OpenCourse
-title: "[Enrollment] @YOUR_USERNAME — COURSE_NAME"
+title: "[Enrollment] @YOUR_USERNAME — COURSE_SLUG"
 labels:
   - enrollment-request
 assignees: []
@@ -10,40 +10,42 @@ body:
     attributes:
       value: |
         ## Welcome to OpenCourses! 🎉
-        Fill out the form below to enroll. An automated welcome message will be posted within minutes.
+        Fill in this form to enroll. An automated welcome message with your full curriculum will be posted within minutes.
+        **Keep this issue open** — it tracks your entire progress.
+
+  - type: input
+    id: full_name
+    attributes:
+      label: Full Name
+      description: Your real name (used for certificate generation)
+      placeholder: "Jane Doe"
+    validations:
+      required: true
+
+  - type: input
+    id: email
+    attributes:
+      label: Email Address
+      description: Used for certificate delivery only — not shown publicly
+      placeholder: "jane@example.com"
+    validations:
+      required: true
 
   - type: input
     id: course
     attributes:
       label: Course
-      description: Which course do you want to enroll in?
-      placeholder: "e.g. git-mastery, rust-fundamentals, docker-fundamentals"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: track
-    attributes:
-      label: Track
-      description: Which learning track does this course belong to?
-      options:
-        - foundations
-        - systems
-        - web
-        - devops
-        - data
-        - security
-        - open-source
-        - ai-ml
+      description: The course slug you want to enroll in
+      placeholder: "git-mastery"
     validations:
       required: true
 
   - type: textarea
     id: goal
     attributes:
-      label: Goal
-      description: What do you hope to achieve by completing this course? (optional, helps us personalize your experience)
-      placeholder: "e.g. I want to get comfortable with Git before my first open-source contribution"
+      label: Your Goal
+      description: What do you hope to achieve? (optional)
+      placeholder: "I want to be comfortable contributing to open-source projects using Git."
     validations:
       required: false
 
@@ -51,7 +53,7 @@ body:
     id: experience
     attributes:
       label: Experience Level
-      description: Your current experience with this topic
+      description: Your current level with this topic
       options:
         - Complete beginner
         - Some exposure
@@ -60,15 +62,6 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: availability
-    attributes:
-      label: Weekly Availability
-      description: How many hours per week can you dedicate to this course?
-      placeholder: "e.g. 5 hours/week"
-    validations:
-      required: false
-
   - type: checkboxes
     id: agreements
     attributes:
@@ -76,7 +69,7 @@ body:
       options:
         - label: I will submit my own original work
           required: true
-        - label: I understand that automated grading runs in a sandbox
+        - label: I have read and agree to the [Code of Conduct](../CODE_OF_CONDUCT.md)
           required: true
-        - label: I have read the [Code of Conduct](../CODE_OF_CONDUCT.md)
+        - label: I understand progress is tracked via GitHub labels on this issue
           required: true

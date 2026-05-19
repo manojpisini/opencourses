@@ -1,0 +1,109 @@
+name: Publish Course
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'engine/courses/**/course.md'
+  workflow_dispatch:
+    inputs:
+      course_path:
+        description: 'Path to course.md (leave blank to scan all)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Parse & validate course.md
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    outputs:
+      valid_count: ${{ steps.parse.outputs.valid_count }}
+      course_count: ${{ steps.parse.outputs.course_count }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: ${{ github.workspace }}
+
+      - name: Parse course(s)
+        id: parse
+        run: |
+          if [ -n "${{ github.event.inputs.course_path }}" ]; then
+            bun run scripts/parse-course.ts --path "../${{ github.event.inputs.course_path }}"
+          else
+            # Detect changed course.md files on push
+            CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+              | grep 'engine/courses/.*/course\.md' || true)
+            if [ -n "$CHANGED" ]; then
+              for f in $CHANGED; do
+                bun run scripts/parse-course.ts --path "../$f"
+              done
+            else
+              bun run scripts/parse-course.ts --all
+            fi
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  detect-contributors:
+    name: Detect contributors
+    needs: validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: ${{ github.workspace }}
+
+      - name: Detect contributors for changed courses
+        run: |
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+            | grep 'engine/courses/.*/course\.md' || true)
+          if [ -z "$CHANGED" ]; then
+            # Scan all
+            CHANGED=$(find engine/courses -name 'course.md' 2>/dev/null || true)
+          fi
+          for f in $CHANGED; do
+            SLUG=$(basename $(dirname $f))
+            COURSE_SLUG="$SLUG" COURSE_PATH="../$f" bun run scripts/detect-contributors.ts
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit generated files
+        run: |
+          git config user.name "opencourse-bot[bot]"
+          git config user.email "opencourse-bot[bot]@users.noreply.github.com"
+          git add engine/courses/*/contributors.json engine/courses/*/course.json
+          git diff --staged --quiet || git commit -m "courses: regenerate course.json + contributors.json [skip ci]"
+          git push
+        working-directory: ${{ github.workspace }}

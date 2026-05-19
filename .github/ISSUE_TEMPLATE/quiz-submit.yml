@@ -1,0 +1,85 @@
+name: 📝 Submit Quiz / Chapter Test
+description: Submit your answers for a chapter quiz or chapter test
+title: "[Quiz] @YOUR_USERNAME — COURSE/TEST_ID"
+labels:
+  - quiz-submit
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quiz Submission
+        Fill in the course slug and test ID, then answer each question below.
+
+        **Answer format per question:**
+        - MCQ: just the letter, e.g. `A`
+        - Multi-select: letters separated by commas, e.g. `A, C`
+        - True/False: `true` or `false`
+        - Short answer: a sentence or two — include the key concepts
+        - Code: paste your code in a fenced block
+
+        You will receive an automated result comment within minutes.
+
+  - type: input
+    id: course
+    attributes:
+      label: Course
+      description: The course slug you are enrolled in
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: input
+    id: test_id
+    attributes:
+      label: Test ID
+      description: The exact test/quiz ID from the course curriculum (e.g. ch-01-test, lesson-2-quiz, final-test)
+      placeholder: "ch-01-test"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### Answers
+        Add your answers below using the format `### Answer: <question-id>` followed by your answer on the next line.
+
+        **Example:**
+        ```
+        ### Answer: q1
+        A
+
+        ### Answer: q2
+        true
+
+        ### Answer: q3
+        A commit is a snapshot of tracked files at a point in time, with a pointer to its parent commit.
+        ```
+
+  - type: textarea
+    id: answers
+    attributes:
+      label: Answers
+      description: |
+        Paste ALL your answers here using the ### Answer: <id> format shown above.
+      placeholder: |
+        ### Answer: q1
+        A
+
+        ### Answer: q2
+        true
+
+        ### Answer: q3
+        Your answer here...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: These are my own answers — I have not copied from others
+          required: true

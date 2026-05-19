@@ -17,6 +17,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["scripts/**/*.ts"],
+  "include": ["scripts/**/*.ts", "lib/**/*.ts", "types/**/*.ts"],
   "exclude": ["node_modules"]
 }
