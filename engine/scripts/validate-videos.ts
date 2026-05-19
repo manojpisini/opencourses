@@ -80,7 +80,7 @@ function writeOutputs(deadCount: number, report: string) {
 async function main() {
   console.log('Scanning for YouTube video URLs...');
 
-  const allLinks = scanDirectory('curriculum');
+  const allLinks = scanDirectory('courses');
   console.log(`Found ${allLinks.length} YouTube URLs across ${new Set(allLinks.map((l) => l.file)).size} files`);
 
   const dead: DeadVideo[] = [];

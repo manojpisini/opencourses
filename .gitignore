@@ -38,6 +38,8 @@ Desktop.ini
 *.swp
 *.swo
 *~
+.claude/
+.vscode/
 
 # ── TypeScript ────────────────────────────────────────────────────────────────
 *.tsbuildinfo

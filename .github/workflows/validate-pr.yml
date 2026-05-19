@@ -4,7 +4,8 @@ on:
   pull_request:
     types: [opened, edited, synchronize]
     paths:
-      - 'engine/curriculum/**'
+      - 'engine/courses/**'
+      - 'site/**'
 
 permissions:
   pull-requests: write
@@ -12,7 +13,7 @@ permissions:
 
 jobs:
   validate:
-    name: Check title format & tamper detection
+    name: Tamper detection & course validation
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,8 +33,14 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Validate PR
-        run: bun run scripts/validate.ts --mode pr
+      - name: Validate changed course.md files
+        run: bun run validate --mode schema
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+
+      - name: Check for protected-path tampering
+        run: bun run validate --mode pr
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
