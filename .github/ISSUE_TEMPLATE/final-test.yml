@@ -1,0 +1,92 @@
+name: 🎓 Submit Final Test
+description: Submit your final test answers to complete the course and trigger certificate generation
+title: "[Final Test] @YOUR_USERNAME — COURSE_SLUG"
+labels:
+  - final-test
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Final Test Submission
+
+        This is the **comprehensive final test** for the course. Passing it triggers automatic
+        certificate generation — a GPG-signed GitHub Release will be issued in your name.
+
+        **Before submitting:**
+        - Verify all required chapters are marked as passed on your enrollment issue
+        - Use the same `### Answer: <id>` format as chapter tests
+        - This counts as your official submission — re-attempts require opening a new issue
+
+        **Answer format:**
+        ```
+        ### Answer: q1
+        A
+
+        ### Answer: q2
+        The three phases of the Git object model are...
+
+        ### Answer: q3
+        true
+        ```
+
+        See [Documentation → Certification](https://manojpisini.github.io/opencourses/docs#arch-certs)
+        for full details on how certificates are generated and verified.
+
+  - type: input
+    id: github_username
+    attributes:
+      label: Your GitHub Username
+      description: Your GitHub handle — must exactly match the username on your enrollment issue
+      placeholder: "@your-username"
+    validations:
+      required: true
+
+  - type: input
+    id: course
+    attributes:
+      label: Course Slug
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: input
+    id: enrollment_issue
+    attributes:
+      label: Your Enrollment Issue URL
+      description: Link to the issue you opened when you enrolled — the bot uses this to verify all chapters are complete
+      placeholder: "https://github.com/manojpisini/opencourses/issues/123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: answers
+    attributes:
+      label: Final Test Answers
+      description: |
+        Paste ALL your answers using the `### Answer: <id>` format.
+        Use the exact question IDs from the final test section of the course.
+      placeholder: |
+        ### Answer: q1
+        A
+
+        ### Answer: q2
+        Your answer here...
+
+        ### Answer: q3
+        true
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have completed all required chapters in this course
+          required: true
+        - label: These are my own answers — I have not copied from others
+          required: true
+        - label: I understand this is my official final test submission (re-attempts require a new issue)
+          required: true

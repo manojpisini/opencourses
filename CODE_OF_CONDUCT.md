@@ -21,7 +21,7 @@ We are committed to making participation a positive experience for everyone.
 
 ## Unacceptable Behaviour
 
-The following will not be tolerated in any project space (issues, PRs, discussions, Discord, email):
+The following will not be tolerated in any project space:
 
 - Harassment, intimidation, or personal attacks
 - Discriminatory jokes, language, or imagery
@@ -36,7 +36,7 @@ The following will not be tolerated in any project space (issues, PRs, discussio
 
 ## Scope
 
-This Code of Conduct applies to all project spaces managed by this repository, including GitHub issues, pull requests, discussions, and any community channels linked from the project. It also applies when an individual is representing the project in public spaces.
+This Code of Conduct applies to all project spaces managed by this repository: GitHub Issues, pull requests, Discussions, code review comments, and any other channels linked from this repository. It also applies when an individual is publicly representing the project.
 
 ---
 

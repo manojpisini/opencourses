@@ -1,6 +1,6 @@
 name: 📚 Enroll in a Course
 description: Start your learning journey — enroll in an OpenCourse
-title: "[Enrolled] @YOUR_GITHUB_USERNAME — COURSE_SLUG"
+title: "[Enrolled] @YOUR_USERNAME — COURSE_SLUG"
 labels:
   - enrollment-request
 assignees: []
@@ -11,19 +11,32 @@ body:
       value: |
         ## Welcome to OpenCourses! 🎉
 
-        Your **GitHub account** (`@your-username`) is your identity for everything:
-        enrollment tracking, chapter tests, the final test, and certificate issuance.
+        Your **GitHub account** is your identity for everything on this platform:
+        enrollment tracking, chapter tests, assignments, the final test, and certificate issuance.
         No separate account needed — just your GitHub profile.
 
-        Fill in the two fields below and submit. An automated welcome message with your full curriculum will appear within minutes.
+        Fill in the fields below and submit. An automated welcome message with your full curriculum
+        will appear within minutes.
 
-        > **Keep this issue open** — it is your progress record. Every chapter test pass, project pass, and the final certificate will be tracked here as GitHub labels.
+        > **Keep this issue open** — it is your progress record. Every chapter test pass, assignment
+        > pass, and your final certificate will be tracked here as GitHub labels.
+
+        Find course slugs at: **[manojpisini.github.io/opencourses/courses](https://manojpisini.github.io/opencourses/courses)**
+
+  - type: input
+    id: github_username
+    attributes:
+      label: Your GitHub Username
+      description: Your GitHub handle — used by the bot to link all your submissions to this enrollment
+      placeholder: "@your-username"
+    validations:
+      required: true
 
   - type: input
     id: course
     attributes:
       label: Course Slug
-      description: The exact slug of the course you want to enroll in (check the course catalog)
+      description: The exact slug of the course you want to enroll in (find it at the course catalog link above)
       placeholder: "git-mastery"
     validations:
       required: true
@@ -31,10 +44,10 @@ body:
   - type: input
     id: email
     attributes:
-      label: Email Address
+      label: Email Address (optional)
       description: |
         Used **only** for certificate delivery — stored privately in this issue body, never shown publicly.
-        Leave blank if you prefer to receive the certificate only via GitHub.
+        Leave blank if you prefer to receive the certificate only via GitHub Release.
       placeholder: "you@example.com"
     validations:
       required: false
@@ -52,6 +65,7 @@ body:
     id: experience
     attributes:
       label: Current Experience Level
+      description: Honestly assess your level — this helps us tailor any feedback
       options:
         - Complete beginner
         - Some exposure
@@ -65,7 +79,7 @@ body:
     attributes:
       label: Agreements
       options:
-        - label: I understand my GitHub username is my identity for all tests and the certificate
+        - label: I understand my GitHub username is my identity for all tests, assignments, and the certificate
           required: true
         - label: I will submit my own original work
           required: true

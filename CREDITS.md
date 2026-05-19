@@ -11,7 +11,7 @@ This file records attributions for any material that has been adapted (summarise
 Each entry follows this structure:
 
 ```
-### [Course Title](site/src/content/courses/<slug>.md)
+### [Course Title](engine/courses/<slug>/course.md)
 
 | Resource | Author / Organisation | Source | License |
 |---|---|---|---|

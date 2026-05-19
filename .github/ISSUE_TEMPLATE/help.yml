@@ -1,0 +1,100 @@
+name: 🆘 Request Help
+description: Get help when you're stuck on a lesson, chapter test, or assignment
+title: "[Help] @YOUR_USERNAME — COURSE_SLUG/CHAPTER_ID"
+labels:
+  - help-wanted
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Help Request
+
+        Stuck? Ask here. Be specific — vague questions get slow answers.
+
+        **Before opening this issue, try:**
+        1. Re-read the chapter content carefully
+        2. Check the error message — the grader always includes a hint
+        3. Search existing issues — your question may already be answered
+
+        The more context you give (what you tried, exact error, specific question),
+        the faster you'll get a useful answer.
+
+  - type: input
+    id: github_username
+    attributes:
+      label: Your GitHub Username
+      description: Your GitHub handle — lets us check your enrollment and submission history
+      placeholder: "@your-username"
+    validations:
+      required: true
+
+  - type: input
+    id: course
+    attributes:
+      label: Course Slug
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: input
+    id: chapter_id
+    attributes:
+      label: Chapter / Lesson
+      description: Which part of the course are you stuck on?
+      placeholder: "ch-01 or lesson-3 or ch-02-test"
+    validations:
+      required: true
+
+  - type: input
+    id: topic
+    attributes:
+      label: What are you stuck on?
+      description: One-line summary of the blocker
+      placeholder: "Chapter test Q3 — don't understand why my binary search fails on duplicate values"
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you already tried?
+      description: Show your work — this avoids back-and-forth and gets you a better answer faster
+      placeholder: |
+        - Re-read the lesson on binary search
+        - Checked the Python docs for list.index()
+        - Tried returning -1 instead of None — same test failure
+        - Searched existing issues — found one similar but no answer
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your specific question
+      description: The more precise your question, the more useful the answer
+      placeholder: |
+        Is the expected output sorted or unsorted? The chapter says "return the index"
+        but my tests pass when the list is pre-sorted and fail when it isn't.
+        Should my function sort first, or is the input always guaranteed sorted?
+    validations:
+      required: true
+
+  - type: textarea
+    id: code_or_error
+    attributes:
+      label: Relevant code or error output (optional)
+      description: Paste any error messages, test output, or relevant code snippet
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: enrollment_issue
+    attributes:
+      label: Your Enrollment Issue URL (optional)
+      description: Link to your enrollment issue — lets the bot pull context faster
+      placeholder: "https://github.com/manojpisini/opencourses/issues/123"
+    validations:
+      required: false

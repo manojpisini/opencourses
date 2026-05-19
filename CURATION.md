@@ -44,8 +44,8 @@ Resources that are **not acceptable:**
 
 ### 4. Structure
 - A course must have a clear progression — learners know what they're building toward
-- At minimum: a learning objective, prerequisites, and a weekly or stage-based curriculum outline
-- Courses with engine integration must have at least one completable stage with defined pass criteria
+- At minimum: a learning objective, prerequisites, and a chapter-based curriculum outline in `course.md`
+- Courses with graded stages must have at least one completable chapter with a defined `pass_score`
 
 ### 5. Licensing Compatibility
 - All linked resources must be freely accessible (no login required to view core content)
@@ -54,15 +54,36 @@ Resources that are **not acceptable:**
 
 ---
 
-## Quality Bar for Engine Stages
+## Quality Bar for Graded Chapters
 
-Graded assignments and quizzes must:
+Chapter tests and code assignments defined in `course.md` must:
 
 - Test understanding, not memorisation — questions should require the learner to apply knowledge
-- Have unambiguous pass/fail criteria defined in `meta.yaml`
-- For code stages: test scripts must be deterministic and not rely on timing or network
-- For quiz stages: all correct answers must be verifiable against a primary source (link required in `quiz.yaml`)
-- Pass threshold: ≥ 75% correct to advance
+- Have unambiguous pass/fail criteria set in the chapter's `chapter_test.pass_score` field
+- For code assignments: test scripts must be deterministic and not rely on timing or network
+- For chapter tests: all correct answers must be verifiable against a primary source (add a `source` field to each question)
+- Pass threshold: ≥ 75% correct to advance (configurable per chapter via `pass_score`)
+
+---
+
+## Valid Track Slugs
+
+Every course must set `meta.track` to exactly one of the 12 valid slugs:
+
+| Slug | Track Name | Covers |
+|---|---|---|
+| `foundations` | Foundations & Theory | Git, DS&A, algorithms, complexity, discrete math, logic, theory |
+| `languages` | Languages & Paradigms | Low-level, OOP, functional, scripting, logic programming, query |
+| `web` | Web & Mobile | HTML/CSS/JS/TS, frameworks, iOS, Android, PWA, WebAssembly |
+| `backend` | Backend & Databases | APIs, SQL/NoSQL/graph DBs, microservices, GraphQL, gRPC |
+| `systems` | Systems & Infrastructure | OS, compilers, Docker, Kubernetes, cloud, CI/CD, IaC, SRE |
+| `networks` | Networks & Protocols | TCP/IP, HTTP/1–3, TLS, BGP, WebRTC, SDN, 5G, MPLS |
+| `data` | Data & AI | ETL, ML, deep learning, LLMs, MLOps, computer vision |
+| `security` | Security & Cryptography | OWASP, crypto, pentesting, CTF, post-quantum, ZKPs |
+| `architecture` | Architecture & Engineering | System design, patterns, DDD, TDD, distributed systems |
+| `creative` | Creative Computing | Graphics, shaders, game engines, simulation, generative |
+| `emerging` | Emerging Technologies | Quantum, neuromorphic, blockchain, formal verification |
+| `applied` | Applied & Cross-Domain | Computational physics/biology, robotics, HPC, GIS, FPGA |
 
 ---
 
@@ -72,9 +93,9 @@ When a content gap is identified (via issues, community feedback, or maintainer 
 
 1. **Open an issue** tagged `content-gap` describing what's missing and why it matters
 2. **Research existing resources** — prefer the best freely available material over creating new explanatory text
-3. **Draft in a branch** — course pages in `site/src/content/courses/` start as `status: "draft"` in `oc.ts`
+3. **Draft in a branch** — copy the template to `engine/courses/{slug}/` and set `meta.status: "draft"` in `course.md`
 4. **Review cycle** — at least one other contributor reads the full course page before it goes `active`
-5. **Engine stages are optional** — a course can ship as `active` with site content only; engine integration can follow
+5. **Graded chapters are optional** — a course can ship as `active` with site content only; chapter tests and code assignments can follow
 
 ---
 
@@ -90,7 +111,7 @@ When a content gap is identified (via issues, community feedback, or maintainer 
 
 ## Maintaining Existing Courses
 
-Courses are reviewed annually (or when a maintainer flags `status: "attention"`):
+Courses are reviewed annually (or when a maintainer flags `meta.status: "attention"` in `course.md`):
 
 - Resources that go offline or become paywalled must be replaced or removed
 - Courses using deprecated tooling get an `attention` status and a 90-day window to update
@@ -105,7 +126,7 @@ Open a GitHub issue with:
 ```
 Title: [Course Proposal] Your Course Title
 
-Track: <track slug>
+Track: <one of the 12 valid slugs above>
 Difficulty: beginner | intermediate | advanced
 Duration estimate: X weeks
 

@@ -7,7 +7,7 @@ This policy covers the OpenCourses platform repository at `github.com/manojpisin
 - The Astro static site (`site/`)
 - The grading engine and Docker sandbox (`engine/`)
 - GitHub Actions workflows (`.github/workflows/`)
-- Automation scripts and tooling
+- Automation scripts and tooling (`engine/scripts/`)
 
 **Out of scope:** Third-party services the site links to, GitHub infrastructure itself, or vulnerabilities in upstream dependencies that have no realistic exploitation path in this project.
 
@@ -63,9 +63,19 @@ We follow [responsible disclosure](https://en.wikipedia.org/wiki/Coordinated_vul
 
 ## Known Limitations (Not Vulnerabilities)
 
-- The site is a **static site** with no user authentication, database, or server-side processing. There is no login system to attack.
-- The grading engine runs in a **Docker sandbox** (`--network none --memory 128m --read-only --user 1001:1001`). Sandbox escapes are in scope; sandbox-contained resource exhaustion is not.
-- Workflow secrets are scoped to the repository and not accessible from forks.
+- The site is a **static site** with no user authentication, database, or server-side processing. There is no login system, session management, or user data stored anywhere on the platform.
+- The grading engine runs in a **Docker sandbox** with these constraints:
+  ```
+  --network none             # no outbound network
+  --memory 256m              # memory cap
+  --cpus 1                   # CPU cap
+  --read-only                # read-only root filesystem
+  --user 1001:1001           # non-root user
+  --security-opt no-new-privileges
+  --tmpfs /tmp:size=100m     # 100 MB writable temp only
+  ```
+  Sandbox escapes are **in scope**. Sandbox-contained resource exhaustion (e.g. slow code) is not.
+- Workflow secrets (`GITHUB_TOKEN`, `GPG_SIGNING_KEY`, etc.) are scoped to this repository and not accessible from forks due to GitHub's pull-request secret isolation.
 
 ---
 

@@ -1,0 +1,106 @@
+name: 🚩 Report False or Outdated Content
+description: Report course content that is factually incorrect, outdated, or misleading
+title: "[Content Issue] @YOUR_USERNAME — COURSE_SLUG"
+labels:
+  - content-fix
+  - false-content
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Content Issue Report
+
+        Use this form to report content that is factually wrong, outdated, or misleading.
+        The more specific you are, the faster it can be fixed.
+
+        **Not sure it's wrong?** That's fine — describe what confused you and where.
+        Even "this explanation wasn't clear" is useful feedback.
+
+  - type: input
+    id: github_username
+    attributes:
+      label: Your GitHub Username
+      placeholder: "@your-username"
+    validations:
+      required: true
+
+  - type: input
+    id: course
+    attributes:
+      label: Course Slug
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: input
+    id: chapter_id
+    attributes:
+      label: Chapter / Lesson
+      description: Which chapter or lesson contains the issue?
+      placeholder: "ch-02 or lesson-3 or final-test"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Type of Issue
+      options:
+        - Factually incorrect
+        - Outdated (deprecated tool, API, or practice)
+        - Misleading explanation
+        - Broken resource link
+        - Wrong answer key (chapter test or final test)
+        - Missing important information
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Exact location of the issue
+      description: Help maintainers find it fast — be as precise as possible
+      placeholder: "Chapter 2, Lesson 1 — paragraph starting with 'Git stores files as...'"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is wrong?
+      description: Describe the error clearly. What does it currently say, and what is actually correct?
+      placeholder: |
+        The lesson says "Git stores diffs between files" but this is incorrect.
+        Git actually stores snapshots (complete file objects), not diffs.
+        Diffs are computed on-the-fly from the stored snapshots.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction (optional)
+      description: If you know the correct information, describe it here
+      placeholder: "Replace with: 'Git stores complete snapshots of files as blob objects in its object database...'"
+    validations:
+      required: false
+
+  - type: input
+    id: source
+    attributes:
+      label: Source / Reference URL (optional)
+      description: Authoritative source supporting your correction — official docs, paper, specification, etc.
+      placeholder: "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have verified this is actually incorrect (not just different from what I expected or prefer)
+          required: true

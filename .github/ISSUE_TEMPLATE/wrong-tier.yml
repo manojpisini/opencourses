@@ -1,6 +1,6 @@
-name: ⚠️ Wrong Tier / Grade Dispute
-description: Dispute an automated grade or wrong difficulty classification
-title: "[Dispute] Stage 0N — @YOUR_USERNAME"
+name: ⚠️ Grade Dispute / Wrong Difficulty
+description: Dispute an automated grade or report incorrect course difficulty classification
+title: "[Dispute] @YOUR_USERNAME — COURSE_SLUG"
 labels:
   - grade-dispute
 assignees: []
@@ -9,45 +9,84 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Grade Dispute
-        If you believe the autograder made an error, describe it here. An instructor will review within 48 hours.
+        ## Grade Dispute / Difficulty Report
+
+        If you believe the autograder made an error, or a course is misclassified by difficulty,
+        describe it here. A maintainer will review within 48 hours.
+
+        For grade disputes, be specific — reference test IDs, expected output, or grader errors.
+        Vague disputes ("it should be higher") without evidence will be closed.
 
   - type: input
-    id: stage
+    id: github_username
     attributes:
-      label: Stage
+      label: Your GitHub Username
+      description: Your GitHub handle — used to look up your enrollment and submission history
+      placeholder: "@your-username"
     validations:
       required: true
 
   - type: input
-    id: pr_url
+    id: course
     attributes:
-      label: PR URL
-      placeholder: "https://github.com/..."
+      label: Course Slug
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dispute_type
+    attributes:
+      label: Type of Dispute
+      options:
+        - Wrong score (autograder error)
+        - Chapter test marked fail — believe I passed
+        - Assignment grade is incorrect
+        - Final test result is wrong
+        - Wrong difficulty classification for course
+        - Other grading issue
+    validations:
+      required: true
+
+  - type: input
+    id: chapter_id
+    attributes:
+      label: Chapter or Test ID
+      description: Which chapter test, assignment, or final test is this about?
+      placeholder: "ch-01-test or assignment-02 or final-test"
+    validations:
+      required: true
+
+  - type: input
+    id: issue_or_pr_url
+    attributes:
+      label: Enrollment Issue or Submission URL
+      description: Link to your enrollment issue or the submission PR/issue
+      placeholder: "https://github.com/manojpisini/opencourses/issues/123"
     validations:
       required: true
 
   - type: input
     id: score_received
     attributes:
-      label: Score received
-      placeholder: "e.g. 60/100"
+      label: Score received (if applicable)
+      placeholder: "e.g. 60/100 or FAIL"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: score_expected
     attributes:
-      label: Score expected
-      placeholder: "e.g. 85/100"
+      label: Score expected (if applicable)
+      placeholder: "e.g. 85/100 or PASS"
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: reason
     attributes:
-      label: Why do you believe the grade is incorrect?
-      description: Be specific — reference test names, output, or grader errors
+      label: Why do you believe the grade or classification is incorrect?
+      description: Be specific — reference test names, expected output, or grader error messages
     validations:
       required: true
 

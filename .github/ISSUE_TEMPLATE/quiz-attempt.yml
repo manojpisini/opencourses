@@ -1,65 +1,89 @@
-name: ❓ Quiz Attempt
-description: Submit your answers for a stage quiz
-title: "[Quiz] Stage 0N — @YOUR_USERNAME"
+name: 📋 Submit Assignment
+description: Submit a chapter coding assignment for automated grading
+title: "[Assignment] @YOUR_USERNAME — COURSE_SLUG/CHAPTER_ID"
 labels:
-  - quiz-attempt
+  - assignment-submit
 assignees: []
 
 body:
   - type: markdown
     attributes:
       value: |
-        ## Stage Quiz Submission
-        Answer each question below. For MCQ questions, write the letter (A/B/C/D).
-        For short-answer and code questions, write your full answer.
+        ## Assignment Submission
 
-        > ⏰ You have **3 attempts** per quiz. Once submitted, the grader runs automatically.
+        Submit a chapter coding assignment for grading. Your code will be tested in a hardened
+        Docker sandbox and results will be posted here within ~60 seconds.
+
+        Make sure your repository or branch is **publicly accessible** before submitting —
+        the grader needs to clone it.
 
   - type: input
-    id: stage
+    id: github_username
     attributes:
-      label: Stage Number
-      placeholder: "e.g. 01, 02, 03, 04, 05"
+      label: Your GitHub Username
+      description: Your GitHub handle — must match the username on your enrollment issue
+      placeholder: "@your-username"
+    validations:
+      required: true
+
+  - type: input
+    id: course
+    attributes:
+      label: Course Slug
+      description: The course slug you are enrolled in
+      placeholder: "git-mastery"
+    validations:
+      required: true
+
+  - type: input
+    id: chapter_id
+    attributes:
+      label: Chapter ID
+      description: The chapter this assignment belongs to
+      placeholder: "ch-01"
+    validations:
+      required: true
+
+  - type: input
+    id: assignment_id
+    attributes:
+      label: Assignment ID
+      description: The exact assignment ID from the chapter (check the chapter content in course.md)
+      placeholder: "assignment-01"
+    validations:
+      required: true
+
+  - type: input
+    id: repo_link
+    attributes:
+      label: Repository / Branch / PR Link
+      description: Link to your work — public GitHub repo, branch URL, or PR URL
+      placeholder: "https://github.com/your-username/my-work or https://github.com/.../pull/123"
     validations:
       required: true
 
   - type: textarea
-    id: q1
+    id: description
     attributes:
-      label: "### Q1"
-      description: Answer to Question 1
+      label: What did you implement?
+      description: Brief description — what works, design decisions, any known limitations
+      placeholder: |
+        Implemented a binary search tree with insert, delete, and in-order traversal.
+        Key decisions:
+        - Used iterative approach for traversal to avoid stack overflow on deep trees
+        Known limitation: deletion of nodes with two children uses in-order predecessor.
     validations:
       required: true
 
   - type: textarea
-    id: q2
+    id: self_review
     attributes:
-      label: "### Q2"
-      description: Answer to Question 2
-    validations:
-      required: true
-
-  - type: textarea
-    id: q3
-    attributes:
-      label: "### Q3"
-      description: Answer to Question 3
-    validations:
-      required: true
-
-  - type: textarea
-    id: q4
-    attributes:
-      label: "### Q4"
-      description: Answer to Question 4 (if applicable)
-    validations:
-      required: false
-
-  - type: textarea
-    id: q5
-    attributes:
-      label: "### Q5"
-      description: Answer to Question 5 (if applicable)
+      label: Self-review checklist (optional)
+      description: Which deliverables did you complete?
+      placeholder: |
+        - [x] Insert implemented and tested locally
+        - [x] Delete handles all three cases
+        - [ ] Stretch goal: AVL balancing — not attempted
     validations:
       required: false
 
@@ -68,5 +92,9 @@ body:
     attributes:
       label: Confirmation
       options:
-        - label: These are my own answers and I have not copied from other students
+        - label: This is my own original work
+          required: true
+        - label: My repository / branch is publicly accessible
+          required: true
+        - label: I am enrolled in the course listed above
           required: true

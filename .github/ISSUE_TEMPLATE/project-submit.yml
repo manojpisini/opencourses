@@ -1,6 +1,6 @@
 name: 🛠️ Submit Project
 description: Submit a course project for automated testing and/or manual review
-title: "[Project] @YOUR_USERNAME — COURSE/PROJECT_ID"
+title: "[Project] @YOUR_USERNAME — COURSE_SLUG/PROJECT_ID"
 labels:
   - project-submit
 assignees: []
@@ -10,14 +10,27 @@ body:
     attributes:
       value: |
         ## Project Submission
-        Submit your project for grading. If the project has automated test cases, they will run in a Docker sandbox and results will be posted here.
+
+        Submit your project for grading. If the project has automated test cases, they will run
+        in a Docker sandbox and results will be posted here.
         Projects without test cases are flagged for **manual review** by a maintainer.
+
+        Make sure your repository is **publicly accessible** before submitting.
+
+  - type: input
+    id: github_username
+    attributes:
+      label: Your GitHub Username
+      description: Your GitHub handle — must match the username on your enrollment issue
+      placeholder: "@your-username"
+    validations:
+      required: true
 
   - type: input
     id: course
     attributes:
-      label: Course
-      description: The course slug
+      label: Course Slug
+      description: The course slug you are enrolled in
       placeholder: "git-mastery"
     validations:
       required: true
@@ -34,8 +47,8 @@ body:
   - type: input
     id: repo_link
     attributes:
-      label: Repository / Branch Link
-      description: Link to your work (public GitHub repo, branch, or Gist)
+      label: Repository Link
+      description: Link to your work (public GitHub repo or branch)
       placeholder: "https://github.com/your-username/my-project"
     validations:
       required: true
@@ -74,4 +87,6 @@ body:
         - label: This is my own original work
           required: true
         - label: My repository is public and accessible
+          required: true
+        - label: I am enrolled in the course listed above
           required: true

@@ -1,6 +1,6 @@
-name: 📝 Submit Quiz / Chapter Test
-description: Submit your answers for a chapter quiz or chapter test
-title: "[Quiz] @YOUR_USERNAME — COURSE/TEST_ID"
+name: 📝 Submit Chapter Test
+description: Submit your answers for a chapter test
+title: "[Chapter Test] @YOUR_USERNAME — COURSE_SLUG/TEST_ID"
 labels:
   - quiz-submit
 assignees: []
@@ -9,22 +9,44 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Quiz Submission
-        Fill in the course slug and test ID, then answer each question below.
+        ## Chapter Test Submission
 
-        **Answer format per question:**
-        - MCQ: just the letter, e.g. `A`
+        Fill in your GitHub username, the course slug, and the test ID, then paste all your answers below.
+
+        **Answer format per question type:**
+        - MCQ (single choice): just the letter, e.g. `A`
         - Multi-select: letters separated by commas, e.g. `A, C`
         - True/False: `true` or `false`
         - Short answer: a sentence or two — include the key concepts
-        - Code: paste your code in a fenced block
+        - Code: paste your code in a fenced block (` ``` `)
+
+        **Answer block format:**
+        ```
+        ### Answer: q1
+        A
+
+        ### Answer: q2
+        true
+
+        ### Answer: q3
+        A commit is a snapshot of tracked files at a point in time, with a pointer to its parent.
+        ```
 
         You will receive an automated result comment within minutes.
 
   - type: input
+    id: github_username
+    attributes:
+      label: Your GitHub Username
+      description: Your GitHub handle — must match the username on your enrollment issue
+      placeholder: "@your-username"
+    validations:
+      required: true
+
+  - type: input
     id: course
     attributes:
-      label: Course
+      label: Course Slug
       description: The course slug you are enrolled in
       placeholder: "git-mastery"
     validations:
@@ -34,36 +56,18 @@ body:
     id: test_id
     attributes:
       label: Test ID
-      description: The exact test/quiz ID from the course curriculum (e.g. ch-01-test, lesson-2-quiz, final-test)
+      description: The exact test ID from the course (e.g. ch-01-test, ch-03-test, final-test)
       placeholder: "ch-01-test"
     validations:
       required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        ---
-        ### Answers
-        Add your answers below using the format `### Answer: <question-id>` followed by your answer on the next line.
-
-        **Example:**
-        ```
-        ### Answer: q1
-        A
-
-        ### Answer: q2
-        true
-
-        ### Answer: q3
-        A commit is a snapshot of tracked files at a point in time, with a pointer to its parent commit.
-        ```
 
   - type: textarea
     id: answers
     attributes:
       label: Answers
       description: |
-        Paste ALL your answers here using the ### Answer: <id> format shown above.
+        Paste ALL your answers here using the `### Answer: <id>` format shown above.
+        Use the exact question IDs from the chapter test (e.g. q1, q2, q3 ...).
       placeholder: |
         ### Answer: q1
         A
@@ -82,4 +86,6 @@ body:
       label: Confirmation
       options:
         - label: These are my own answers — I have not copied from others
+          required: true
+        - label: I am submitting for the course and chapter test ID listed above
           required: true

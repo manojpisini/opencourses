@@ -87,7 +87,7 @@ The leaderboard rebuilds itself every night.
 │   site/         │          │   engine/        │        │  .github/        │
 │                 │          │                  │        │  workflows/      │
 │  Astro 4        │          │  TypeScript      │        │                  │
-│  Static site    │          │  grading engine  │        │  19 automations  │
+│  Static site    │          │  grading engine  │        │  11 workflows    │
 │  GitHub Pages   │          │  Docker sandbox  │        │  Zero servers    │
 └────────┬────────┘          └────────┬─────────┘        └────────┬─────────┘
          │                           │                            │
@@ -105,27 +105,29 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
 ```
   1. ENROLL ──────────────────────────────────────────────────────────────────
      Open an Issue using the "Enroll in a Course" template.
-     Bot processes it instantly. Your student journey begins.
+     Fill in your GitHub username and course slug.
+     The bot processes it instantly. Your student journey begins.
 
   2. LEARN ───────────────────────────────────────────────────────────────────
      Read Markdown content in this repo.
      Watch linked videos. Write code locally. No tracking. No timers.
 
   3. SUBMIT ──────────────────────────────────────────────────────────────────
-     Open a Pull Request:  "[Stage 01] @your-username"
+     For code assignments: open a Pull Request "[Assignment] @username — course/ch-01"
      GitHub Actions runs your code in a hardened Docker sandbox.
      Score + line-by-line feedback posted as a PR comment in ~45 seconds.
 
   4. QUIZ ────────────────────────────────────────────────────────────────────
-     Open a "Quiz Attempt" issue. Claude grades it semantically —
-     not keyword matching. You get real feedback, not just ✓ / ✗.
+     For chapter tests: open a "Submit Chapter Test" issue.
+     The grader checks your answers against the course answer key automatically.
+     Feedback posted within minutes. No manual review for standard tests.
 
   5. ADVANCE ─────────────────────────────────────────────────────────────────
-     Pass all stages? The bot unlocks Stage N+1 automatically.
+     Pass a chapter? The bot labels your enrollment issue automatically.
      Fail? Feedback posted. Iterate. No penalty. No lock-out.
 
   6. CERTIFY ─────────────────────────────────────────────────────────────────
-     All 5 stages cleared? A GPG-signed certificate is issued
+     Submit the final test. Pass? A GPG-signed certificate is issued
      as a GitHub Release. Your name goes on the public leaderboard.
      The certificate lives on GitHub forever.
 ```
@@ -134,20 +136,28 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
 
 ---
 
-## ✦ Course Catalog
+## ✦ Course Tracks
 
-| Track | Courses | Difficulty | Description |
-|:-----:|:-------:|:----------:|:-----------:|
-| 🔧 **Systems** | Rust Fundamentals · Async Rust · Systems Programming | ◆◆◆ Advanced | Memory, ownership, concurrency, OS internals |
-| 🌐 **Web** | Modern CSS · TypeScript Types · HTML Done Right | ◆◇◇ – ◆◆◆ | The frontend stack, actually understood |
-| 🔒 **Security** | Web Security 101 · Applied Cryptography · Auth Patterns | ◆◇◇ – ◆◆◆ | XSS, CSRF, zero-trust, real cryptography |
-| 🚀 **DevOps** | Docker Basics · Kubernetes Fastpath · Observability Core | ◆◆◇ Intermediate | Ship, operate, and observe production software |
-| 📊 **Data** | Data Structures Revisited · Shell Mastery | ◆◇◇ – ◆◆◇ | Foundations that don't rot |
-| 🏛️ **Foundations** | Git Internals · Computers from the Ground Up | ◆◇◇ – ◆◆◇ | First principles, not hand-waving |
+OpenCourses uses 12 broad tracks that cover every area of computing:
+
+| Track | Slug | Description |
+|:-----:|:----:|:-----------:|
+| 🔵 **Foundations & Theory** | `foundations` | Git, DS&A, algorithms, complexity, discrete math, theory |
+| 🟣 **Languages & Paradigms** | `languages` | Low-level, OOP, functional, scripting, logic, query |
+| 🔷 **Web & Mobile** | `web` | HTML/CSS/JS/TS, frameworks, iOS, Android, PWA, WebAssembly |
+| 🩵 **Backend & Databases** | `backend` | APIs, SQL/NoSQL/graph DBs, microservices, GraphQL |
+| 🟢 **Systems & Infrastructure** | `systems` | OS, compilers, Docker, Kubernetes, cloud, CI/CD, IaC |
+| 🟡 **Networks & Protocols** | `networks` | TCP/IP, HTTP/1–3, TLS, BGP, WebRTC, SDN, 5G |
+| 🟠 **Data & AI** | `data` | ETL, ML, deep learning, LLMs, MLOps, computer vision |
+| 🔴 **Security & Cryptography** | `security` | OWASP, crypto, pentesting, CTF, post-quantum, ZKPs |
+| ⚫ **Architecture & Engineering** | `architecture` | System design, patterns, DDD, TDD, distributed systems |
+| 🩷 **Creative Computing** | `creative` | Graphics, shaders, game engines, simulation, generative |
+| 🔵 **Emerging Technologies** | `emerging` | Quantum, neuromorphic, blockchain, formal verification |
+| 🟩 **Applied & Cross-Domain** | `applied` | Computational physics/biology, robotics, HPC, GIS |
 
 <br/>
 
-**[Browse all 16 courses →](https://manojpisini.github.io/opencourses/courses)**
+**[Browse all courses →](https://manojpisini.github.io/opencourses/courses)**
 &nbsp;&nbsp;·&nbsp;&nbsp;
 **[Explore the knowledge graph →](https://manojpisini.github.io/opencourses/tracks)**
 
@@ -162,7 +172,7 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
   │  ⌘K  Command Palette     │   │  ◉  Knowledge Graph       │   │  ▓  Build Status Bar      │
   │                          │   │                          │   │                          │
   │  Search any course,      │   │  Force-directed graph of  │   │  A real-time indicator   │
-  │  track, or contributor   │   │  all 16 courses, colored  │   │  that the site was built │
+  │  track, or contributor   │   │  all courses, colored     │   │  that the site was built │
   │  instantly. Keyboard     │   │  by track, linked by      │   │  fresh. Green = latest   │
   │  navigable, fuzzy-       │   │  prerequisites. Click     │   │  commit deployed. Not    │
   │  scored. No mouse.       │   │  any node to explore.     │   │  decorative — functional.│
@@ -189,40 +199,39 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
 opencourses/
 │
 ├── 📁 .github/
-│   ├── 📁 workflows/              19 GitHub Actions — the entire platform runs here
-│   │   ├── deploy-site.yml        Astro build → GitHub Pages  (every push)
+│   ├── 📁 workflows/              11 GitHub Actions — the entire platform runs here
+│   │   ├── deploy-site.yml        Astro build → GitHub Pages  (every push to main)
+│   │   ├── course-publish.yml     Parse course.md → course.json on merge
+│   │   ├── sync-site-data.yml     Aggregate engine JSON → site/src/data/*.json
 │   │   ├── enroll.yml             Process enrollment issues
-│   │   ├── grade-assignment.yml   Docker sandbox grader
-│   │   ├── run-quiz.yml           Claude AI quiz grading
+│   │   ├── run-quiz.yml           Chapter test grading
+│   │   ├── grade-assignment.yml   Docker sandbox grader (code assignments)
 │   │   ├── issue-cert.yml         GPG-signed certificate generation
-│   │   ├── advance-stage.yml      Stage unlock logic
-│   │   ├── leaderboard.yml        Nightly LEADERBOARD.md rebuild
-│   │   ├── build-data.yml         Refresh live data every 6 hours
+│   │   ├── course-leaderboard.yml Nightly leaderboard rebuild
 │   │   ├── validate-pr.yml        PR title + tamper detection
-│   │   ├── plagiarism-check.yml   AST similarity on every submission
-│   │   ├── peer-review-assign.yml Assign peer reviewers (Stage 5)
-│   │   ├── mentorship-match.yml   Weekly mentor matching
 │   │   ├── check-links.yml        Weekly dead-link scan
-│   │   ├── check-videos.yml       Weekly YouTube oEmbed check
-│   │   ├── dashboard.yml          Weekly DASHBOARD.md
-│   │   ├── cohort-nudge.yml       Daily inactivity nudge
-│   │   ├── stale-check.yml        Stale student cleanup
-│   │   ├── audit-log.yml          Append-only event log
-│   │   └── build-readme.yml       Auto-generate CURRICULUM.md
-│   └── 📁 ISSUE_TEMPLATE/         Enrollment, quiz, support forms
+│   │   └── check-videos.yml       Weekly YouTube oEmbed check
+│   └── 📁 ISSUE_TEMPLATE/         Enrollment, quiz, assignment, support forms
 │
-├── 📁 site/                       ★ The website — touch this to add courses
+├── 📁 site/                       ★ The website (auto-generated from engine data)
 │   └── src/
-│       ├── data/oc.ts             ★ Course catalog (single source of truth)
-│       ├── content/courses/       ★ Per-course Markdown content
+│       ├── data/                  ★ JSON data files (machine-generated by sync-site-data)
+│       │   ├── courses.json       Course catalog (auto-generated)
+│       │   ├── contributors.json  Contributor list (auto-generated)
+│       │   └── oc.ts              Type definitions + imports
 │       ├── pages/                 One .astro file per route
 │       ├── components/            Shared Astro components
 │       └── styles/global.css      Full design system, no framework
 │
-└── 📁 engine/                     The grading engine — stable, do not modify
-    ├── curriculum/                Stage content, quizzes, exercises
-    ├── scripts/                   17 TypeScript automation scripts
-    ├── scripts/graders/           Per-stage Docker test runners
+└── 📁 engine/                     ★ The course engine — add courses here
+    ├── courses/                   ★ One directory per course
+    │   ├── template/              Copy this to start a new course
+    │   │   └── course.md          Course definition (frontmatter + content)
+    │   └── {slug}/
+    │       ├── course.md          ★ The course (frontmatter-driven)
+    │       ├── assets/            Images, starter code, data files
+    │       └── course.json        Auto-generated by course-publish.yml
+    ├── scripts/                   TypeScript automation scripts
     └── sandbox/Dockerfile         Hardened grading container
 ```
 
@@ -232,78 +241,72 @@ opencourses/
 
 ## ✦ Adding a Course
 
-> **You only need to touch `site/`. Nothing else.**
+> **All you need to touch is `engine/courses/`.**
 
-### 1 — Add to the catalog
-
-Open **[`site/src/data/oc.ts`](site/src/data/oc.ts)** and add to the `COURSES` array:
-
-```ts
-{
-  slug: "your-course-slug",          // → /courses/your-course-slug
-  title: "Your Course Title",
-  description: "One sentence. What will students be able to do after this?",
-  track: "foundations",              // systems | web | security | devops | data | foundations
-  difficulty: "beginner",            // beginner | intermediate | advanced | draft
-  duration: "5h",
-  modules: 8,
-  maintainer: "your-github-login",
-  contributors: ["your-github-login"],
-  tags: ["tag1", "tag2"],
-  prerequisites: [],
-  repo: "manojpisini/opencourses",
-  version: "v1.0.0",
-  updatedAt: "2026-05-19T00:00:00Z",
-  featured: false,
-  stars: 0, forks: 0, openIssues: 0,
-  status: "added",
-  lastCommit: "Initial release",
-},
-```
-
-The course page generates automatically. No routing config, no component changes.
-
-### 2 — Write the content
-
-Create **`site/src/content/courses/your-course-slug.md`**:
-
-```markdown
----
-title: "Your Course Title"
-description: "One sentence."
-track: "foundations"
-difficulty: "beginner"
-modules: 8
-duration: "5h"
-updatedAt: "2026-05-19T00:00:00Z"
-status: "added"
-tags: ["tag1", "tag2"]
-stars: 0
-version: "v1.0.0"
-maintainer: "your-github-login"
-repo: "manojpisini/opencourses"
-prerequisites: []
----
-
-Your course overview. What is this? Who is it for? What will students build?
-
-## What You'll Build
-- Project or skill 1
-- Project or skill 2
-
-## Prerequisites
-- What students should already know
-```
-
-### 3 — Push
+### 1 — Copy the template
 
 ```bash
-git add site/src/data/oc.ts site/src/content/courses/your-course-slug.md
-git commit -m "course: add Your Course Title"
-git push
+cp -r engine/courses/template engine/courses/your-course-slug
 ```
 
-**Live in 60 seconds.**
+### 2 — Edit `course.md`
+
+Open `engine/courses/your-course-slug/course.md` and fill in the frontmatter:
+
+```yaml
+---
+meta:
+  slug: your-course-slug          # URL-safe, lowercase, hyphens only. Never change after publish.
+  title: "Your Course Title"
+  description: "One sentence — what students will be able to do after completing this."
+  track: web                      # foundations | languages | web | backend | systems
+                                  # networks | data | security | architecture | creative
+                                  # emerging | applied
+  difficulty: beginner            # beginner | intermediate | advanced
+  duration: "4 weeks"
+  version: "v1.0.0"
+  maintainer: your-github-login
+  tags: [tag1, tag2]
+  prerequisites: []               # array of course slugs
+
+changelog:
+  - date: "2026-05-19"
+    message: "Initial release"
+---
+
+## Overview
+
+What this course covers and who it is for.
+
+## Learning Objectives
+
+- Objective one
+- Objective two
+
+## Prerequisites
+
+What the learner should know before starting.
+
+## Chapters
+
+### Chapter 1 — Topic Name
+
+...
+```
+
+### 3 — Open a PR
+
+```bash
+git checkout -b course/your-course-slug
+git add engine/courses/your-course-slug/
+git commit -m "course: add Your Course Title"
+git push -u origin course/your-course-slug
+# Open a PR → validate-pr.yml checks the schema → merge → live in ~90 seconds
+```
+
+On merge: `course-publish.yml` parses `course.md` → writes `course.json` → `sync-site-data.yml` aggregates → `deploy-site.yml` rebuilds the site.
+
+**You never manually edit `site/src/data/*.json` — they are machine-generated.**
 
 <br/>
 
@@ -315,10 +318,11 @@ We welcome contributions of all kinds.
 
 | Type | How |
 |:----:|:---:|
-| 📚 **New course** | Follow "Adding a Course" above → open a PR |
-| ✏️ **Fix content** | Edit `site/src/data/oc.ts` or the course `.md` → PR |
-| 🐛 **Report error** | Open an issue with the `content-fix` label |
-| 💡 **Suggest course** | Open an issue — describe topic, audience, and why it's missing |
+| 📚 **New course** | Copy template → edit `course.md` → open a PR |
+| ✏️ **Fix content** | Edit `engine/courses/{slug}/course.md` → PR |
+| 🐛 **Report error** | Open an issue using the Bug Report template |
+| 🚩 **Wrong content** | Open an issue using the False Content template |
+| 💡 **Suggest course** | Open an issue — describe topic, audience, and gap |
 | 🌍 **Translate** | Open an issue to coordinate before starting |
 | 🎨 **Improve site** | Open a PR against anything in `site/` |
 
@@ -330,7 +334,7 @@ We welcome contributions of all kinds.
 2. No paywalled resources — all exercises and readings must be freely accessible
 3. Own your course — keep it accurate, use `status: "attention"` when you need help
 4. One PR per course — don't bundle unrelated changes
-5. Be honest about state — `difficulty: "draft"` exists for a reason
+5. Be honest about state — `difficulty: "beginner"` with `status: "draft"` is fine
 
 <br/>
 
@@ -346,22 +350,22 @@ We follow the [Contributor Covenant v2.1](https://www.contributor-covenant.org/v
 |:-----:|:----------:|:-----:|
 | Site framework | [Astro 4](https://astro.build) — `output: static` | Zero JS framework shipped to browsers |
 | Interactivity | Vanilla JS IIFEs | Catalog filter, force-directed graph, ⌘K palette |
-| Styling | Custom CSS design system | 42 KB total, no Tailwind, no utility classes |
+| Styling | Custom CSS design system | ~42 KB total, no Tailwind, no utility classes |
 | Fonts | DM Sans + JetBrains Mono + Sora | Google Fonts, loaded from CDN |
 | Knowledge graph | Custom force simulation | No D3 — pure physics in ~150 lines of JS |
 | Hosting | GitHub Pages | Free, org-native, zero-config after setup |
 | CI/CD | GitHub Actions | Build, deploy, grade, certify — all in one place |
-| Grading | Docker on `ubuntu-latest` | Reproducible, isolated, zero server cost |
-| Quiz grading | Claude API (Anthropic) | Semantic evaluation, not keyword matching |
+| Grading | Docker on `ubuntu-latest` | Reproducible, isolated, deterministic — no AI |
 | Certificates | GPG-signed GitHub Releases | Cryptographically verifiable, permanently public |
+| Data pipeline | Bun + TypeScript scripts | Aggregates engine output → site JSON automatically |
 
 <br/>
 
 **What actually loads in a user's browser:**
 
 ```
-CSS (entire design system)   →  42 KB   (one file, cached)
-Global JS (theme + ⌘K)      →   2 KB
+CSS (entire design system)   →  ~42 KB  (one file, cached)
+Global JS (theme + ⌘K)      →    2 KB
 Page JS (only where needed)  →  6–9 KB  (catalog / graph)
 HTML (pre-rendered)          →  30–150 KB per page
 Fonts (Google Fonts CDN)     →  ~60 KB  (cached after first visit)
@@ -397,8 +401,8 @@ Trigger manually: **Actions → Deploy Site to GitHub Pages → Run workflow**
 
 | 🌐 [Website](https://manojpisini.github.io/opencourses) | 📚 [Courses](https://manojpisini.github.io/opencourses/courses) | 🗺️ [Knowledge Graph](https://manojpisini.github.io/opencourses/tracks) |
 |:---:|:---:|:---:|
-| **👥 [Contributors](https://manojpisini.github.io/opencourses/contributors)** | **📋 [Curriculum](engine/CURRICULUM.md)** | **🏆 [Leaderboard](engine/LEADERBOARD.md)** |
-| **📅 [Changelog](https://manojpisini.github.io/opencourses/changelog)** | **🎓 [Certified](engine/CERTIFIED.md)** | **🛠️ [Setup Guide](SETUP.md)** |
+| **👥 [Contributors](https://manojpisini.github.io/opencourses/contributors)** | **📖 [Documentation](https://manojpisini.github.io/opencourses/docs)** | **🏆 [Leaderboard](https://manojpisini.github.io/opencourses/leaderboard)** |
+| **📅 [Changelog](https://manojpisini.github.io/opencourses/changelog)** | **🐛 [Report a Bug](../../issues/new?template=report-bug.yml)** | **📋 [CONTRIBUTING.md](CONTRIBUTING.md)** |
 
 <br/>
 
@@ -408,8 +412,8 @@ Trigger manually: **Actions → Deploy Site to GitHub Pages → Run workflow**
 
 This repository uses two licenses depending on the type of content:
 
-[MIT License](./LICENSE)
-[CC BY-SA 4.0](./LICENSE-CONTENT)
+[MIT License](./LICENSE) — engine & site code  
+[CC BY-SA 4.0](./LICENSE-CONTENT) — course content
 
 Course content is built from curated open-source videos, repositories, and
 public resources. Original authors retain their respective copyrights.
