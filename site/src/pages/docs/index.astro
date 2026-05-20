@@ -1,0 +1,336 @@
+---
+import Base from '../../layouts/Base.astro';
+import OC from '../../data/oc';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const CHAPTERS = [
+  {
+    id: 'students',
+    num: '01',
+    label: 'For Students',
+    icon: '📚',
+    color: '#4f9eff',
+    desc: 'Everything you need to enroll, learn, submit tests, and earn your GPG-signed certificate.',
+    topics: ['Enrolling in a course', 'Submitting chapter tests', 'Grading & scoring', 'Certification & leaderboard'],
+  },
+  {
+    id: 'creators',
+    num: '02',
+    label: 'Course Creators',
+    icon: '🛠️',
+    color: '#a78bfa',
+    desc: 'Build and publish courses using the engine\'s course.md format — from frontmatter to question banks.',
+    topics: ['Course directory layout', 'course.md frontmatter reference', 'Question types & test generators', 'PR workflow & checklist'],
+  },
+  {
+    id: 'contributors',
+    num: '03',
+    label: 'Code Contributors',
+    icon: '🔧',
+    color: '#34d399',
+    desc: 'Improve the engine, site, or automation pipeline. Covers repo structure, internals, and local dev setup.',
+    topics: ['Repo structure', 'Engine & site internals', 'Local development', 'PR checklist'],
+  },
+  {
+    id: 'architecture',
+    num: '04',
+    label: 'Architecture & Reference',
+    icon: '🏗️',
+    color: '#fb923c',
+    desc: 'Deep dive into the data pipeline, workflow catalog, Docker sandbox, certificate format, and JSON schemas.',
+    topics: ['Data pipeline diagram', 'All 11 workflows', 'Docker sandbox security', 'JSON schemas & secrets'],
+  },
+];
+
+const stats = [
+  { label: 'Courses', value: OC.STATS.courses || '—' },
+  { label: 'Tracks',  value: OC.STATS.tracks },
+  { label: 'Contributors', value: OC.STATS.contributors || '—' },
+  { label: 'Workflows', value: 11 },
+];
+---
+
+<Base title="Documentation" description="Complete guides for students, course creators, code contributors, and project architecture.">
+  <div class="container">
+    <!-- Header -->
+    <div class="docs-index-hero">
+      <div class="docs-index-hero__eyebrow">
+        <a href={`${base}/`}>~</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span>docs</span>
+      </div>
+      <h1 class="docs-index-hero__title">Documentation</h1>
+      <p class="docs-index-hero__sub">
+        Everything you need — whether you're learning, building courses, contributing code, or understanding the architecture.
+        Select a guide to get started.
+      </p>
+
+      <!-- Quick stats bar -->
+      <div class="docs-index-stats">
+        {stats.map(s => (
+          <div class="docs-index-stat">
+            <span class="docs-index-stat__value">{s.value}</span>
+            <span class="docs-index-stat__label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Chapter cards -->
+    <div class="docs-index-grid">
+      {CHAPTERS.map((ch, i) => (
+        <a href={`${base}/docs/${ch.id}`} class="docs-ch-card" style={`--ch-color:${ch.color};animation-delay:${i * 60}ms`}>
+          <div class="docs-ch-card__top">
+            <span class="docs-ch-card__num">{ch.num}</span>
+            <span class="docs-ch-card__icon">{ch.icon}</span>
+          </div>
+          <h2 class="docs-ch-card__title">{ch.label}</h2>
+          <p class="docs-ch-card__desc">{ch.desc}</p>
+          <ul class="docs-ch-card__topics">
+            {ch.topics.map(t => (
+              <li>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                {t}
+              </li>
+            ))}
+          </ul>
+          <div class="docs-ch-card__cta">
+            Read guide
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <!-- Quick links section -->
+    <div class="docs-index-links">
+      <h3 class="docs-index-links__title">Quick Links</h3>
+      <div class="docs-index-links__grid">
+        <a href={`${base}/courses`} class="docs-quick-link">
+          <span class="docs-quick-link__icon">🎓</span>
+          <span class="docs-quick-link__text">Browse Courses</span>
+        </a>
+        <a href={`${base}/tracks`} class="docs-quick-link">
+          <span class="docs-quick-link__icon">🗺️</span>
+          <span class="docs-quick-link__text">Track Map</span>
+        </a>
+        <a href={`${base}/leaderboard`} class="docs-quick-link">
+          <span class="docs-quick-link__icon">🏆</span>
+          <span class="docs-quick-link__text">Leaderboard</span>
+        </a>
+        <a href="https://github.com/manojpisini/opencourses/issues/new/choose" class="docs-quick-link" target="_blank" rel="noopener">
+          <span class="docs-quick-link__icon">🆘</span>
+          <span class="docs-quick-link__text">Get Help</span>
+        </a>
+        <a href="https://github.com/manojpisini/opencourses" class="docs-quick-link" target="_blank" rel="noopener">
+          <span class="docs-quick-link__icon">💻</span>
+          <span class="docs-quick-link__text">GitHub Repo</span>
+        </a>
+        <a href={`${base}/changelog`} class="docs-quick-link">
+          <span class="docs-quick-link__icon">📋</span>
+          <span class="docs-quick-link__text">Changelog</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+/* Hero */
+.docs-index-hero {
+  padding: 3rem 0 2.5rem;
+  max-width: 720px;
+}
+.docs-index-hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+.docs-index-hero__eyebrow a { color: var(--text-muted); text-decoration: none; }
+.docs-index-hero__eyebrow a:hover { color: var(--text-primary); }
+.docs-index-hero__title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.03em;
+}
+.docs-index-hero__sub {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+.docs-index-stats {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  width: fit-content;
+}
+.docs-index-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-right: 1px solid var(--border-default);
+  gap: 2px;
+}
+.docs-index-stat:last-child { border-right: none; }
+.docs-index-stat__value {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.docs-index-stat__label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+/* Chapter cards grid */
+.docs-index-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+@media (max-width: 700px) {
+  .docs-index-grid { grid-template-columns: 1fr; }
+}
+
+.docs-ch-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.docs-ch-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--ch-color);
+  border-radius: 12px 12px 0 0;
+  opacity: 0.7;
+}
+.docs-ch-card:hover {
+  border-color: var(--ch-color);
+  box-shadow: 0 0 0 1px var(--ch-color), 0 4px 20px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+.docs-ch-card__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.docs-ch-card__num {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ch-color);
+  background: color-mix(in srgb, var(--ch-color) 12%, var(--bg-raised));
+  border: 1px solid color-mix(in srgb, var(--ch-color) 30%, transparent);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+.docs-ch-card__icon { font-size: 1.5rem; }
+.docs-ch-card__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.docs-ch-card__desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+.docs-ch-card__topics {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border-default);
+}
+.docs-ch-card__topics li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.docs-ch-card__topics li svg { color: var(--ch-color); opacity: 0.7; flex-shrink: 0; }
+.docs-ch-card__cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ch-color);
+  margin-top: auto;
+}
+
+/* Quick links */
+.docs-index-links {
+  padding: 1.5rem 0 3rem;
+  border-top: 1px solid var(--border-default);
+}
+.docs-index-links__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+  margin: 0 0 1rem;
+}
+.docs-index-links__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.docs-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.docs-quick-link:hover {
+  border-color: var(--accent-blue, #4f9eff);
+  background: var(--bg-raised);
+}
+.docs-quick-link__icon { font-size: 1rem; }
+.docs-quick-link__text {
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+</style>

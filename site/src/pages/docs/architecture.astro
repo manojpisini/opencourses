@@ -1,0 +1,250 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="Architecture & Reference"
+  description="Data pipeline, all 11 workflows, Docker sandbox security model, certificate format, secrets reference, and complete JSON schemas."
+  chapterId="architecture"
+>
+  <nav slot="toc">
+    <a href="#pipeline"   class="docs-toc-link">Data Pipeline</a>
+    <a href="#workflows"  class="docs-toc-link">Workflow Catalog</a>
+    <a href="#labels"     class="docs-toc-link">Labels Reference</a>
+    <a href="#sandbox"    class="docs-toc-link">Docker Sandbox</a>
+    <a href="#certs"      class="docs-toc-link">Certificates</a>
+    <a href="#secrets"    class="docs-toc-link">Secrets Reference</a>
+    <a href="#schemas"    class="docs-toc-link">JSON Schemas</a>
+  </nav>
+
+  <section id="pipeline" class="docs-section">
+    <h2 class="docs-section-title">
+      Data Pipeline
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#fb923c 12%,transparent);color:#fb923c;border:1px solid color-mix(in srgb,#fb923c 30%,transparent)">Full Flow</span>
+    </h2>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">pipeline</span></div>
+      <code>COURSE CREATION
+  course.md edited → PR opened
+    └─ validate-pr.yml: parse + tamper-check → PR comment report
+  PR merged
+    └─ course-publish.yml:
+         Job 1: parse-course.ts → engine/courses/&#123;slug&#125;/course.json
+         Job 2: detect-contributors.ts → contributors.json
+         Job 3: dispatch sync-site-data.yml →
+           sync-site-data.ts:
+             reads  engine/courses/*/course.json
+             reads  engine/courses/*/contributors.json
+             fetches GitHub API (stars, forks, 52-week activity)
+             writes site/src/data/courses.json
+             writes site/src/data/contributors.json
+             writes site/src/data/activity.json
+             writes site/src/data/graph.json
+             writes site/src/data/changelog.json
+             writes site/src/data/stats.json
+             writes site/public/stats.json        ← badges endpoint
+           commits site/src/data/* → triggers deploy-site.yml
+    └─ deploy-site.yml: bun run build → GitHub Pages → live
+
+ENROLLMENT & GRADING
+  enrollment-request issue opened
+    └─ enroll.yml → enroll.ts → relabel + welcome comment
+  quiz-submit issue opened
+    └─ run-quiz.yml → quiz-engine.ts → Docker sandbox (code Qs)
+       → grade comment; on pass dispatches course-leaderboard.yml
+  project-submit issue
+    └─ grade-assignment.yml → Docker sandbox → grade comment
+
+LEADERBOARD
+  course-leaderboard.yml (nightly 02:00 UTC | on quiz/project pass):
+    leaderboard.ts → reads all enrolled issues → rankings JSON
+    commits leaderboard.json → deploy-site.yml rebuilds
+
+MAINTENANCE
+  check-links.yml   (weekly Mon 04:00 UTC): dead-link detection
+  check-videos.yml  (weekly Mon 06:00 UTC): dead-video detection
+  sync-site-data.yml (nightly 03:00 UTC): full data refresh</code>
+    </div>
+  </section>
+
+  <section id="workflows" class="docs-section">
+    <h2 class="docs-section-title">Workflow Catalog</h2>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Workflow</th><th>Trigger</th><th>Permissions</th><th>Key vars</th></tr></thead>
+        <tbody>
+          <tr><td><code>course-publish.yml</code></td><td>Push <code>engine/courses/**/course.md</code> + manual</td><td>contents:write</td><td>GITHUB_TOKEN</td></tr>
+          <tr><td><code>sync-site-data.yml</code></td><td>After course-publish, nightly 03:00, manual</td><td>contents:write</td><td>GITHUB_TOKEN, REPO</td></tr>
+          <tr><td><code>deploy-site.yml</code></td><td>Push <code>site/**</code> + manual</td><td>pages:write, id-token:write</td><td>—</td></tr>
+          <tr><td><code>enroll.yml</code></td><td>Issue labeled <code>enrollment-request</code></td><td>issues:write, contents:write</td><td>GITHUB_TOKEN, REPO, ISSUE_NUMBER, ISSUE_AUTHOR</td></tr>
+          <tr><td><code>run-quiz.yml</code></td><td>Issue labeled <code>quiz-submit</code></td><td>issues:write</td><td>GITHUB_TOKEN, REPO, ISSUE_NUMBER, STUDENT</td></tr>
+          <tr><td><code>grade-assignment.yml</code></td><td>Issue labeled <code>project-submit</code></td><td>issues:write, pull-requests:write</td><td>GITHUB_TOKEN, REPO, STUDENT, COURSE_SLUG, PROJECT_ID</td></tr>
+          <tr><td><code>course-leaderboard.yml</code></td><td>Nightly 02:00, quiz/project pass, manual</td><td>contents:write, issues:read</td><td>GITHUB_TOKEN, REPO</td></tr>
+          <tr><td><code>issue-cert.yml</code></td><td>Manual dispatch only</td><td>contents:write, issues:write</td><td>GITHUB_TOKEN, COURSE_BOT_TOKEN, STUDENT, COURSE, GPG_KEY_ID</td></tr>
+          <tr><td><code>validate-pr.yml</code></td><td>PR on <code>engine/courses/**</code> or <code>site/**</code></td><td>pull-requests:write</td><td>GITHUB_TOKEN, REPO, PR_NUMBER</td></tr>
+          <tr><td><code>check-links.yml</code></td><td>Weekly Mon 04:00, manual</td><td>issues:write</td><td>GITHUB_TOKEN, REPO</td></tr>
+          <tr><td><code>check-videos.yml</code></td><td>Weekly Mon 06:00, manual</td><td>issues:write</td><td>GITHUB_TOKEN, REPO</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="labels" class="docs-section">
+    <h2 class="docs-section-title">Issue Labels Reference</h2>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Label</th><th>Color</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>enrollment-request</code></td><td>blue</td><td>Set by issue template; triggers <code>enroll.yml</code></td></tr>
+          <tr><td><code>enrolled</code></td><td>green</td><td>Bot confirms enrollment</td></tr>
+          <tr><td><code>course:&#123;slug&#125;</code></td><td>gray</td><td>Dynamic — one per course. Used by leaderboard to group enrollments.</td></tr>
+          <tr><td><code>chapter-&#123;id&#125;-passed</code></td><td>green</td><td>Chapter test passed. e.g. <code>chapter-ch-01-passed</code></td></tr>
+          <tr><td><code>course-complete</code></td><td>purple</td><td>All chapters + certificate criteria met</td></tr>
+          <tr><td><code>certified</code></td><td>gold</td><td>GPG certificate issued and published as a Release</td></tr>
+          <tr><td><code>quiz-submit</code></td><td>blue</td><td>Set by issue template; triggers <code>run-quiz.yml</code></td></tr>
+          <tr><td><code>project-submit</code></td><td>blue</td><td>Set by issue template; triggers <code>grade-assignment.yml</code></td></tr>
+          <tr><td><code>final-test</code></td><td>blue</td><td>Final exam submission; triggers certificate eligibility check</td></tr>
+          <tr><td><code>help-wanted</code></td><td>yellow</td><td>Help request — community + maintainers respond</td></tr>
+          <tr><td><code>grade-dispute</code></td><td>orange</td><td>Grade dispute awaiting maintainer review</td></tr>
+          <tr><td><code>content-fix</code></td><td>red</td><td>False or outdated content reported</td></tr>
+          <tr><td><code>dead-link</code></td><td>red</td><td>Opened by <code>check-links.yml</code></td></tr>
+          <tr><td><code>dead-video</code></td><td>red</td><td>Opened by <code>check-videos.yml</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="sandbox" class="docs-section">
+    <h2 class="docs-section-title">Docker Sandbox</h2>
+    <p>All code submissions run inside <code>engine/sandbox/</code> — a hardened Docker image with strict resource limits:</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">bash</span></div>
+      <code>docker run \
+  --network none              # no internet access — ever
+  --memory 256m               # 256 MB RAM hard limit
+  --cpus 1                    # single CPU, no multi-core tricks
+  --read-only                 # filesystem is read-only
+  --tmpfs /tmp:size=100m      # 100 MB writable /tmp for outputs
+  --user 1001:1001            # non-root, unprivileged user
+  --security-opt no-new-privileges \
+  opencourses/sandbox:latest</code>
+    </div>
+
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Language</th><th>Executor</th><th>Version</th></tr></thead>
+        <tbody>
+          <tr><td>Python</td><td><code>python3</code></td><td>3.11</td></tr>
+          <tr><td>JavaScript</td><td><code>node</code></td><td>20 LTS</td></tr>
+          <tr><td>Bash</td><td><code>bash</code></td><td>5.2</td></tr>
+          <tr><td>Java</td><td><code>javac</code> + <code>java</code></td><td>21 LTS</td></tr>
+          <tr><td>Go</td><td><code>go run</code></td><td>1.22</td></tr>
+          <tr><td>Rust</td><td><code>rustc</code></td><td>stable</td></tr>
+          <tr><td>C</td><td><code>gcc</code></td><td>12</td></tr>
+          <tr><td>C++</td><td><code>g++</code></td><td>12</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The sandbox outputs <code>/tmp/test-results.json</code>:</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">json</span></div>
+      <code>&#123;
+  "passed": true,
+  "score": 9,
+  "maxScore": 10,
+  "tests": [
+    &#123;"input": "[3,1]", "expected": "[1,3]", "actual": "[1,3]", "passed": true&#125;,
+    &#123;"input": "[5]",   "expected": "[5]",   "actual": "[5]",   "passed": true&#125;
+  ]
+&#125;</code>
+    </div>
+  </section>
+
+  <section id="certs" class="docs-section">
+    <h2 class="docs-section-title">Certificate Format</h2>
+    <div class="docs-cards-2">
+      <div class="docs-cert-card">
+        <div class="docs-cert-card__icon">🔏</div>
+        <div class="docs-cert-card__title">GPG Signed</div>
+        <div class="docs-cert-card__body">Every certificate is signed with the project's GPG key. Anyone can verify authenticity using the public key — no central authority needed.</div>
+      </div>
+      <div class="docs-cert-card">
+        <div class="docs-cert-card__icon">🏅</div>
+        <div class="docs-cert-card__title">Open Badges 3.0</div>
+        <div class="docs-cert-card__body">Embedded metadata includes <code>issuer</code>, <code>recipient</code>, <code>criteria</code>, <code>evidence</code>, and <code>issuedOn</code> — interoperable with any OBv3-compliant system.</div>
+      </div>
+      <div class="docs-cert-card">
+        <div class="docs-cert-card__icon">🖼️</div>
+        <div class="docs-cert-card__title">SVG Format</div>
+        <div class="docs-cert-card__body">The certificate is an SVG with the Open Badges JSON embedded in a <code>&lt;metadata&gt;</code> element. Human-readable and machine-verifiable in one file.</div>
+      </div>
+      <div class="docs-cert-card">
+        <div class="docs-cert-card__icon">📦</div>
+        <div class="docs-cert-card__title">GitHub Release</div>
+        <div class="docs-cert-card__body">Published as a GitHub Release asset, tagged <code>cert-&#123;student&#125;-&#123;course&#125;-&#123;date&#125;</code>. Permanent, publicly accessible URL.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="secrets" class="docs-section">
+    <h2 class="docs-section-title">Secrets Reference</h2>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Secret</th><th>Used By</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>GITHUB_TOKEN</code></td><td>All workflows</td><td>Auto-provided by GitHub Actions. Scoped to the repo with configured permissions.</td></tr>
+          <tr><td><code>COURSE_BOT_TOKEN</code></td><td><code>issue-cert.yml</code></td><td>Personal access token for the bot account. Needed to push Release assets without triggering protected branch rules.</td></tr>
+          <tr><td><code>GPG_SIGNING_KEY</code></td><td><code>issue-cert.yml</code></td><td>Base64-encoded GPG private key for signing certificates.</td></tr>
+          <tr><td><code>GPG_KEY_ID</code></td><td><code>issue-cert.yml</code></td><td>ID of the GPG key — passed to <code>gpg --local-user</code> during signing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="docs-callout docs-callout--danger">
+      <span class="docs-callout__icon">🔒</span>
+      <div class="docs-callout__body">Never commit secrets, tokens, or private keys to the repository. All sensitive values must be stored in GitHub Actions Secrets (repo Settings → Secrets and variables → Actions).</div>
+    </div>
+  </section>
+
+  <section id="schemas" class="docs-section">
+    <h2 class="docs-section-title">JSON Schemas (<code>site/src/data/</code>)</h2>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>File</th><th>Shape</th><th>Written By</th></tr></thead>
+        <tbody>
+          <tr><td><code>courses.json</code></td><td><code>Course[]</code> — full course objects per <code>oc.ts</code> interface</td><td><code>sync-site-data.ts</code></td></tr>
+          <tr><td><code>contributors.json</code></td><td><code>Contributor[]</code> — <code>&#123;login, name, role, commits, courses, hue&#125;</code></td><td><code>sync-site-data.ts</code></td></tr>
+          <tr><td><code>changelog.json</code></td><td><code>ChangelogMonth[]</code> — <code>&#123;month, entries: ChangelogEntry[]&#125;</code></td><td><code>sync-site-data.ts</code></td></tr>
+          <tr><td><code>activity.json</code></td><td><code>&#123;weeks: number[][]&#125;</code> — 52 rows × 7 days (Sun–Sat)</td><td><code>sync-site-data.ts</code></td></tr>
+          <tr><td><code>graph.json</code></td><td><code>&#123;nodes: GraphNode[], links: GraphLink[]&#125;</code></td><td><code>sync-site-data.ts</code></td></tr>
+          <tr><td><code>stats.json</code></td><td><code>&#123;courses, contributors, stars, forks, tracks, builtAt&#125;</code></td><td><code>sync-site-data.ts</code></td></tr>
+          <tr><td><code>leaderboard.json</code></td><td><code>&#123;entries: LeaderboardEntry[], stats, builtAt&#125;</code></td><td><code>leaderboard.ts</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="docs-callout docs-callout--info">
+      <span class="docs-callout__icon">ℹ️</span>
+      <div class="docs-callout__body"><code>site/public/stats.json</code> is a copy of <code>site/src/data/stats.json</code> written by <code>sync-site-data.ts</code>. It's deployed as a static file at <code>/opencourses/stats.json</code> and used by the shields.io dynamic badge endpoints in README.md.</div>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+.docs-cards-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+@media (max-width: 560px) { .docs-cards-2 { grid-template-columns: 1fr; } }
+.docs-cert-card {
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+}
+.docs-cert-card__icon { font-size: 1.3rem; margin-bottom: 6px; }
+.docs-cert-card__title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.docs-cert-card__body { font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; }
+</style>

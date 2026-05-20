@@ -8,170 +8,481 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const maintainers = OC.CONTRIBUTORS.filter(c => c.role.startsWith('Maintainer') || c.role === 'Lead Maintainer');
 const showLeadCard = !maintainers.find(m => m.login === 'manojpisini');
 
+const stats = [
+  { label: 'Courses',      value: OC.STATS.courses || '0',      icon: '🎓', color: '#4f9eff' },
+  { label: 'Tracks',       value: OC.STATS.tracks,              icon: '🗺️', color: '#a78bfa' },
+  { label: 'Contributors', value: OC.STATS.contributors || '0', icon: '👥', color: '#34d399' },
+  { label: 'Workflows',    value: 11,                            icon: '⚙️', color: '#fb923c' },
+];
+
+const principles = [
+  {
+    icon: '🔓',
+    title: 'Radically Open',
+    desc: 'Every line of content and code is public, version-controlled, and forkable. No walled gardens, no paywalls, no proprietary formats.',
+    color: '#4f9eff',
+  },
+  {
+    icon: '🤖',
+    title: 'Fully Automated',
+    desc: 'Enrollment, grading, certification, and the leaderboard all run through GitHub Actions — zero manual steps after the initial setup.',
+    color: '#34d399',
+  },
+  {
+    icon: '🔏',
+    title: 'Cryptographically Verified',
+    desc: 'Certificates are GPG-signed SVGs with Open Badges 3.0 metadata. Anyone can verify a certificate\'s authenticity without trusting a central authority.',
+    color: '#f59e0b',
+  },
+  {
+    icon: '🧪',
+    title: 'Deterministic Grading',
+    desc: 'No AI, no keyword guessing, no semantic scoring. Grading is fully algorithmic — Docker sandbox for code, exact match for MCQ, keyword match for short answers.',
+    color: '#a78bfa',
+  },
+  {
+    icon: '📦',
+    title: 'Version-Controlled by Design',
+    desc: 'Courses are Git repos. Content changes ship like software releases. Every correction has a commit hash. Rollbacks are one revert away.',
+    color: '#ef4444',
+  },
+  {
+    icon: '🌍',
+    title: 'GitHub-Native',
+    desc: 'Your GitHub @username is your identity. Enrollment, test submissions, grading results, and certificates all live in GitHub Issues and Releases.',
+    color: '#fb923c',
+  },
+];
+
+const howItWorks = [
+  { num: '01', title: 'Browse & Enroll',    desc: 'Find a course, click Enroll — a GitHub Issue is opened using the enrollment template. The bot confirms within seconds.', icon: '📚' },
+  { num: '02', title: 'Study the Chapters', desc: 'Read lessons, watch videos, complete exercises. All content is in course.md on GitHub — no login required to read.', icon: '📖' },
+  { num: '03', title: 'Submit Chapter Tests', desc: 'Open a quiz-submit issue with your answers in the structured format. The grader runs automatically in a Docker sandbox.', icon: '📝' },
+  { num: '04', title: 'Get Graded Instantly', desc: 'A score comment appears within 60 seconds. Pass and the next chapter unlocks. Fail and retry (up to max_attempts).', icon: '⚡' },
+  { num: '05', title: 'Earn Your Certificate', desc: 'Complete all chapters, meet the overall score threshold — a GPG-signed SVG certificate is published as a GitHub Release in your name.', icon: '🎓' },
+];
+
 const stack = [
-  { name: 'Astro 4',        role: 'Site framework — zero-JS by default, islands architecture' },
-  { name: 'Custom CSS',     role: 'Styling — design token system, no utility framework' },
-  { name: 'Vanilla JS',     role: 'Track map, catalog filter, command palette' },
-  { name: 'Bun',            role: 'Runtime & package manager for the engine scripts' },
-  { name: 'GitHub Actions', role: 'Data pipeline, grading, certification, deploy' },
-  { name: 'GitHub Pages',   role: 'Hosting — free, native org pages support' },
-  { name: 'GitHub API',     role: 'Live data — stars, forks, contributors, commit activity' },
-  { name: 'Docker',         role: 'Isolated sandbox for grading code submissions' },
+  { name: 'Astro 4',        role: 'Site framework — zero-JS by default, static output',    color: '#f472b6' },
+  { name: 'Custom CSS',     role: 'Design token system — no utility framework',             color: '#818cf8' },
+  { name: 'Bun',            role: 'Runtime & package manager for all engine scripts',       color: '#f59e0b' },
+  { name: 'GitHub Actions', role: '11 workflows — enroll, grade, certify, deploy, sync',    color: '#34d399' },
+  { name: 'GitHub Pages',   role: 'Hosting — free, native, no build servers needed',        color: '#4f9eff' },
+  { name: 'GitHub API',     role: 'Live data — stars, forks, contributors, activity',       color: '#a78bfa' },
+  { name: 'Docker',         role: 'Isolated sandbox (256 MB, no network) for code grading', color: '#38bdf8' },
+  { name: 'Vanilla JS',     role: 'Command palette, TrackMap, theme toggle — ~4 files',     color: '#fb923c' },
 ];
 ---
 
-<Base title="About" description="What OpenCourses is, how it works, and who builds it.">
+<Base title="About" description="What OpenCourses is, how it works, the principles behind it, and who builds it.">
   <div class="container">
-    <div class="page-head">
-      <div class="page-head__crumbs">
+
+    <!-- ── Page header ────────────────────────────────────────────── -->
+    <div class="about-hero">
+      <div class="about-hero__crumbs">
         <a href={`${base}/`}>~</a>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         <span>about</span>
       </div>
-      <h1 class="page-head__title">About OpenCourses</h1>
-      <p class="page-head__sub">Free, open-source developer education. Version-controlled by design.</p>
+      <h1 class="about-hero__title">About OpenCourses</h1>
+      <p class="about-hero__sub">Free, open-source developer education built entirely on GitHub infrastructure. No servers, no subscriptions, no lock-in.</p>
+      <div class="about-hero__actions">
+        <a href={`${base}/courses`} class="about-btn about-btn--primary">Browse Courses</a>
+        <a href={`${base}/docs`}    class="about-btn about-btn--ghost">Documentation →</a>
+      </div>
     </div>
 
-    <!-- Docs callout -->
-    <div class="about-docs-callout">
-      <span class="about-docs-callout__label">📖 Looking for guides?</span>
-      <span class="about-docs-callout__text">
-        Step-by-step instructions for students, course creators, and code contributors are in the
-        <a href={`${base}/docs`}>Documentation →</a>
-      </span>
+    <!-- ── Stats bar ──────────────────────────────────────────────── -->
+    <div class="about-stats">
+      {stats.map(s => (
+        <div class="about-stat" style={`--s-color:${s.color}`}>
+          <span class="about-stat__icon">{s.icon}</span>
+          <span class="about-stat__value">{s.value}</span>
+          <span class="about-stat__label">{s.label}</span>
+        </div>
+      ))}
     </div>
 
-    <div class="container-narrow">
-      <!-- What it is -->
-      <section class="section" id="what">
-        <div class="section-head">
-          <h2 class="section-head__title">What OpenCourses Is</h2>
+    <!-- ── What it is ─────────────────────────────────────────────── -->
+    <section class="about-section" id="what">
+      <div class="about-section__header">
+        <h2 class="about-section__title">What OpenCourses Is</h2>
+        <p class="about-section__sub">Not a MOOC. Not a wiki. Not a docs site behind a login wall.</p>
+      </div>
+      <div class="about-what-grid">
+        <div class="about-what-prose">
+          <p>OpenCourses is the first developer education platform built entirely on GitHub infrastructure. Courses live in Git repositories. Every piece of content has a commit history. Every contributor is credited like an open-source maintainer.</p>
+          <p>The entire site regenerates automatically on every push. Enrollment, grading, certification, and the leaderboard all run through GitHub Issues and Actions. Your GitHub <code>@username</code> is the only identity you need.</p>
+          <p>It is a living curriculum — <em>version-controlled by design</em>.</p>
         </div>
-        <div class="prose">
-          <p>
-            OpenCourses is a free, open-source developer education platform built entirely on GitHub infrastructure.
-            No login. No proprietary LMS. No vendor lock-in.
-          </p>
-          <p>
-            Courses live in Git repositories. Every piece of content has a commit history.
-            Every contributor is credited like an open-source maintainer.
-            The entire site regenerates automatically on every push.
-          </p>
-          <p>
-            Enrollment, grading, certification, and the leaderboard all run through GitHub Issues and Actions —
-            your GitHub <code>@username</code> is the only identity you need.
-            It is the first course platform that feels <em>version-controlled by design</em>.
-          </p>
+        <div class="about-what-quote">
+          <blockquote class="about-quote">
+            <p>"Every course is a repo.<br/>Every update is a commit.<br/>Every contributor is a maintainer."</p>
+          </blockquote>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <div class="section-divider"></div>
-
-      <!-- Maintainers -->
-      <section class="section" id="maintainers">
-        <div class="section-head">
-          <h2 class="section-head__title">Maintainers</h2>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px">
-          {/* Lead maintainer is always shown, even when CONTRIBUTORS is empty */}
-          {showLeadCard && (
-            <a
-              href={`${base}/contributors/manojpisini`}
-              class="contributor-card"
-              style="text-decoration:none"
-            >
-              <Avatar login="manojpisini" size="md" />
-              <div>
-                <div class="contributor-card__name">Manoj Pisini</div>
-                <div class="contributor-card__role">@manojpisini · Lead Maintainer</div>
+    <!-- ── How it works ───────────────────────────────────────────── -->
+    <section class="about-section" id="how-it-works">
+      <div class="about-section__header">
+        <h2 class="about-section__title">How It Works</h2>
+        <p class="about-section__sub">The full learning flow from enrollment to certificate — all automated.</p>
+      </div>
+      <div class="about-flow">
+        {howItWorks.map((step, i) => (
+          <div class="about-flow__step">
+            <div class="about-flow__step-num">{step.num}</div>
+            <div class="about-flow__step-icon">{step.icon}</div>
+            <div class="about-flow__step-title">{step.title}</div>
+            <div class="about-flow__step-desc">{step.desc}</div>
+            {i < howItWorks.length - 1 && (
+              <div class="about-flow__arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </div>
-            </a>
-          )}
-          {maintainers.map(m => (
-            <a
-              href={`${base}/contributors/${m.login}`}
-              class="contributor-card"
-              style="text-decoration:none"
-            >
-              <Avatar login={m.login} size="md" />
-              <div>
-                <div class="contributor-card__name">{m.name}</div>
-                <div class="contributor-card__role">@{m.login} · {m.role}</div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
 
-      <div class="section-divider"></div>
+    <!-- ── Principles ─────────────────────────────────────────────── -->
+    <section class="about-section" id="principles">
+      <div class="about-section__header">
+        <h2 class="about-section__title">Core Principles</h2>
+        <p class="about-section__sub">The six ideas that define every decision in this project.</p>
+      </div>
+      <div class="about-principles">
+        {principles.map(p => (
+          <div class="about-principle" style={`--p-color:${p.color}`}>
+            <div class="about-principle__icon">{p.icon}</div>
+            <div class="about-principle__title">{p.title}</div>
+            <div class="about-principle__desc">{p.desc}</div>
+          </div>
+        ))}
+      </div>
+    </section>
 
-      <!-- Tech stack -->
-      <section class="section" id="stack">
-        <div class="section-head">
-          <h2 class="section-head__title">Tech Stack</h2>
-        </div>
-        <ul class="prose" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.75rem">
-          {stack.map(item => (
-            <li style="display:flex;align-items:flex-start;gap:0.75rem;font-size:0.9rem">
-              <code style="font-family:var(--font-mono);color:var(--accent-blue);background:var(--bg-raised);border:1px solid var(--border-default);border-radius:4px;padding:2px 8px;white-space:nowrap;flex-shrink:0">
-                {item.name}
-              </code>
-              <span style="color:var(--text-secondary);margin-top:2px">{item.role}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+    <!-- ── Maintainers ────────────────────────────────────────────── -->
+    <section class="about-section" id="maintainers">
+      <div class="about-section__header">
+        <h2 class="about-section__title">Maintainers</h2>
+        <p class="about-section__sub">The people who keep this running.</p>
+      </div>
+      <div class="about-maintainers">
+        {showLeadCard && (
+          <a href={`${base}/contributors/manojpisini`} class="about-maintainer-card" style="text-decoration:none">
+            <div class="about-maintainer-card__crown" title="Lead Maintainer">👑</div>
+            <Avatar login="manojpisini" size="lg" />
+            <div class="about-maintainer-card__info">
+              <div class="about-maintainer-card__name">Manoj Pisini</div>
+              <div class="about-maintainer-card__handle">@manojpisini</div>
+              <div class="about-maintainer-card__role">Lead Maintainer</div>
+            </div>
+          </a>
+        )}
+        {maintainers.map(m => (
+          <a href={`${base}/contributors/${m.login}`} class="about-maintainer-card" style="text-decoration:none">
+            <Avatar login={m.login} size="lg" />
+            <div class="about-maintainer-card__info">
+              <div class="about-maintainer-card__name">{m.name}</div>
+              <div class="about-maintainer-card__handle">@{m.login}</div>
+              <div class="about-maintainer-card__role">{m.role}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-top:1rem">
+        Want to contribute? See the <a href={`${base}/docs/contributors`} style="color:var(--accent-blue,#4f9eff)">contributor guide →</a>
+      </p>
+    </section>
 
-      <div class="section-divider"></div>
+    <!-- ── Tech stack ─────────────────────────────────────────────── -->
+    <section class="about-section" id="stack">
+      <div class="about-section__header">
+        <h2 class="about-section__title">Tech Stack</h2>
+        <p class="about-section__sub">No frameworks for their own sake — every choice has a clear reason.</p>
+      </div>
+      <div class="about-stack">
+        {stack.map(item => (
+          <div class="about-stack-item" style={`--s-color:${item.color}`}>
+            <span class="about-stack-item__name">{item.name}</span>
+            <span class="about-stack-item__role">{item.role}</span>
+          </div>
+        ))}
+      </div>
+    </section>
 
-      <!-- License -->
-      <section class="section" id="license">
-        <div class="section-head">
-          <h2 class="section-head__title">License</h2>
+    <!-- ── License ────────────────────────────────────────────────── -->
+    <section class="about-section about-section--last" id="license">
+      <div class="about-section__header">
+        <h2 class="about-section__title">License</h2>
+      </div>
+      <div class="about-license-cards">
+        <div class="about-license-card">
+          <div class="about-license-card__badge">CC BY-SA 4.0</div>
+          <div class="about-license-card__title">Course Content</div>
+          <div class="about-license-card__desc">Use it, fork it, translate it, build on it. Attribution required. Share-Alike applies to derivatives.</div>
+          <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener" class="about-license-card__link">View license →</a>
         </div>
-        <div class="prose">
-          <p>
-            <strong>Course content</strong> —
-            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
-            Use it, fork it, translate it. Credit required.
-          </p>
-          <p>
-            <strong>Engine &amp; site code</strong> —
-            <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT</a>.
-            Fork it, run your own instance.
-          </p>
+        <div class="about-license-card">
+          <div class="about-license-card__badge">MIT</div>
+          <div class="about-license-card__title">Engine & Site Code</div>
+          <div class="about-license-card__desc">Fork it, run your own instance, adapt the automation for your own courses. No restrictions.</div>
+          <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener" class="about-license-card__link">View license →</a>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+
   </div>
 </Base>
 
 <style>
-  .about-docs-callout {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
-    padding: 0.75rem 1rem;
-    margin-bottom: 2rem;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-left: 3px solid var(--accent-blue, #4f9eff);
-    border-radius: 6px;
-    font-size: 0.875rem;
-  }
-  .about-docs-callout__label {
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-  }
-  .about-docs-callout__text {
-    color: var(--text-secondary);
-  }
-  .about-docs-callout__text a {
-    color: var(--accent-blue, #4f9eff);
-    text-decoration: none;
-    font-weight: 500;
-  }
-  .about-docs-callout__text a:hover { text-decoration: underline; }
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.about-hero {
+  padding: 3rem 0 2rem;
+  max-width: 680px;
+}
+.about-hero__crumbs {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 0.72rem;
+  color: var(--text-muted); margin-bottom: 1.25rem;
+}
+.about-hero__crumbs a { color: var(--text-muted); text-decoration: none; }
+.about-hero__crumbs a:hover { color: var(--text-primary); }
+.about-hero__title {
+  font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em;
+  color: var(--text-primary); margin: 0 0 0.75rem;
+}
+.about-hero__sub {
+  font-size: 1rem; color: var(--text-secondary); line-height: 1.65; margin: 0 0 1.5rem;
+}
+.about-hero__actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.about-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: 8px; font-size: 0.875rem;
+  font-weight: 600; text-decoration: none; transition: all 0.15s;
+}
+.about-btn--primary {
+  background: var(--accent-blue, #4f9eff);
+  color: #fff;
+}
+.about-btn--primary:hover { filter: brightness(1.1); }
+.about-btn--ghost {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+.about-btn--ghost:hover { border-color: var(--accent-blue, #4f9eff); color: var(--accent-blue, #4f9eff); }
+
+/* ── Stats bar ─────────────────────────────────────────────────────────── */
+.about-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  margin-bottom: 3rem;
+}
+@media (max-width: 600px) { .about-stats { grid-template-columns: repeat(2, 1fr); } }
+.about-stat {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1.25rem 1rem; gap: 4px;
+  border-right: 1px solid var(--border-default);
+  transition: background 0.15s;
+}
+.about-stat:last-child { border-right: none; }
+.about-stat:hover { background: var(--bg-raised); }
+.about-stat__icon { font-size: 1.4rem; }
+.about-stat__value {
+  font-family: var(--font-mono); font-size: 1.5rem; font-weight: 800;
+  color: var(--s-color, var(--text-primary));
+}
+.about-stat__label { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+.about-section {
+  padding: 2.5rem 0;
+  border-top: 1px solid var(--border-default);
+  scroll-margin-top: 70px;
+}
+.about-section--last { padding-bottom: 4rem; }
+.about-section__header { margin-bottom: 1.75rem; }
+.about-section__title {
+  font-size: 1.5rem; font-weight: 800; color: var(--text-primary);
+  margin: 0 0 0.4rem; letter-spacing: -0.02em;
+}
+.about-section__sub { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
+
+/* ── What it is ────────────────────────────────────────────────────────── */
+.about-what-grid {
+  display: grid; grid-template-columns: 1fr 340px; gap: 2.5rem; align-items: start;
+}
+@media (max-width: 800px) { .about-what-grid { grid-template-columns: 1fr; } }
+.about-what-prose p {
+  font-size: 0.95rem; color: var(--text-secondary); line-height: 1.75; margin: 0 0 1rem;
+}
+.about-what-prose code {
+  font-family: var(--font-mono); font-size: 0.85em;
+  background: var(--bg-raised); border: 1px solid var(--border-default);
+  border-radius: 3px; padding: 1px 5px; color: var(--text-primary);
+}
+.about-what-prose em { color: var(--text-primary); font-style: italic; }
+.about-quote {
+  padding: 1.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent-blue, #4f9eff);
+  border-radius: 8px;
+  margin: 0;
+}
+.about-quote p {
+  font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-secondary);
+  line-height: 1.8; margin: 0;
+}
+
+/* ── How it works ──────────────────────────────────────────────────────── */
+.about-flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+@media (max-width: 900px) { .about-flow { grid-template-columns: 1fr; } }
+.about-flow__step {
+  position: relative;
+  padding: 1.5rem 1.25rem;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  border-right: 1px solid var(--border-default);
+}
+.about-flow__step:last-child { border-right: none; }
+@media (max-width: 900px) {
+  .about-flow__step { border-right: none; border-bottom: 1px solid var(--border-default); }
+  .about-flow__step:last-child { border-bottom: none; }
+}
+.about-flow__step-num {
+  font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700;
+  color: var(--text-muted); background: var(--bg-raised);
+  border: 1px solid var(--border-default); border-radius: 4px;
+  padding: 1px 6px; line-height: 1.5;
+}
+.about-flow__step-icon { font-size: 1.5rem; }
+.about-flow__step-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.about-flow__step-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.55; }
+.about-flow__arrow {
+  position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); z-index: 1;
+  background: var(--bg-surface);
+}
+@media (max-width: 900px) { .about-flow__arrow { display: none; } }
+
+/* ── Principles ────────────────────────────────────────────────────────── */
+.about-principles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 800px) { .about-principles { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .about-principles { grid-template-columns: 1fr; } }
+.about-principle {
+  padding: 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+  border-top: 3px solid var(--p-color);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.about-principle:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+.about-principle__icon { font-size: 1.4rem; }
+.about-principle__title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+.about-principle__desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; }
+
+/* ── Maintainers ───────────────────────────────────────────────────────── */
+.about-maintainers {
+  display: flex; flex-wrap: wrap; gap: 1rem;
+}
+.about-maintainer-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 1rem 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 220px;
+}
+.about-maintainer-card:hover {
+  border-color: var(--accent-blue, #4f9eff);
+  box-shadow: 0 0 0 1px var(--accent-blue, #4f9eff);
+}
+.about-maintainer-card__crown {
+  position: absolute; top: -8px; right: 10px; font-size: 1rem;
+}
+.about-maintainer-card__info { display: flex; flex-direction: column; gap: 2px; }
+.about-maintainer-card__name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+.about-maintainer-card__handle { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+.about-maintainer-card__role {
+  font-size: 0.72rem; color: var(--accent-blue, #4f9eff);
+  background: color-mix(in srgb, #4f9eff 12%, transparent);
+  border: 1px solid color-mix(in srgb, #4f9eff 25%, transparent);
+  border-radius: 4px; padding: 1px 7px;
+  font-family: var(--font-mono); font-weight: 600; width: fit-content; margin-top: 2px;
+}
+
+/* ── Tech stack ────────────────────────────────────────────────────────── */
+.about-stack {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+@media (max-width: 600px) { .about-stack { grid-template-columns: 1fr; } }
+.about-stack-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  border-left: 3px solid var(--s-color);
+}
+.about-stack-item__name {
+  font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;
+  color: var(--s-color); white-space: nowrap; flex-shrink: 0; min-width: 110px;
+}
+.about-stack-item__role { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+/* ── License ───────────────────────────────────────────────────────────── */
+.about-license-cards {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;
+}
+@media (max-width: 560px) { .about-license-cards { grid-template-columns: 1fr; } }
+.about-license-card {
+  padding: 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.about-license-card__badge {
+  display: inline-flex;
+  font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;
+  color: var(--text-muted); background: var(--bg-raised);
+  border: 1px solid var(--border-default); border-radius: 4px;
+  padding: 2px 8px; width: fit-content;
+}
+.about-license-card__title { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.about-license-card__desc { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.55; }
+.about-license-card__link {
+  font-size: 0.8rem; color: var(--accent-blue, #4f9eff);
+  text-decoration: none; font-weight: 500; margin-top: 4px;
+}
+.about-license-card__link:hover { text-decoration: underline; }
 </style>

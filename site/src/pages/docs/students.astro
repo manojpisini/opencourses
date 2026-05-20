@@ -1,0 +1,272 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="For Students"
+  description="Enroll in courses, submit chapter tests, track your progress, and earn GPG-signed certificates — all through GitHub Issues."
+  chapterId="students"
+>
+  <!-- Right sidebar TOC -->
+  <nav slot="toc">
+    <a href="#getting-started"  class="docs-toc-link">Getting Started</a>
+    <a href="#enrolling"        class="docs-toc-link">Enrolling</a>
+    <a href="#learning"         class="docs-toc-link">Learning</a>
+    <a href="#submitting-tests" class="docs-toc-link">Submitting Tests</a>
+    <a href="#grading"          class="docs-toc-link">Grading & Scoring</a>
+    <a href="#certification"    class="docs-toc-link">Certification</a>
+    <a href="#leaderboard"      class="docs-toc-link">Leaderboard</a>
+    <a href="#labels"           class="docs-toc-link">Issue Labels</a>
+  </nav>
+
+  <!-- Main content -->
+
+  <section id="getting-started" class="docs-section">
+    <h2 class="docs-section-title">
+      Getting Started
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#4f9eff 12%,transparent);color:#4f9eff;border:1px solid color-mix(in srgb,#4f9eff 30%,transparent)">Prerequisites</span>
+    </h2>
+    <p>You need exactly <strong>one thing</strong>: a GitHub account. No separate sign-up, no email verification, no proprietary platform. Your <code>@username</code> is your permanent identity across every course, chapter test, and certificate.</p>
+    <div class="docs-callout docs-callout--info">
+      <span class="docs-callout__icon">ℹ️</span>
+      <div class="docs-callout__body">Browse available courses at <a href={`${base}/courses`}>/courses</a>. Each course page shows difficulty, estimated hours, prerequisites, and which track it belongs to.</div>
+    </div>
+    <p>The entire learning flow runs on GitHub Issues and Actions:</p>
+    <div class="docs-flow">
+      <div class="docs-flow__step"><span class="docs-flow__num">1</span><span>Enroll via Issue</span></div>
+      <div class="docs-flow__arrow">→</div>
+      <div class="docs-flow__step"><span class="docs-flow__num">2</span><span>Study chapters</span></div>
+      <div class="docs-flow__arrow">→</div>
+      <div class="docs-flow__step"><span class="docs-flow__num">3</span><span>Submit tests</span></div>
+      <div class="docs-flow__arrow">→</div>
+      <div class="docs-flow__step"><span class="docs-flow__num">4</span><span>Earn certificate</span></div>
+    </div>
+  </section>
+
+  <section id="enrolling" class="docs-section">
+    <h2 class="docs-section-title">Enrolling in a Course</h2>
+    <div class="docs-steps" style="--ch-color:#4f9eff">
+      <div class="docs-step">
+        <div class="docs-step__line"><div class="docs-step__num">1</div><div class="docs-step__connector"></div></div>
+        <div class="docs-step__body">
+          <p class="docs-step__title">Open the enrollment issue</p>
+          <p class="docs-step__desc">On any course page, click <strong>Enroll</strong>. This opens a pre-filled GitHub issue using the <code>enroll.yml</code> template. Enter your course slug and optionally your email for certificate delivery.</p>
+        </div>
+      </div>
+      <div class="docs-step">
+        <div class="docs-step__line"><div class="docs-step__num">2</div><div class="docs-step__connector"></div></div>
+        <div class="docs-step__body">
+          <p class="docs-step__title">Bot validates and confirms</p>
+          <p class="docs-step__desc">The <code>enroll.yml</code> workflow fires within seconds. It checks the course slug exists, verifies you haven't already enrolled, then relabels the issue <code>enrolled</code> + <code>course:{'{'}slug{'}'}</code> and posts a welcome comment with the full curriculum outline.</p>
+        </div>
+      </div>
+      <div class="docs-step">
+        <div class="docs-step__line"><div class="docs-step__num">3</div><div class="docs-step__connector"></div></div>
+        <div class="docs-step__body">
+          <p class="docs-step__title">Your enrollment issue is your progress tracker</p>
+          <p class="docs-step__desc">Keep it open for the entire course. Chapter passes, final grade, and your certificate are all recorded here as labels and comments. One enrollment issue per course — a second attempt for the same course is automatically rejected.</p>
+        </div>
+      </div>
+    </div>
+    <div class="docs-callout docs-callout--warn">
+      <span class="docs-callout__icon">⚠️</span>
+      <div class="docs-callout__body">The GitHub username that opens the enrollment issue is your permanent identity for that course. Make sure you're logged in as the correct account.</div>
+    </div>
+  </section>
+
+  <section id="learning" class="docs-section">
+    <h2 class="docs-section-title">Learning</h2>
+    <p>Every course is structured into <strong>chapters</strong>. Each chapter contains:</p>
+    <div class="docs-cards-row">
+      <div class="docs-mini-card">
+        <div class="docs-mini-card__icon">📖</div>
+        <div class="docs-mini-card__title">Lessons</div>
+        <div class="docs-mini-card__desc">Videos, readings, and exercises. Links and descriptions in <code>course.md</code>.</div>
+      </div>
+      <div class="docs-mini-card">
+        <div class="docs-mini-card__icon">📝</div>
+        <div class="docs-mini-card__title">Chapter Test</div>
+        <div class="docs-mini-card__desc">Required assessment — must score ≥ <code>pass_score</code> before the next chapter unlocks.</div>
+      </div>
+      <div class="docs-mini-card">
+        <div class="docs-mini-card__icon">🛠️</div>
+        <div class="docs-mini-card__title">Project</div>
+        <div class="docs-mini-card__desc">Optional hands-on project graded by the Docker sandbox or manual review.</div>
+      </div>
+    </div>
+    <p>All course content — lessons, reading links, question banks — is defined in <code>engine/courses/{'{'}slug{'}'}/course.md</code>. You can read it directly on GitHub before enrolling.</p>
+  </section>
+
+  <section id="submitting-tests" class="docs-section">
+    <h2 class="docs-section-title">Submitting Tests</h2>
+    <p>To take a chapter test, open a new GitHub issue using the <strong>quiz-submit</strong> template. Format your answers using <code>### Answer: &lt;id&gt;</code> headers:</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar">
+        <span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span>
+        <span class="docs-pre__lang">issue body</span>
+      </div>
+      <code>### Answer: q1
+B
+
+### Answer: q2
+A, C
+
+### Answer: q3
+true
+
+### Answer: q4
+The index tracks staged changes ready for the next commit.
+
+### Answer: q5
+```python
+def two_sum(nums, target):
+    seen = &#123;&#125;
+    for i, n in enumerate(nums):
+        if target - n in seen:
+            return [seen[target - n], i]
+        seen[n] = i
+```</code>
+    </div>
+
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Question Type</th><th>Format</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><code>mcq</code></td><td>Single letter</td><td><code>B</code></td></tr>
+          <tr><td><code>multi</code></td><td>Comma-separated letters</td><td><code>A, C</code></td></tr>
+          <tr><td><code>true_false</code></td><td>Lowercase boolean</td><td><code>true</code></td></tr>
+          <tr><td><code>short</code></td><td>Free text</td><td>Natural language answer</td></tr>
+          <tr><td><code>code</code></td><td>Fenced code block with language tag</td><td><code>```python ... ```</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="grading" class="docs-section">
+    <h2 class="docs-section-title">Grading & Scoring</h2>
+    <p>The grader runs in seconds and posts a result comment on your quiz issue. Here's how each type is scored:</p>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Type</th><th>Scoring Method</th><th>Partial Credit</th></tr></thead>
+        <tbody>
+          <tr><td><code>mcq</code></td><td>Exact match. 1 point per question.</td><td>No</td></tr>
+          <tr><td><code>multi</code></td><td><code>correct_selected / total_correct × points</code></td><td>Yes</td></tr>
+          <tr><td><code>true_false</code></td><td>Exact match. 1 point.</td><td>No</td></tr>
+          <tr><td><code>short</code></td><td>Keyword matching: <code>matched / total_keywords × points</code>. Zero if &lt; <code>min_keywords</code>.</td><td>Yes</td></tr>
+          <tr><td><code>code</code></td><td>Docker sandbox: <code>passed_tests / total_tests × points</code>. No AI — pure I/O.</td><td>Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The grader posts a comment like: <code>**Score:** 42/50 (84.0%) ✅ PASSED</code> or <code>❌ FAILED</code>. If you fail, open a new quiz-submit issue for the same chapter (up to <code>max_attempts</code> total).</p>
+    <div class="docs-callout docs-callout--warn">
+      <span class="docs-callout__icon">⚠️</span>
+      <div class="docs-callout__body">Code questions use a new random seed on each attempt — dynamic generators produce different inputs every run. You cannot memorize expected outputs between attempts.</div>
+    </div>
+  </section>
+
+  <section id="certification" class="docs-section">
+    <h2 class="docs-section-title">Certification</h2>
+    <p>Once you meet all certificate requirements configured for the course, <code>issue-cert.yml</code> generates your certificate automatically. Requirements vary per course but typically include:</p>
+    <ul>
+      <li>All chapter tests passed (always required)</li>
+      <li>Average score ≥ <code>min_overall_score</code> (e.g. 70%)</li>
+      <li>Final project submitted and graded (if required)</li>
+      <li>Final exam passed (if present)</li>
+    </ul>
+    <div class="docs-callout docs-callout--tip">
+      <span class="docs-callout__icon">✅</span>
+      <div class="docs-callout__body">
+        <strong>Certificate format:</strong> GPG-signed SVG with embedded Open Badges 3.0 metadata. Published as a GitHub Release — verifiable by anyone with the project's public GPG key.
+      </div>
+    </div>
+  </section>
+
+  <section id="leaderboard" class="docs-section">
+    <h2 class="docs-section-title">Leaderboard</h2>
+    <p>Rankings rebuild nightly at 02:00 UTC and after every quiz pass. Ranking uses four criteria in order:</p>
+    <ol>
+      <li><strong>Average score</strong> — mean percentage across all graded chapter tests</li>
+      <li><strong>Courses completed</strong> — more completed courses ranks higher</li>
+      <li><strong>Total points earned</strong> — sum of all question points</li>
+      <li><strong>Fastest completion</strong> — time from enrollment to last chapter pass (lower = better)</li>
+    </ol>
+    <p>Your rank appears at <a href={`${base}/leaderboard`}>/leaderboard</a> automatically. A 🎓 badge marks certified students.</p>
+  </section>
+
+  <section id="labels" class="docs-section">
+    <h2 class="docs-section-title">Issue Labels Reference</h2>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Label</th><th>Set By</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>enrollment-request</code></td><td>Issue template</td><td>Triggers enrollment workflow</td></tr>
+          <tr><td><code>enrolled</code></td><td>Bot</td><td>Enrollment confirmed</td></tr>
+          <tr><td><code>course:&#123;slug&#125;</code></td><td>Bot</td><td>Which course this issue tracks</td></tr>
+          <tr><td><code>chapter-&#123;id&#125;-passed</code></td><td>Bot</td><td>Chapter test passed</td></tr>
+          <tr><td><code>course-complete</code></td><td>Bot</td><td>All chapters passed</td></tr>
+          <tr><td><code>certified</code></td><td>Bot</td><td>GPG certificate issued</td></tr>
+          <tr><td><code>quiz-submit</code></td><td>Issue template</td><td>Triggers quiz grader</td></tr>
+          <tr><td><code>project-submit</code></td><td>Issue template</td><td>Triggers project grader</td></tr>
+          <tr><td><code>help-wanted</code></td><td>Issue template</td><td>Help request — community answers</td></tr>
+          <tr><td><code>grade-dispute</code></td><td>Issue template</td><td>Grade dispute awaiting review</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</DocsLayout>
+
+<style>
+.docs-flow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+.docs-flow__step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.docs-flow__num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, #4f9eff 15%, var(--bg-raised));
+  border: 1px solid color-mix(in srgb, #4f9eff 35%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #4f9eff;
+  flex-shrink: 0;
+}
+.docs-flow__arrow { color: var(--text-muted); font-size: 0.9rem; }
+
+.docs-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+@media (max-width: 600px) { .docs-cards-row { grid-template-columns: 1fr; } }
+.docs-mini-card {
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.docs-mini-card__icon { font-size: 1.3rem; }
+.docs-mini-card__title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+.docs-mini-card__desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+</style>

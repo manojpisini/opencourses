@@ -19,13 +19,13 @@ const { COURSES, TRACKS, TRACK_COLORS } = OC;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 // ── Layout constants ──────────────────────────────────────────────────────────
-const COL_W    = 140;   // px between track center columns
-const PAD_L    = 48;    // left / right padding
-const HEADER   = 72;    // px reserved for track header labels at top
+const COL_W    = 108;   // px between track center columns
+const PAD_L    = 40;    // left / right padding
+const HEADER   = 80;    // px reserved for track header labels at top
 const FOOTER   = 32;    // bottom padding
-const TIER_H   = 180;   // px per difficulty tier
-const NODE_R   = 10;    // station circle radius
-const LABEL_OFFSET = NODE_R + 8;
+const TIER_H   = 170;   // px per difficulty tier
+const NODE_R   = 8;     // station circle radius
+const LABEL_OFFSET = NODE_R + 7;
 
 const TIERS = ['beginner', 'intermediate', 'advanced'] as const;
 const TIER_LABELS: Record<string, string> = {
@@ -206,23 +206,30 @@ const isEmpty = COURSES.length === 0;
             <!-- Rail terminus dot at bottom -->
             <circle cx={x} cy={svgH - FOOTER} r="3" fill={color} opacity={hasC ? '0.4' : '0.15'} />
 
-            <!-- Track header label -->
+            <!-- Track header: icon badge + abbreviated name -->
             <g class="track-header" style="cursor:default">
-              <rect
-                x={x - 44} y={8} width={88} height={22}
-                rx={4} fill={color} opacity="0.12"
-              />
-              <rect
-                x={x - 44} y={8} width={4} height={22}
-                rx={2} fill={color} opacity="0.9"
-              />
+              <title>{t.name} — {t.description}</title>
+              <!-- Outer glow ring -->
+              <circle cx={x} cy={26} r={18} fill={color} opacity="0.08" />
+              <!-- Badge circle -->
+              <circle cx={x} cy={26} r={14} fill={color} opacity="0.14" />
+              <circle cx={x} cy={26} r={14} fill="none" stroke={color} stroke-width="1.5" opacity="0.55" />
+              <!-- 2-char icon -->
               <text
-                x={x - 36} y={22}
-                font-family="var(--font-mono)" font-size="10.5" font-weight="600"
-                fill={color} text-anchor="start"
+                x={x} y={26}
+                font-family="var(--font-mono)" font-size="9.5" font-weight="800"
+                fill={color} text-anchor="middle" dominant-baseline="middle"
+                letter-spacing="-0.5"
+              >{t.icon}</text>
+              <!-- Short track name below badge -->
+              <text
+                x={x} y={56}
+                font-family="var(--font-mono)" font-size="8.5" font-weight="600"
+                fill={color} text-anchor="middle" dominant-baseline="middle"
+                opacity="0.85"
                 class="track-label"
                 data-track={t.slug}
-              >{t.name}</text>
+              >{t.name.split(' ')[0]}</text>
             </g>
 
             <!-- Ghost stations when no courses on this track -->

@@ -1,0 +1,213 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<DocsLayout
+  title="Code Contributors"
+  description="Improve the engine, site, or automation pipeline. Repo structure, engine internals, site internals, local dev setup, and PR checklist."
+  chapterId="contributors"
+>
+  <nav slot="toc">
+    <a href="#structure"   class="docs-toc-link">Repo Structure</a>
+    <a href="#engine"      class="docs-toc-link">Engine Internals</a>
+    <a href="#site"        class="docs-toc-link">Site Internals</a>
+    <a href="#local-dev"   class="docs-toc-link">Local Development</a>
+    <a href="#checklist"   class="docs-toc-link">PR Checklist</a>
+  </nav>
+
+  <section id="structure" class="docs-section">
+    <h2 class="docs-section-title">
+      Repo Structure
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#34d399 12%,transparent);color:#34d399;border:1px solid color-mix(in srgb,#34d399 30%,transparent)">Overview</span>
+    </h2>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">tree</span></div>
+      <code>opencourses/
+├── engine/                  ← course engine (Bun/TypeScript)
+│   ├── courses/             ← course directories (one per course)
+│   │   └── &#123;slug&#125;/
+│   │       ├── course.md    ← source of truth
+│   │       ├── course.json  ← auto-generated
+│   │       └── assets/
+│   ├── lib/                 ← shared utilities
+│   │   ├── github.ts        ← Octokit wrapper + helpers
+│   │   └── parse-course.ts  ← course.md YAML parser
+│   ├── scripts/             ← one script per workflow job
+│   ├── types/
+│   │   └── course.ts        ← all TypeScript interfaces
+│   ├── sandbox/             ← Docker image for code grading
+│   └── package.json
+├── site/                    ← Astro static site
+│   ├── src/
+│   │   ├── components/      ← Astro components
+│   │   ├── data/            ← oc.ts + 7 JSON data files
+│   │   ├── layouts/         ← Base.astro, DocsLayout.astro
+│   │   └── pages/           ← one .astro per route
+│   ├── public/              ← static assets (JS, CSS, SVG, stats.json)
+│   └── astro.config.mjs
+├── .github/
+│   ├── workflows/           ← 11 GitHub Actions workflows
+│   └── ISSUE_TEMPLATE/      ← 10 issue form templates
+└── package.json             ← Bun workspace root</code>
+    </div>
+  </section>
+
+  <section id="engine" class="docs-section">
+    <h2 class="docs-section-title">Engine Internals</h2>
+
+    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.25rem 0 0.5rem">Key libraries</h3>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>File</th><th>Exports</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>lib/github.ts</code></td><td><code>makeOctokit()</code>, <code>repoFromEnv()</code>, helpers</td><td>Octokit instance from <code>GITHUB_TOKEN</code>; all GitHub API calls go through here</td></tr>
+          <tr><td><code>lib/parse-course.ts</code></td><td><code>parseCourseFile(path)</code></td><td>Reads <code>course.md</code>, splits YAML frontmatter from body, validates required fields, returns typed <code>Course</code></td></tr>
+          <tr><td><code>types/course.ts</code></td><td>All interfaces</td><td><code>Course</code>, <code>Chapter</code>, <code>Lesson</code>, <code>Question</code>, <code>ChapterTest</code>, <code>Project</code>, <code>Certificate</code>, <code>LeaderboardEntry</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.25rem 0 0.5rem">Script conventions</h3>
+    <ul>
+      <li>Every script is a standalone <code>#!/usr/bin/env bun</code> file — one script per workflow job</li>
+      <li>Configuration comes entirely from environment variables (<code>GITHUB_TOKEN</code>, <code>REPO</code>, issue-specific vars)</li>
+      <li>Exit code 1 on any unrecoverable error — GitHub Actions marks the step as failed</li>
+      <li>All GitHub mutations (label, comment, release) go through <code>lib/github.ts</code> helpers, never inline</li>
+      <li>No AI, no external paid APIs — all grading is fully algorithmic and deterministic</li>
+    </ul>
+
+    <div class="docs-callout docs-callout--tip">
+      <span class="docs-callout__icon">💡</span>
+      <div class="docs-callout__body">The <code>sync-site-data.ts</code> script is the bridge between the engine and site. It reads all per-course <code>course.json</code> files, fetches live GitHub API data, and writes the 6 JSON files in <code>site/src/data/</code> plus <code>site/public/stats.json</code>.</div>
+    </div>
+  </section>
+
+  <section id="site" class="docs-section">
+    <h2 class="docs-section-title">Site Internals</h2>
+
+    <div class="docs-cards-2">
+      <div class="docs-info-card">
+        <div class="docs-info-card__label">Framework</div>
+        <div class="docs-info-card__value">Astro 4 — output: static</div>
+        <div class="docs-info-card__note">Zero client-side JS by default. Islands only where needed.</div>
+      </div>
+      <div class="docs-info-card">
+        <div class="docs-info-card__label">Styling</div>
+        <div class="docs-info-card__value">Custom CSS — design tokens</div>
+        <div class="docs-info-card__note">No Tailwind, no component library. CSS variables defined in <code>:root</code>.</div>
+      </div>
+      <div class="docs-info-card">
+        <div class="docs-info-card__label">Data Layer</div>
+        <div class="docs-info-card__value">oc.ts + 7 JSON files</div>
+        <div class="docs-info-card__note">All pages consume <code>OC.*</code> from <code>site/src/data/oc.ts</code>.</div>
+      </div>
+      <div class="docs-info-card">
+        <div class="docs-info-card__label">Client JS</div>
+        <div class="docs-info-card__value">Vanilla — ~4 files</div>
+        <div class="docs-info-card__note">Command palette, theme toggle, TrackMap hover, docs TOC.</div>
+      </div>
+    </div>
+
+    <p>New page pattern (all pages follow this structure):</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">astro</span></div>
+      <code>---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+&lt;Base title="Page Title" description="..."&gt;
+  &lt;div class="container"&gt;
+    &lt;div class="page-head"&gt;
+      &lt;!-- breadcrumbs, h1, subtitle --&gt;
+    &lt;/div&gt;
+    &lt;!-- content --&gt;
+  &lt;/div&gt;
+&lt;/Base&gt;</code>
+    </div>
+
+    <div class="docs-callout docs-callout--warn">
+      <span class="docs-callout__icon">⚠️</span>
+      <div class="docs-callout__body">Never hardcode data in page templates. All content flows from <code>OC.*</code> or the JSON imports in <code>oc.ts</code>. Static mock data was the cause of the most significant technical debt in this codebase.</div>
+    </div>
+  </section>
+
+  <section id="local-dev" class="docs-section">
+    <h2 class="docs-section-title">Local Development</h2>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">bash</span></div>
+      <code># 1. Clone
+git clone https://github.com/manojpisini/opencourses.git
+cd opencourses
+
+# 2. Install all workspace dependencies
+bun install
+
+# 3. Run the site dev server
+cd site && bun run dev    # → http://localhost:4321/opencourses/
+
+# 4. Parse a single course
+cd engine
+COURSE_SLUG=your-slug bun run scripts/parse-course.ts \
+  --path courses/your-slug/course.md
+
+# 5. Run the full sync script (needs a GitHub token)
+GITHUB_TOKEN=ghp_... REPO=manojpisini/opencourses \
+  bun run scripts/sync-site-data.ts
+
+# 6. Build the site
+cd site && bun run build</code>
+    </div>
+    <div class="docs-callout docs-callout--info">
+      <span class="docs-callout__icon">ℹ️</span>
+      <div class="docs-callout__body">The site build succeeds even with empty JSON files — all sections gracefully degrade to empty states. You don't need courses or contributors to work on the UI.</div>
+    </div>
+  </section>
+
+  <section id="checklist" class="docs-section">
+    <h2 class="docs-section-title">PR Checklist</h2>
+    <ul class="docs-checklist">
+      <li>All TypeScript compiles without errors (<code>bun run build</code> in <code>site/</code>)</li>
+      <li>No <code>any</code> casts added without an explanatory comment</li>
+      <li>New engine scripts follow the existing pattern (shebang, env vars, exit 1 on error)</li>
+      <li>New site pages use the <code>Base</code> or <code>DocsLayout</code> layout and page-head pattern</li>
+      <li>No hardcoded data — all content flows from <code>oc.ts</code> or JSON imports</li>
+      <li>No dead code or orphaned files introduced</li>
+      <li>YAML workflow files are valid (no duplicate step names or missing permissions)</li>
+      <li>Commit message is descriptive; no co-author trailers added</li>
+      <li>No AI, external paid APIs, or semantic grading logic introduced</li>
+    </ul>
+  </section>
+</DocsLayout>
+
+<style>
+.docs-cards-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+@media (max-width: 560px) { .docs-cards-2 { grid-template-columns: 1fr; } }
+.docs-info-card {
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+}
+.docs-info-card__label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.docs-info-card__value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.docs-info-card__note { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+</style>
