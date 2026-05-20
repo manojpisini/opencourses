@@ -55,6 +55,32 @@ jobs:
             core.setOutput('assignment_id', assignId);
             core.setOutput('repo_link', repoLink);
 
+      - name: Read assignment config from course.yaml
+        id: config
+        run: |
+          # Extract the assignment definition (language + test generator/cases)
+          # from the course.yaml so we can pass the right params to grade.sh.
+          bun run - <<'EOF'
+          import { parseCourseFile } from './lib/course-parser.ts';
+          import * as fs from 'fs';
+          const slug       = process.env['COURSE_SLUG']   ?? '';
+          const assignId   = process.env['ASSIGNMENT_ID'] ?? '';
+          const candidates = [`courses/${slug}/course.yaml`, `engine/courses/${slug}/course.yaml`];
+          let course = null;
+          for (const p of candidates) {
+            if (fs.existsSync(p)) { course = parseCourseFile(p); break; }
+          }
+          const assign = course?.chapter_assignments?.find((a: {id:string}) => a.id === assignId);
+          const lang     = assign?.language ?? 'python';
+          const gen      = assign?.test_generator ?? '';
+          const cases    = assign?.test_cases_file ?? '';
+          const output = `language=${lang}\ntest_generator=${gen}\ntest_cases_file=${cases}\n`;
+          fs.appendFileSync(process.env['GITHUB_OUTPUT'] ?? '/dev/null', output);
+          EOF
+        env:
+          COURSE_SLUG: ${{ steps.parse.outputs.course }}
+          ASSIGNMENT_ID: ${{ steps.parse.outputs.assignment_id }}
+
       - name: Build sandbox image
         run: docker build -t opencourse-sandbox -f sandbox/Dockerfile .
 
@@ -62,6 +88,11 @@ jobs:
         run: |
           WORK_DIR=$(mktemp -d)
           git clone --depth 1 "${{ steps.parse.outputs.repo_link }}" "$WORK_DIR/student" 2>/dev/null || true
+          # Locate the student's primary source file (first .py/.js/.ts/.go/.java/.c/.cpp found)
+          STUDENT_FILE=$(find "$WORK_DIR/student" -maxdepth 3 \
+            \( -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.go" \
+               -o -name "*.java" -o -name "*.c" -o -name "*.cpp" \) \
+            ! -path "*/node_modules/*" ! -name "*.test.*" -print -quit 2>/dev/null || true)
           docker run \
             --network none \
             --memory 256m \
@@ -70,11 +101,13 @@ jobs:
             --tmpfs /tmp:size=100m \
             --user 1001:1001 \
             --security-opt no-new-privileges \
-            -e COURSE_SLUG=${{ steps.parse.outputs.course }} \
-            -e CHAPTER_ID=${{ steps.parse.outputs.chapter_id }} \
-            -e ASSIGNMENT_ID=${{ steps.parse.outputs.assignment_id }} \
+            -e LANGUAGE=${{ steps.config.outputs.language }} \
+            -e STUDENT_CODE_FILE="/student/$(basename "${STUDENT_FILE:-main.py}")" \
+            -e COURSE_DIR=/courses/${{ steps.parse.outputs.course }} \
+            -e TEST_GENERATOR="${{ steps.config.outputs.test_generator }}" \
+            -e TEST_CASES_FILE="${{ steps.config.outputs.test_cases_file }}" \
             -e TEST_OUTPUT_FILE=/tmp/test-results.json \
-            -v $(pwd)/engine/courses:/courses:ro \
+            -v $(pwd)/courses:/courses:ro \
             -v "$WORK_DIR/student":/student:ro \
             -v /tmp:/tmp \
             opencourse-sandbox
