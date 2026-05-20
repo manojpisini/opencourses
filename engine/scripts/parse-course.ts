@@ -14,7 +14,10 @@ import * as fs   from 'fs';
 import * as path from 'path';
 import { parseCourseFile, findCourseYamlFiles, countLessons, countQuestions } from '../lib/course-parser.ts';
 import { setOutput } from '../lib/github.ts';
-import type { Course, CourseJson } from '../types/course.ts';
+import type {
+  Course, CourseJson, CourseDetailJson,
+  PlayerChapter, PlayerLesson, Lesson,
+} from '../types/course.ts';
 
 const args      = process.argv.slice(2);
 const allMode   = args.includes('--all');
@@ -120,6 +123,234 @@ function buildCourseJson(course: Course): CourseJson {
   };
 }
 
+// ─── Video embed URL derivation ───────────────────────────────────────────────
+
+function deriveEmbedUrl(url: string, embedUrl?: string): string {
+  if (embedUrl) return embedUrl;
+  // YouTube standard: youtube.com/watch?v=ID
+  const ytWatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (ytWatch) return `https://www.youtube-nocookie.com/embed/${ytWatch[1]}`;
+  // YouTube embed already
+  if (url.includes('youtube.com/embed/') || url.includes('youtube-nocookie.com/embed/')) return url;
+  // Vimeo: vimeo.com/NUMERIC_ID
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  // Vimeo player already
+  if (url.includes('player.vimeo.com/video/')) return url;
+  // Fallback: return original
+  return url;
+}
+
+// ─── Flatten lessons from a chapter (sections → subsections → lessons) ───────
+
+function flattenLessons(ch: Course['curriculum']['chapters'][number]): Lesson[] {
+  const out: Lesson[] = [];
+  if (ch.lessons) out.push(...ch.lessons);
+  for (const sec of ch.sections ?? []) {
+    if (sec.lessons) out.push(...sec.lessons);
+    for (const sub of sec.subsections ?? []) {
+      out.push(...sub.lessons);
+    }
+  }
+  return out;
+}
+
+// ─── Build a PlayerLesson from a raw Lesson ───────────────────────────────────
+
+function toPlayerLesson(lesson: Lesson): PlayerLesson {
+  const c = lesson.content;
+  const pl: PlayerLesson = {
+    id:               lesson.id,
+    title:            lesson.title,
+    type:             lesson.type,
+    duration_minutes: lesson.duration_minutes ?? 0,
+    free_preview:     lesson.free_preview ?? false,
+    description:      lesson.description,
+    tags:             lesson.tags,
+  };
+
+  if (c?.video) {
+    pl.video = {
+      embed_url:            deriveEmbedUrl(c.video.url, c.video.embed_url),
+      url:                  c.video.url,
+      source:               c.video.source,
+      channel:              c.video.channel,
+      subtitles_available:  c.video.subtitles_available,
+      timestamps:           c.video.timestamps,
+    };
+  }
+  if (c?.reading) {
+    pl.reading = {
+      url:                c.reading.url,
+      source:             c.reading.source,
+      estimated_minutes:  c.reading.estimated_minutes,
+      sections_to_read:   c.reading.sections_to_read,
+    };
+  }
+  if (c?.text?.body) {
+    pl.text_md = c.text.body;
+  }
+  if (c?.code_blocks) {
+    pl.code_blocks = c.code_blocks.map((cb) => ({
+      id:              cb.id,
+      title:           cb.title,
+      language:        cb.language,
+      snippet:         cb.snippet,
+      explanation:     cb.explanation,
+      expected_output: cb.expected_output,
+      runnable:        cb.runnable,
+    }));
+  }
+  if (c?.exercise) {
+    pl.exercise = {
+      starter_repo:    c.exercise.starter_repo,
+      solution_repo:   c.exercise.solution_repo ?? undefined,
+      test_command:    c.exercise.test_command,
+      submission_type: c.exercise.submission_type,
+    };
+  }
+  if (c?.hints) {
+    pl.hints = c.hints.map((h) => ({ level: h.level, text: h.text }));
+  }
+  if (c?.links)        pl.links        = c.links;
+  if (c?.files)        pl.files        = c.files;
+  if (c?.supplemental) pl.supplemental = c.supplemental;
+
+  return pl;
+}
+
+// ─── Build full CourseDetailJson ──────────────────────────────────────────────
+
+function buildCourseDetailJson(course: Course): CourseDetailJson {
+  const chapters: PlayerChapter[] = course.curriculum.chapters.map((ch) => {
+    const rawLessons = flattenLessons(ch);
+    const lessons    = rawLessons.map(toPlayerLesson);
+    const testObj    = course.chapter_tests.find((t) => t.id === ch.chapter_test_id);
+
+    const durationMins = lessons.reduce((s, l) => s + l.duration_minutes, 0);
+    const questionCount = testObj
+      ? testObj.sections.flatMap((s) => s.questions).length
+      : 0;
+
+    return {
+      id:                    ch.id,
+      title:                 ch.title,
+      description:           ch.description,
+      outcomes:              ch.outcomes,
+      lessons,
+      chapter_test_id:       ch.chapter_test_id,
+      chapter_assignment_id: ch.chapter_assignment_id,
+      lessonCount:           lessons.length,
+      duration_minutes:      durationMins,
+      hasAssignment:         !!ch.chapter_assignment_id,
+      test_summary: {
+        title:              testObj?.title ?? ch.chapter_test_id,
+        passing_score:      testObj?.passing_score ?? 70,
+        max_attempts:       testObj?.max_attempts ?? 3,
+        time_limit_minutes: testObj?.time_limit_minutes,
+        question_count:     questionCount,
+        gates_next_chapter: testObj?.gates_next_chapter ?? false,
+      },
+    } satisfies PlayerChapter;
+  });
+
+  const totalLessons  = chapters.reduce((s, ch) => s + ch.lessonCount, 0);
+  const totalDuration = chapters.reduce((s, ch) => s + ch.duration_minutes, 0);
+
+  const finalQCount = course.final_test
+    ? course.final_test.sections.flatMap((s) => s.questions).length
+    : 0;
+
+  return {
+    id:                  course.metadata.id,
+    title:               course.identity.title,
+    tagline:             course.identity.tagline,
+    description_short:   course.identity.description.short,
+    description_full_md: course.identity.description.full,
+    cover: {
+      thumbnail:       course.identity.cover.thumbnail,
+      banner:          course.identity.cover.banner,
+      color_primary:   course.identity.cover.color_primary,
+      color_secondary: course.identity.cover.color_secondary,
+    },
+    level:        course.classification.level,
+    track:        course.classification.category,
+    tags:         course.classification.tags,
+    topics:       course.classification.topics,
+    skills_gained: course.classification.skills_gained,
+    effort: {
+      video_hours:              course.effort.video_hours,
+      reading_hours:            course.effort.reading_hours,
+      exercise_hours:           course.effort.exercise_hours,
+      total_hours:              course.effort.total_hours,
+      pace:                     course.effort.pace,
+      weekly_commitment_hours:  course.effort.weekly_commitment_hours,
+      completion_weeks:         course.effort.completion_weeks,
+    },
+    curator: {
+      name:   course.people.curator.name,
+      github: course.people.curator.github,
+      role:   course.people.curator.role,
+      bio:    course.people.curator.bio,
+      avatar: course.people.curator.avatar ?? undefined,
+    },
+    prerequisites: {
+      knowledge: course.prerequisites?.knowledge ?? [],
+      courses:   course.prerequisites?.courses   ?? [],
+      tools:     (course.prerequisites?.tools ?? []).map((t) => ({
+        name:            t.name,
+        url:             t.url,
+        required:        t.required,
+        version_minimum: t.version_minimum ?? undefined,
+      })),
+      accounts: (course.prerequisites?.accounts ?? []).map((a) => ({
+        service:  a.service,
+        url:      a.url,
+        required: a.required,
+        reason:   a.reason,
+      })),
+    },
+    outcomes: {
+      by_completion: course.outcomes?.by_completion ?? [],
+      by_chapter:    course.outcomes?.by_chapter    ?? {},
+    },
+    chapters,
+    final_test: course.final_test ? {
+      id:                       course.final_test.id,
+      title:                    course.final_test.title,
+      passing_score:            course.final_test.passing_score,
+      max_attempts:             course.final_test.max_attempts,
+      time_limit_minutes:       course.final_test.time_limit_minutes,
+      question_count:           finalQCount,
+      required_for_certificate: course.final_test.required_for_certificate,
+    } : undefined,
+    final_assignment: course.final_assignment ? {
+      id:                       course.final_assignment.id,
+      title:                    course.final_assignment.title,
+      required_for_certificate: course.final_assignment.required_for_certificate,
+      submission_type:          course.final_assignment.submission_type,
+    } : undefined,
+    certificate: {
+      enabled:      course.certificate.enabled,
+      title:        course.certificate.title,
+      subtitle:     course.certificate.subtitle,
+      requirements: course.certificate.requirements,
+    },
+    discussion: {
+      enabled:     course.discussion?.enabled ?? false,
+      category:    course.discussion?.category,
+      per_chapter: course.discussion?.per_chapter,
+    },
+    version:              course.metadata.version,
+    status:               course.metadata.status,
+    totalLessons,
+    totalChapters:        chapters.length,
+    totalDurationMinutes: totalDuration,
+    generatedAt:          new Date().toISOString(),
+  };
+}
+
+
 function processCourse(filePath: string): boolean {
   console.log(`\nParsing: ${filePath}`);
   try {
@@ -138,6 +369,11 @@ function processCourse(filePath: string): boolean {
     const outPath = path.join(path.dirname(filePath), 'course.json');
     fs.writeFileSync(outPath, JSON.stringify(buildCourseJson(course), null, 2));
     console.log(`  📄 Wrote course.json`);
+
+    // Emit full player-ready detail JSON (all lesson content, video embeds, etc.)
+    const detailPath = path.join(path.dirname(filePath), 'course-detail.json');
+    fs.writeFileSync(detailPath, JSON.stringify(buildCourseDetailJson(course), null, 2));
+    console.log(`  📄 Wrote course-detail.json`);
     return true;
   } catch (e) {
     console.error(`  ❌ Parse error: ${(e as Error).message}`);

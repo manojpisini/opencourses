@@ -1,0 +1,525 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                  OPENCOURSES — SOLUTIONS MANIFEST                            ║
+# ║                  solutions.yaml  |  Schema v3.0                              ║
+# ║                                                                              ║
+# ║  Companion file to course.yaml.                                              ║
+# ║  Contains all answers, explanations, and sample solutions for every          ║
+# ║  question defined in course.yaml.                                            ║
+# ║                                                                              ║
+# ║  SECURITY                                                                    ║
+# ║  ──────────────────────────────────────────────────────────────────────────  ║
+# ║  This file must NEVER be on a public branch.                                 ║
+# ║  Store in a private branch, encrypted secret, or private repo.               ║
+# ║  The automation engine fetches it at runtime via a GitHub App token.         ║
+# ║                                                                              ║
+# ║  LINKING TO course.yaml                                                      ║
+# ║  ──────────────────────────────────────────────────────────────────────────  ║
+# ║  Every entry is keyed by the exact question_id from course.yaml.             ║
+# ║  The parser joins them at runtime using those ids.                           ║
+# ║  If a question_id has no entry here, the question will not be gradeable.     ║
+# ║                                                                              ║
+# ║  ANSWER FORMAT BY QUESTION TYPE                                              ║
+# ║  ──────────────────────────────────────────────────────────────────────────  ║
+# ║  mcq          answer: 1           (0-indexed integer)                        ║
+# ║  multi        answers: [0, 2, 3]  (list of 0-indexed integers)               ║
+# ║  truefalse    answer: true        (true | false)                             ║
+# ║  short        sample_answer: "…"  + keywords: […]                           ║
+# ║  code_output  answer: 2           (0-indexed option)                         ║
+# ║  code_fix     correct_code: |     (full corrected code block)                ║
+# ║  code_write   sample_solution: |  (one correct implementation)               ║
+# ║  code_reading answer: 0           (0-indexed option)                         ║
+# ║                                                                              ║
+# ║  GRADING LABELS  (grading)                                                   ║
+# ║  ──────────────────────────────────────────────────────────────────────────  ║
+# ║  auto      exact match                                                       ║
+# ║  diff      structural code diff                                              ║
+# ║  keywords  keyword presence scoring                                          ║
+# ║  manual    maintainer reads and scores                                       ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# METADATA
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+metadata:
+  course_id: <course-slug>                  # [REQUIRED] must match course.yaml metadata.id
+  course_version: "<1.0.0>"                 # [REQUIRED] must match course.yaml metadata.version
+  schema_version: "3.0"                     # [REQUIRED] do not change
+  updated_at: "<YYYY-MM-DD>"               # [REQUIRED] update whenever any solution changes
+  maintainer: <github-username>             # [REQUIRED]
+  visibility: private                       # [REQUIRED] NEVER change — always private
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SOLUTIONS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# One entry per question in course.yaml.
+# Order should mirror the order questions appear in course.yaml.
+# question_id must be an exact copy of the id field from course.yaml.
+
+solutions:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # CHAPTER 1 TEST SOLUTIONS  —  ctest-ch-01
+  # ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: <Section Title> ───────────────────────────────────────────
+
+  # ── SOLUTION TEMPLATE: mcq ──────────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-01-q-01     # [REQUIRED] exact copy from course.yaml
+    type: mcq                               # [REQUIRED] must match course.yaml question type
+    points: <N>                             # [REQUIRED] must match course.yaml
+    difficulty: <easy | medium | hard>      # [REQUIRED]
+    answer: <0 | 1 | 2 | 3>               # [REQUIRED] 0-indexed correct option
+    explanation: |                          # [REQUIRED] shown to student after attempt
+      <Full explanation of why this answer is correct.
+      Explain the concept, not just the answer.
+      Reference the lesson where this was covered if helpful.>
+
+  # ── SOLUTION TEMPLATE: multi ─────────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-01-q-02
+    type: multi
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answers:                                # [REQUIRED] list of 0-indexed correct options
+      - <N>
+      - <N>
+    explanation: |
+      <Explain which options are correct and why.
+      For each incorrect option, explain why it is wrong.
+      Format:
+        Correct:
+        - ✅ "<Option text>" — reason
+        Incorrect:
+        - ❌ "<Option text>" — reason>
+
+  # ── SOLUTION TEMPLATE: truefalse ─────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-01-q-03
+    type: truefalse
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <true | false>                  # [REQUIRED]
+    explanation: |
+      <Explain why the statement is true or false.
+      Include the nuance — what would make it the other way?>
+
+  # ── Section 2: <Section Title> ───────────────────────────────────────────
+
+  # ── SOLUTION TEMPLATE: code_output ──────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-02-q-01
+    type: code_output
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <0 | 1 | 2 | 3>               # [REQUIRED] 0-indexed correct option
+    explanation: |
+      <Walk through the code execution step by step.
+      Explain exactly why this output is produced.
+      Use a trace format like:
+
+      Execution trace:
+      1. Line X: <what happens>
+      2. Line Y: <what happens>
+
+      Key concept: <the underlying concept being tested>>
+
+  # ── SOLUTION TEMPLATE: code_fix ──────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-02-q-02
+    type: code_fix
+    points: <N>
+    difficulty: <easy | medium | hard>
+    correct_code: |                         # [REQUIRED] the full corrected code
+      <// Corrected version of the buggy code from course.yaml.>
+      <// Must be complete and runnable.>
+    bugs_fixed:                             # [OPTIONAL] list each bug found and fixed
+      - id: bug-01
+        description: "<What the bug was.>"
+        original: "<The buggy line or pattern.>"
+        fixed: "<The corrected line or pattern.>"
+      - id: bug-02
+        description: "<What the bug was.>"
+        original: "<The buggy line.>"
+        fixed: "<The corrected line.>"
+        note: "<Optional additional note about this fix.>"  # [OPTIONAL]
+    grading_rubric:                         # [OPTIONAL] per-criterion breakdown for manual grading
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+    explanation: |
+      <Explain what the bug(s) were and why the fix works.
+      Include the underlying concept that caused the bug.>
+
+  # ── SOLUTION TEMPLATE: code_write ────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-02-q-03
+    type: code_write
+    points: <N>
+    difficulty: <easy | medium | hard>
+    sample_solution: |                      # [REQUIRED] one correct implementation
+      <// A clean, idiomatic solution.>
+      <// Should satisfy all requirements from the question.>
+    alternative_solutions:                  # [OPTIONAL] other valid approaches
+      - description: "<Approach name, e.g. Recursive approach>"
+        code: |
+          <// Alternative correct implementation.>
+      - description: "<Another approach>"
+        code: |
+          <// Another alternative.>
+    grading_rubric:                         # [REQUIRED for manual grading]
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+      - criterion: "<Criterion 3>"
+        points: <N>
+    explanation: |
+      <Explain the key design decisions in the solution.
+      What are the important parts? What common mistakes should be avoided?>
+
+  # ── SOLUTION TEMPLATE: short ──────────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-02-q-04
+    type: short
+    points: <N>
+    difficulty: <easy | medium | hard>
+    sample_answer: |                        # [REQUIRED] a model answer
+      <A clear, complete model answer for this question.
+      Should demonstrate the depth of understanding expected at this level.>
+    keywords:                               # [REQUIRED] used for keyword-based scoring
+      - <keyword-1>
+      - <keyword-2>
+      - <keyword-3>
+    grading_rubric:                         # [REQUIRED]
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+    explanation: |
+      <What makes a good answer? What key concepts must be mentioned?
+      What common mistakes or misconceptions should reviewers watch for?>
+
+  # ── SOLUTION TEMPLATE: code_reading ──────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-02-q-05
+    type: code_reading
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <0 | 1 | 2 | 3>               # [REQUIRED] 0-indexed correct option
+    explanation: |
+      <Explain why this answer is correct.
+      Walk through the code to show how you arrive at the answer.>
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # CHAPTER 2 TEST SOLUTIONS  —  ctest-ch-02
+  # ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ctest-ch-02-s-01-q-01
+    type: <type>
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <answer>                        # format depends on type — see schema above
+    explanation: |
+      <Explanation.>
+
+  # ── Section 2: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ctest-ch-02-s-02-q-01
+    type: <type>
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <answer>
+    explanation: |
+      <Explanation.>
+
+  # Add one entry per question in ctest-ch-02.
+  # Use the correct solution template for each question type.
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # CHAPTER 3 TEST SOLUTIONS  —  ctest-ch-03
+  # ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ctest-ch-03-s-01-q-01
+    type: <type>
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <answer>
+    explanation: |
+      <Explanation.>
+
+  # ── Section 2: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ctest-ch-03-s-02-q-01
+    type: code_write
+    points: <N>
+    difficulty: <easy | medium | hard>
+    sample_solution: |
+      <// Sample solution code.>
+    alternative_solutions:
+      - description: "<Alternative approach>"
+        code: |
+          <// Alternative implementation.>
+    grading_rubric:
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+    explanation: |
+      <Explanation.>
+
+  # Add one entry per question in ctest-ch-03.
+
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # FINAL TEST SOLUTIONS  —  final-test
+  # ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ft-s-01-q-01
+    type: <type>
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <answer>
+    explanation: |
+      <Explanation.>
+
+  - question_id: ft-s-01-q-02
+    type: <type>
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answers:
+      - <N>
+      - <N>
+    explanation: |
+      <Explanation.>
+
+  - question_id: ft-s-01-q-03
+    type: truefalse
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <true | false>
+    explanation: |
+      <Explanation.>
+
+  # ── Section 2: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ft-s-02-q-01
+    type: code_output
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <0 | 1 | 2 | 3>
+    explanation: |
+      <Step-by-step execution trace.>
+
+  - question_id: ft-s-02-q-02
+    type: code_fix
+    points: <N>
+    difficulty: <easy | medium | hard>
+    correct_code: |
+      <// Corrected code.>
+    bugs_fixed:
+      - id: bug-01
+        description: "<Bug description.>"
+        original: "<Buggy code.>"
+        fixed: "<Fixed code.>"
+    grading_rubric:
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+    explanation: |
+      <Explanation.>
+
+  - question_id: ft-s-02-q-03
+    type: code_reading
+    points: <N>
+    difficulty: <easy | medium | hard>
+    answer: <0 | 1 | 2 | 3>
+    explanation: |
+      <Explanation.>
+
+  # ── Section 3: <Section Title> ───────────────────────────────────────────
+
+  - question_id: ft-s-03-q-01
+    type: short
+    points: <N>
+    difficulty: <easy | medium | hard>
+    sample_answer: |
+      <Model answer.>
+    keywords:
+      - <keyword-1>
+      - <keyword-2>
+      - <keyword-3>
+    grading_rubric:
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+    explanation: |
+      <What makes a good answer? What must be mentioned?
+      What do reviewers watch for?>
+
+  - question_id: ft-s-03-q-02
+    type: code_write
+    points: <N>
+    difficulty: <easy | medium | hard>
+    sample_solution: |
+      <// Primary sample solution.>
+    alternative_solutions:
+      - description: "<Alternative approach>"
+        code: |
+          <// Alternative implementation.>
+    grading_rubric:
+      - criterion: "<Criterion 1>"
+        points: <N>
+      - criterion: "<Criterion 2>"
+        points: <N>
+      - criterion: "<Criterion 3>"
+        points: <N>
+      - criterion: "<Criterion 4>"
+        points: <N>
+    explanation: |
+      <Key design decisions. Common mistakes. What to watch for in review.>
+
+  # Add one entry per question in final-test.
+  # Every question in course.yaml final_test must have a matching entry here.
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ASSIGNMENT REVIEW GUIDES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# These are reviewer guides for manually graded assignments —
+# not answers, but structured guidance for the maintainer doing the review.
+# One entry per chapter_assignment and for final_assignment.
+
+assignment_review_guides:
+
+  # ── CHAPTER ASSIGNMENT REVIEW GUIDE TEMPLATE ──────────────────────────────
+
+  - assignment_id: cassign-ch-01            # [REQUIRED] matches chapter_assignments[].id
+    title: "<Chapter N Assignment — Reviewer Guide>"
+    pass_threshold: <N>                     # [REQUIRED] same as assignment passing_score
+
+    what_to_look_for:                       # [REQUIRED] positive signals of quality work
+      - "<Signal 1: what should a good submission contain or demonstrate?>"
+      - "<Signal 2>"
+      - "<Signal 3>"
+      - "<Signal 4>"
+
+    common_mistakes:                        # [REQUIRED] what to watch out for
+      - mistake: "<Common mistake 1>"
+        note: "<How to handle it in scoring and feedback.>"
+      - mistake: "<Common mistake 2>"
+        note: "<How to handle it.>"
+
+    edge_cases:                             # [OPTIONAL] tricky cases reviewers may encounter
+      - case: "<Edge case 1>"
+        guidance: "<How to score or handle this case.>"
+
+    feedback_notes: |                       # [OPTIONAL] general feedback guidance
+      <Notes for writing useful, constructive feedback.
+      What tone to use. What to prioritize. What NOT to say.>
+
+  - assignment_id: cassign-ch-02
+    title: "<Chapter N Assignment — Reviewer Guide>"
+    pass_threshold: <N>
+
+    what_to_look_for:
+      - "<Signal 1>"
+      - "<Signal 2>"
+      - "<Signal 3>"
+
+    common_mistakes:
+      - mistake: "<Common mistake>"
+        note: "<How to handle.>"
+
+    feedback_notes: |
+      <Reviewer guidance.>
+
+  - assignment_id: cassign-ch-03
+    title: "<Chapter N Assignment — Reviewer Guide>"
+    pass_threshold: <N>
+
+    what_to_look_for:
+      - "<Signal 1>"
+      - "<Signal 2>"
+      - "<Signal 3>"
+
+    common_mistakes:
+      - mistake: "<Common mistake>"
+        note: "<How to handle.>"
+
+    feedback_notes: |
+      <Reviewer guidance.>
+
+  # ── FINAL ASSIGNMENT REVIEW GUIDE ─────────────────────────────────────────
+
+  - assignment_id: final-assignment
+    title: "Final Assignment — Reviewer Guide"
+    pass_threshold: <N>
+
+    what_to_look_for:
+      - "<Signal 1: what makes this a strong capstone submission?>"
+      - "<Signal 2>"
+      - "<Signal 3>"
+      - "<Signal 4>"
+      - "<Signal 5>"
+
+    common_mistakes:
+      - mistake: "<Common mistake 1>"
+        note: "<How to handle it.>"
+      - mistake: "<Common mistake 2>"
+        note: "<How to handle it.>"
+
+    edge_cases:
+      - case: "<Edge case>"
+        guidance: "<How to score.>"
+
+    feedback_template: |                    # [OPTIONAL] copy-paste template for review comments
+      ## Code Review — Final Assignment
+
+      **Student:** {github_username}
+      **Repository:** {repo_url}
+      **Submitted:** {submission_date}
+      **Reviewer:** {reviewer_github}
+
+      ---
+
+      ### ✅ Strengths
+      - {strength_1}
+      - {strength_2}
+
+      ### 🔧 Areas for Improvement
+      - {improvement_1}
+      - {improvement_2}
+
+      ### 📊 Score Breakdown
+
+      | Criterion | Score | Max |
+      |---|---|---|
+      | <Criterion 1> | {score_1} | <N> |
+      | <Criterion 2> | {score_2} | <N> |
+      | <Criterion 3> | {score_3} | <N> |
+      | <Criterion 4> | {score_4} | <N> |
+      | <Criterion 5> | {score_5} | <N> |
+      | **Total** | **{total}** | **<total_points>** |
+
+      **Result:** {PASS | RESUBMIT}
+
+      {if_resubmit}
+      ### 📋 Required for Resubmission
+      - {required_change_1}
+      - {required_change_2}
+      {end_if}

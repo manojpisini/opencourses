@@ -610,6 +610,160 @@ export interface GradeReport {
 }
 
 
+// ─── Course Detail JSON (written by parse-course, read by [slug].astro) ──────
+// Full player-ready data for a course. Every lesson's content is inlined so the
+// Astro page can render it at build time without reading additional files.
+
+export interface PlayerLesson {
+  id: string;
+  title: string;
+  type: LessonType;
+  duration_minutes: number;
+  free_preview: boolean;
+  description?: string;
+  tags?: string[];
+  /** Video embed info — only present for type: video */
+  video?: {
+    embed_url: string;    // iframe src (youtube-nocookie or vimeo player)
+    url: string;          // original URL for "open externally" link
+    source: string;       // "youtube" | "vimeo" | etc.
+    channel?: string;
+    subtitles_available?: boolean;
+    timestamps?: Array<{ label: string; time: string }>;
+  };
+  /** Reading link — only for type: reading */
+  reading?: {
+    url: string;
+    source: string;
+    estimated_minutes?: number;
+    sections_to_read?: string[];
+  };
+  /** Curator notes body (raw markdown) — present on most lesson types */
+  text_md?: string;
+  /** Code blocks — for type: code */
+  code_blocks?: Array<{
+    id: string;
+    title: string;
+    language: string;
+    snippet: string;
+    explanation?: string;
+    expected_output?: string;
+    runnable?: boolean;
+  }>;
+  /** Exercise details — for type: exercise */
+  exercise?: {
+    starter_repo: string;
+    solution_repo?: string;
+    test_command?: string;
+    submission_type?: string;
+  };
+  hints?: Array<{ level: number; text: string }>;
+  links?: Array<{ label: string; url: string; type: string; required?: boolean; note?: string }>;
+  files?: Array<{ label: string; file: string; type: string }>;
+  supplemental?: Array<{ label: string; url: string; type: string }>;
+}
+
+export interface PlayerChapter {
+  id: string;
+  title: string;
+  description?: string;
+  outcomes?: string[];
+  lessons: PlayerLesson[];   // flattened from sections/subsections/direct lessons
+  chapter_test_id: string;
+  chapter_assignment_id?: string;
+  lessonCount: number;
+  duration_minutes: number;
+  hasAssignment: boolean;
+  /** Chapter test summary (no answers — answers in solutions.yaml) */
+  test_summary: {
+    title: string;
+    passing_score: number;
+    max_attempts: number;
+    time_limit_minutes?: number;
+    question_count: number;
+    gates_next_chapter: boolean;
+  };
+}
+
+export interface CourseDetailJson {
+  id: string;
+  title: string;
+  tagline: string;
+  description_short: string;
+  description_full_md: string;   // raw markdown — rendered at build time in Astro
+  cover: {
+    thumbnail?: string;
+    banner?: string;
+    color_primary?: string;
+    color_secondary?: string;
+  };
+  level: CourseLevel;
+  track: string;
+  tags: string[];
+  topics: string[];
+  skills_gained: string[];
+  effort: {
+    video_hours: number;
+    reading_hours: number;
+    exercise_hours: number;
+    total_hours: number;
+    pace: CoursePace;
+    weekly_commitment_hours: number;
+    completion_weeks: number;
+  };
+  curator: {
+    name: string;
+    github: string;
+    role: string;
+    bio?: string;
+    avatar?: string;
+  };
+  prerequisites: {
+    knowledge: string[];
+    courses: string[];
+    tools: Array<{ name: string; url: string; required: boolean; version_minimum?: string }>;
+    accounts: Array<{ service: string; url: string; required: boolean; reason?: string }>;
+  };
+  outcomes: {
+    by_completion: string[];
+    by_chapter: Record<string, string[]>;
+  };
+  chapters: PlayerChapter[];
+  final_test?: {
+    id: string;
+    title: string;
+    passing_score: number;
+    max_attempts: number;
+    time_limit_minutes?: number;
+    question_count: number;
+    required_for_certificate: boolean;
+  };
+  final_assignment?: {
+    id: string;
+    title: string;
+    required_for_certificate: boolean;
+    submission_type: SubmissionType;
+  };
+  certificate: {
+    enabled: boolean;
+    title: string;
+    subtitle?: string;
+    requirements: CertificateRequirement[];
+  };
+  discussion: {
+    enabled: boolean;
+    category?: string;
+    per_chapter?: boolean;
+  };
+  version: string;
+  status: CourseStatus;
+  totalLessons: number;
+  totalChapters: number;
+  totalDurationMinutes: number;
+  generatedAt: string;
+}
+
+
 // ─── Sandbox types ────────────────────────────────────────────────────────────
 
 export interface CodeTestResult {

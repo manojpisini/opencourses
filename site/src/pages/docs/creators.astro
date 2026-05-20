@@ -5,386 +5,1309 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <DocsLayout
   title="Course Creators"
-  description="Build and publish courses using the course.yaml manifest — from directory layout to question banks, assignments, and the PR workflow."
+  description="Build and publish courses using the course.yaml manifest — 18 structured sections covering identity, curriculum, tests, certificates, and automation."
   chapterId="creators"
 >
   <nav slot="toc">
-    <a href="#layout"        class="docs-toc-link">Course Layout</a>
-    <a href="#yaml-format"   class="docs-toc-link">course.yaml Format</a>
-    <a href="#sections"      class="docs-toc-link">YAML Sections</a>
-    <a href="#questions"     class="docs-toc-link">Question Types</a>
-    <a href="#solutions"     class="docs-toc-link">solutions.yaml</a>
-    <a href="#assets"        class="docs-toc-link">Assets</a>
-    <a href="#pr-workflow"   class="docs-toc-link">PR Workflow</a>
-    <a href="#checklist"     class="docs-toc-link">Checklist</a>
+    <a href="#downloads"      class="docs-toc-link">Download Templates</a>
+    <a href="#layout"         class="docs-toc-link">Directory Layout</a>
+    <a href="#overview"       class="docs-toc-link">Schema Overview</a>
+    <a href="#s1-metadata"    class="docs-toc-link">§1 Metadata</a>
+    <a href="#s2-identity"    class="docs-toc-link">§2 Identity</a>
+    <a href="#s3-classify"    class="docs-toc-link">§3 Classification</a>
+    <a href="#s4-effort"      class="docs-toc-link">§4 Effort</a>
+    <a href="#s5-people"      class="docs-toc-link">§5 People</a>
+    <a href="#s6-credits"     class="docs-toc-link">§6 Credits</a>
+    <a href="#s7-prereqs"     class="docs-toc-link">§7 Prerequisites</a>
+    <a href="#s8-outcomes"    class="docs-toc-link">§8 Outcomes</a>
+    <a href="#s9-curriculum"  class="docs-toc-link">§9 Curriculum</a>
+    <a href="#lesson-types"   class="docs-toc-link">Lesson Types</a>
+    <a href="#s10-tests"      class="docs-toc-link">§10 Chapter Tests</a>
+    <a href="#s11-assign"     class="docs-toc-link">§11 Assignments</a>
+    <a href="#s12-final-test" class="docs-toc-link">§12 Final Test</a>
+    <a href="#s13-final-proj" class="docs-toc-link">§13 Final Project</a>
+    <a href="#s14-cert"       class="docs-toc-link">§14 Certificate</a>
+    <a href="#s15-assets"     class="docs-toc-link">§15 Assets</a>
+    <a href="#s16-triggers"   class="docs-toc-link">§16 Triggers</a>
+    <a href="#s17-discussion" class="docs-toc-link">§17 Discussion</a>
+    <a href="#s18-changelog"  class="docs-toc-link">§18 Changelog</a>
+    <a href="#solutions"      class="docs-toc-link">solutions.yaml</a>
+    <a href="#questions"      class="docs-toc-link">Question Types</a>
+    <a href="#pr-workflow"    class="docs-toc-link">PR Workflow</a>
+    <a href="#checklist"      class="docs-toc-link">Checklist</a>
   </nav>
 
-  <section id="layout" class="docs-section">
+
+  <!-- ═══════════════════════════════════════════════════════════ DOWNLOADS ═ -->
+  <section id="downloads" class="docs-section">
     <h2 class="docs-section-title">
-      Course Directory Layout
-      <span class="docs-section-badge" style="background:color-mix(in srgb,#a78bfa 12%,transparent);color:#a78bfa;border:1px solid color-mix(in srgb,#a78bfa 30%,transparent)">Setup</span>
+      Download Templates
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#a78bfa 12%,transparent);color:#a78bfa;border:1px solid color-mix(in srgb,#a78bfa 30%,transparent)">Start here</span>
     </h2>
-    <p>Every course lives under <code>engine/courses/&#123;slug&#125;/</code>. Copy the template to start:</p>
-    <div class="docs-pre">
-      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">bash</span></div>
-      <code>cp -r engine/courses/template engine/courses/your-slug</code>
-    </div>
-    <p>Full directory structure:</p>
-    <div class="docs-pre">
-      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">tree</span></div>
-      <code>engine/courses/your-slug/
-├── course.yaml              ← single source of truth (edit this)
-├── solutions.yaml           ← all answers (NEVER commit to main — private only)
-├── course.json              ← auto-generated on publish (do not edit)
-├── contributors.json        ← auto-generated on publish (do not edit)
-└── assets/
-    ├── images/              (thumbnail + banner + og + badge)
-    │   ├── thumbnail.png    (16:9, min 800×450px)
-    │   ├── banner.png       (3:1, min 1200×400px)
-    │   ├── og.png           (1200×630px, for social sharing)
-    │   └── badge.png        (completion badge, square)
-    ├── code/                (runnable code examples, by chapter)
-    │   └── ch01/
-    │       └── example.js
-    └── docs/                (PDFs, cheatsheets, assignment briefs)
-        ├── ch01-assignment.pdf
-        └── final-project-brief.pdf</code>
+    <p>Two files power every course. Download both before you write a single line:</p>
+    <div class="dl-grid">
+      <a href={`${base}/templates/course.yaml`} download="course.yaml" class="dl-card">
+        <div class="dl-card__icon">📄</div>
+        <div class="dl-card__body">
+          <div class="dl-card__title">course.yaml</div>
+          <div class="dl-card__sub">Schema v3.0 · 1644-line annotated template</div>
+          <div class="dl-card__desc">Single source of truth. Contains all 18 sections — identity, curriculum, tests, assignments, certificate, triggers, and changelog.</div>
+        </div>
+        <div class="dl-card__btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Download
+        </div>
+      </a>
+      <a href={`${base}/templates/solutions.yaml`} download="solutions.yaml" class="dl-card dl-card--private">
+        <div class="dl-card__icon">🔒</div>
+        <div class="dl-card__body">
+          <div class="dl-card__title">solutions.yaml</div>
+          <div class="dl-card__sub">Schema v3.0 · Companion private file · NEVER commit to main</div>
+          <div class="dl-card__desc">All answers, grading rubrics, and sample solutions for every question in course.yaml. Store on a private branch or encrypted secret.</div>
+        </div>
+        <div class="dl-card__btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Download
+        </div>
+      </a>
     </div>
     <div class="docs-callout docs-callout--danger">
       <span class="docs-callout__icon">🔒</span>
-      <div class="docs-callout__body"><strong>Never commit <code>solutions.yaml</code> to the main branch.</strong> Add it to <code>.gitignore</code>, keep it on a private branch, or store it encrypted. The grader reads question IDs from <code>course.yaml</code> and matches them to answers in <code>solutions.yaml</code> at runtime.</div>
+      <div class="docs-callout__body">
+        <strong>solutions.yaml must NEVER appear on a public branch.</strong> Keep it in a private branch, GitHub Secret, or private repository. The automation engine fetches it at runtime using a privileged token. Any push of solutions.yaml to main is a security incident.
+      </div>
     </div>
   </section>
 
-  <section id="yaml-format" class="docs-section">
-    <h2 class="docs-section-title">course.yaml — Pure YAML Format</h2>
-    <p><code>course.yaml</code> is a pure YAML file — no Markdown frontmatter, no mixed formats. Every field is machine-readable and validated by <code>validate-pr.yml</code> on PR open. The parser (<code>engine/lib/course-parser.ts</code>) reads it directly via <code>js-yaml</code>.</p>
 
-    <div class="docs-callout docs-callout--tip">
-      <span class="docs-callout__icon">💡</span>
-      <div class="docs-callout__body">Validate locally before opening a PR: <code>python -c "import yaml,sys; yaml.safe_load(sys.stdin)" &lt; course.yaml</code> — any YAML error is reported immediately.</div>
-    </div>
-
-    <p>The file has 18 top-level sections in a fixed order:</p>
-    <div class="docs-table-wrap">
-      <table class="docs-table">
-        <thead><tr><th>#</th><th>Section key</th><th>Required</th><th>Purpose</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td><code>metadata</code></td><td>✓</td><td>ID, version, status, visibility, dates, language</td></tr>
-          <tr><td>2</td><td><code>identity</code></td><td>✓</td><td>Title, tagline, short/full description, cover images, brand colours</td></tr>
-          <tr><td>3</td><td><code>classification</code></td><td>✓</td><td>Track (category), level, tags, topics, target audience, skills gained</td></tr>
-          <tr><td>4</td><td><code>effort</code></td><td>✓</td><td>Video / reading / exercise hours, pace, weekly commitment</td></tr>
-          <tr><td>5</td><td><code>people</code></td><td>✓</td><td>Curator, contributors, reviewers with GitHub usernames</td></tr>
-          <tr><td>6</td><td><code>credits</code></td><td>✓</td><td>Full attribution for every external resource used anywhere in the course</td></tr>
-          <tr><td>7</td><td><code>prerequisites</code></td><td></td><td>Required knowledge, prerequisite courses, tools, accounts</td></tr>
-          <tr><td>8</td><td><code>outcomes</code></td><td></td><td>What students can do after completion, broken down per chapter</td></tr>
-          <tr><td>9</td><td><code>curriculum</code></td><td>✓</td><td>All chapters, sections, subsections, and lessons with content</td></tr>
-          <tr><td>10</td><td><code>chapter_tests</code></td><td>✓</td><td>Assessment questions for each chapter (no answers — those are in solutions.yaml)</td></tr>
-          <tr><td>11</td><td><code>chapter_assignments</code></td><td></td><td>Coding assignments per chapter with rubric and review settings</td></tr>
-          <tr><td>12</td><td><code>final_test</code></td><td></td><td>Comprehensive final test spanning all chapters</td></tr>
-          <tr><td>13</td><td><code>final_assignment</code></td><td></td><td>Capstone project (unlocked by final test)</td></tr>
-          <tr><td>14</td><td><code>certificate</code></td><td>✓</td><td>Certificate requirements, badge, and template settings</td></tr>
-          <tr><td>15</td><td><code>assets</code></td><td></td><td>Manifest of all asset files referenced in the course</td></tr>
-          <tr><td>16</td><td><code>triggers</code></td><td></td><td>Automation hooks (on_publish, on_enrollment, on_certificate_earn, etc.)</td></tr>
-          <tr><td>17</td><td><code>discussion</code></td><td></td><td>GitHub Discussions configuration</td></tr>
-          <tr><td>18</td><td><code>changelog</code></td><td>✓</td><td>Version history with dates and changes</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="sections" class="docs-section">
-    <h2 class="docs-section-title">Key YAML Sections Reference</h2>
-
-    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.25rem 0 0.5rem">metadata</h3>
-    <div class="docs-table-wrap">
-      <table class="docs-table">
-        <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Notes</th></tr></thead>
-        <tbody>
-          <tr><td><code>id</code></td><td>string</td><td>✓</td><td>Kebab-case, globally unique. <strong>Permanent — never change after publish.</strong></td></tr>
-          <tr><td><code>version</code></td><td>semver</td><td>✓</td><td>Bump on breaking curriculum changes.</td></tr>
-          <tr><td><code>schema_version</code></td><td>string</td><td>✓</td><td>Always <code>"3.0"</code> — do not change.</td></tr>
-          <tr><td><code>status</code></td><td>enum</td><td>✓</td><td><code>draft</code> <code>review</code> <code>published</code> <code>archived</code> <code>deprecated</code></td></tr>
-          <tr><td><code>visibility</code></td><td>enum</td><td>✓</td><td><code>public</code> <code>unlisted</code> <code>private</code></td></tr>
-          <tr><td><code>language</code></td><td>string</td><td>✓</td><td>ISO 639-1 code, e.g. <code>en</code></td></tr>
-          <tr><td><code>solutions_file</code></td><td>path</td><td>✓</td><td>Always <code>solutions.yaml</code> — the companion file with all answers.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.25rem 0 0.5rem">classification — Track slugs</h3>
-    <p>The <code>category</code> field must be one of the 12 valid track slugs:</p>
-    <div class="docs-table-wrap">
-      <table class="docs-table">
-        <thead><tr><th>Slug</th><th>Track Name</th></tr></thead>
-        <tbody>
-          <tr><td><code>foundations</code></td><td>Foundations &amp; Theory</td></tr>
-          <tr><td><code>languages</code></td><td>Languages &amp; Paradigms</td></tr>
-          <tr><td><code>web</code></td><td>Web &amp; Mobile</td></tr>
-          <tr><td><code>backend</code></td><td>Backend &amp; Databases</td></tr>
-          <tr><td><code>systems</code></td><td>Systems &amp; Infrastructure</td></tr>
-          <tr><td><code>networks</code></td><td>Networks &amp; Protocols</td></tr>
-          <tr><td><code>data</code></td><td>Data &amp; AI</td></tr>
-          <tr><td><code>security</code></td><td>Security &amp; Cryptography</td></tr>
-          <tr><td><code>architecture</code></td><td>Architecture &amp; Engineering</td></tr>
-          <tr><td><code>creative</code></td><td>Creative Computing</td></tr>
-          <tr><td><code>emerging</code></td><td>Emerging Technologies</td></tr>
-          <tr><td><code>applied</code></td><td>Applied &amp; Cross-Domain</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.25rem 0 0.5rem">curriculum — Content node hierarchy</h3>
-    <p>Lessons are the leaf nodes. The hierarchy is flexible — flatten any level if not needed:</p>
+  <!-- ══════════════════════════════════════════════════════════════ LAYOUT ═ -->
+  <section id="layout" class="docs-section">
+    <h2 class="docs-section-title">Course Directory Layout</h2>
+    <p>Every course lives under <code>engine/courses/&#123;slug&#125;/</code>. Copy the template directory to start:</p>
     <div class="docs-pre">
-      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
-      <code>curriculum:
-  chapters:
-    - id: ch-01
-      title: "Chapter 1 Title"
-      chapter_test_id: ctest-ch-01         # required — links to chapter_tests[]
-      chapter_assignment_id: cassign-ch-01  # optional — links to chapter_assignments[]
-      sections:
-        - id: ch-01-s-01
-          title: "Section Title"
-          subsections:
-            - id: ch-01-s-01-sub-01
-              title: "Subsection Title"
-              lessons:
-                - id: ch-01-s-01-sub-01-l-01
-                  title: "Lesson Title"
-                  type: video       # video|reading|code|exercise|reference|project
-                  duration_minutes: 15
-                  free_preview: true
-                  content:
-                    video:
-                      url: "https://youtube.com/watch?v=..."
-                      credit_id: src-01  # references credits[] by id
-                    text:
-                      format: markdown
-                      body: |
-                        ## Watch Guide
-                        Notes and context...</code>
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">bash</span></div>
+      <code>cp -r engine/courses/template engine/courses/your-slug
+# then edit engine/courses/your-slug/course.yaml</code>
     </div>
-
-    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.25rem 0 0.5rem">chapter_tests — Question bank (answers in solutions.yaml)</h3>
     <div class="docs-pre">
-      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
-      <code>chapter_tests:
-  - id: ctest-ch-01
-    attached_to: ch-01
-    gates_next_chapter: true
-    passing_score: 70
-    max_attempts: 3
-    time_limit_minutes: 30
-    randomize_questions: true
-    show_answers_after: passed      # passed | attempted | never
-    sections:
-      - id: ctest-ch-01-s-01
-        title: "Conceptual Understanding"
-        weight: 50                  # percentage of total score
-        questions:
-          - id: ctest-ch-01-s-01-q-01
-            type: mcq
-            points: 10
-            difficulty: easy
-            topic: variables
-            question: "Question text?"
-            options: ["A", "B", "C", "D"]
-            # answer: see solutions.yaml → ctest-ch-01-s-01-q-01</code>
-    </div>
-    <div class="docs-callout docs-callout--warn">
-      <span class="docs-callout__icon">⚠️</span>
-      <div class="docs-callout__body"><strong>No answers in <code>course.yaml</code>.</strong> Questions are in <code>course.yaml</code>; answers and explanations are in the private <code>solutions.yaml</code>. Reference them via <code>question_id</code>.</div>
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">tree</span></div>
+      <code>engine/courses/your-slug/
+├── course.yaml              ← edit this — single source of truth
+├── solutions.yaml           ← PRIVATE: all answers (never commit to main)
+├── course.json              ← auto-generated by parse-course on publish
+├── course-detail.json       ← auto-generated player data (full lesson content)
+├── contributors.json        ← auto-generated by detect-contributors
+└── assets/
+    ├── images/
+    │   ├── thumbnail.png    16:9 · min 800×450px
+    │   ├── banner.png       3:1  · min 1200×400px
+    │   ├── og.png           1200×630px (social sharing)
+    │   └── badge.png        square · completion badge
+    ├── code/                runnable code examples, by chapter
+    │   └── ch-01/
+    │       └── example.py
+    ├── docs/                PDFs, cheatsheets, slide decks
+    │   ├── ch-01-notes.pdf
+    │   └── reference-card.pdf
+    ├── data/                datasets for exercises
+    └── slides/              slide presentations</code>
     </div>
   </section>
 
-  <section id="questions" class="docs-section">
-    <h2 class="docs-section-title">Question Types</h2>
-    <p>All question types are supported in <code>chapter_tests[].sections[].questions[]</code> and <code>final_test.sections[].questions[]</code>:</p>
+
+  <!-- ═══════════════════════════════════════════════════════════ OVERVIEW ══ -->
+  <section id="overview" class="docs-section">
+    <h2 class="docs-section-title">Schema Overview — 18 Sections</h2>
+    <p><code>course.yaml</code> follows a strict schema (v3.0). It has exactly 18 top-level sections. The parser reads them in order and rejects any unknown keys. Here is the complete map:</p>
     <div class="docs-table-wrap">
       <table class="docs-table">
-        <thead><tr><th>Type</th><th>Required fields</th><th>Grading</th></tr></thead>
+        <thead><tr><th>#</th><th>Section</th><th>Purpose</th><th>Required</th></tr></thead>
         <tbody>
-          <tr><td><code>mcq</code></td><td><code>options: string[]</code></td><td>Exact match on index. Auto.</td></tr>
-          <tr><td><code>multi</code></td><td><code>options: string[]</code></td><td>Partial credit: correct_selected / total_correct × points. Auto.</td></tr>
-          <tr><td><code>truefalse</code></td><td>—</td><td>Exact bool match. Auto.</td></tr>
-          <tr><td><code>short</code></td><td><code>keywords: string[]</code></td><td>Keyword match. <code>grading: keywords</code>. Partial credit per matched keyword.</td></tr>
-          <tr><td><code>code_output</code></td><td><code>code.snippet</code>, <code>options: string[]</code></td><td>"What does this code log?" — exact option match. Auto.</td></tr>
-          <tr><td><code>code_fix</code></td><td><code>code.snippet</code>, <code>grading</code></td><td>Fix the bug. <code>grading: diff</code> or <code>manual</code>.</td></tr>
-          <tr><td><code>code_write</code></td><td><code>language</code>, <code>starter</code>, <code>grading</code></td><td>Write from scratch. <code>grading: manual</code> — maintainer reviews.</td></tr>
-          <tr><td><code>code_reading</code></td><td><code>code.snippet</code>, <code>options: string[]</code></td><td>Read and analyse code. Exact option match. Auto.</td></tr>
+          <tr><td><code>01</code></td><td><code>metadata</code></td><td>ID, version, status, visibility, dates, language</td><td>Yes</td></tr>
+          <tr><td><code>02</code></td><td><code>identity</code></td><td>Title, tagline, description, cover images, brand colors</td><td>Yes</td></tr>
+          <tr><td><code>03</code></td><td><code>classification</code></td><td>Category, tags, topics, level, audience, skills gained</td><td>Yes</td></tr>
+          <tr><td><code>04</code></td><td><code>effort</code></td><td>Hours breakdown, pace, completion weeks</td><td>Yes</td></tr>
+          <tr><td><code>05</code></td><td><code>people</code></td><td>Curator, contributors, reviewers</td><td>Yes</td></tr>
+          <tr><td><code>06</code></td><td><code>credits</code></td><td>Attribution for every external resource used</td><td>Yes if using external content</td></tr>
+          <tr><td><code>07</code></td><td><code>prerequisites</code></td><td>Knowledge, other courses, tools, accounts</td><td>No</td></tr>
+          <tr><td><code>08</code></td><td><code>outcomes</code></td><td>What students learn (by completion, by chapter)</td><td>Yes</td></tr>
+          <tr><td><code>09</code></td><td><code>curriculum</code></td><td>All chapters → sections → subsections → lessons</td><td>Yes</td></tr>
+          <tr><td><code>10</code></td><td><code>chapter_tests</code></td><td>Graded assessments gating chapter progression</td><td>Yes (one per chapter)</td></tr>
+          <tr><td><code>11</code></td><td><code>chapter_assignments</code></td><td>Hands-on chapter projects submitted via GitHub</td><td>No</td></tr>
+          <tr><td><code>12</code></td><td><code>final_test</code></td><td>Comprehensive final assessment</td><td>Recommended</td></tr>
+          <tr><td><code>13</code></td><td><code>final_assignment</code></td><td>Capstone project</td><td>No</td></tr>
+          <tr><td><code>14</code></td><td><code>certificate</code></td><td>Completion certificate config and badge</td><td>Yes</td></tr>
+          <tr><td><code>15</code></td><td><code>assets</code></td><td>File manifests (images, code, docs, data, slides)</td><td>No</td></tr>
+          <tr><td><code>16</code></td><td><code>triggers</code></td><td>GitHub Actions to fire on course lifecycle events</td><td>No</td></tr>
+          <tr><td><code>17</code></td><td><code>discussion</code></td><td>GitHub Discussions integration per-chapter or per-course</td><td>No</td></tr>
+          <tr><td><code>18</code></td><td><code>changelog</code></td><td>Version history — required before status: review</td><td>Yes</td></tr>
         </tbody>
       </table>
     </div>
     <div class="docs-callout docs-callout--info">
       <span class="docs-callout__icon">ℹ️</span>
-      <div class="docs-callout__body">Short-answer questions use keyword matching — no AI, no semantic analysis. List at least 3 distinct keywords per question. Grading is purely deterministic: keyword presence counts, case-insensitive.</div>
+      <div class="docs-callout__body">Fields marked <code>[REQUIRED]</code> inside the template must be filled before setting <code>metadata.status: review</code>. Fields marked <code>[OPTIONAL]</code> may be removed entirely if not needed. The YAML parser validates this at PR time.</div>
     </div>
   </section>
 
-  <section id="solutions" class="docs-section">
-    <h2 class="docs-section-title">solutions.yaml — The Private Companion</h2>
-    <p><code>solutions.yaml</code> lives in the same directory as <code>course.yaml</code>. It contains all answers, explanations, and grading rubrics. It <strong>must never be committed to the main branch</strong>.</p>
 
-    <div class="docs-pre">
-      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
-      <code>course_id: your-course-slug
-visibility: private
-maintainer: manojpisini
-
-solutions:
-
-  # MCQ: answer is the 0-indexed option (0=A, 1=B, 2=C, 3=D)
-  - question_id: ctest-ch-01-s-01-q-01
-    type: mcq
-    answer: 1
-    explanation: "Option B is correct because..."
-    points: 10
-
-  # True/False
-  - question_id: ctest-ch-01-s-01-q-02
-    type: truefalse
-    answer: true
-    explanation: "This is true because..."
-    points: 5
-
-  # Multi: array of 0-indexed correct options
-  - question_id: ctest-ch-01-s-01-q-03
-    type: multi
-    answers: [0, 1, 3]
-    explanation: "Options A, B, D are correct because..."
-    points: 15
-
-  # Short: sample answer for reference; grading uses keywords from course.yaml
-  - question_id: ctest-ch-01-s-02-q-01
-    type: short
-    sample_answer: "A closure is a function that..."
-    explanation: "Full explanation..."
-    points: 20
-
-  # Code fix: the correct code
-  - question_id: ctest-ch-01-s-02-q-02
-    type: code_fix
-    correct_code: |
-      for (let i = 0; i &lt; 3; i++) &#123;
-        setTimeout(() =&gt; console.log(i), 0);
-      &#125;
-    bugs_fixed:
-      - "Changed var to let — creates a new binding per iteration"
-    explanation: "..."
-    points: 25
-
-  # Code write: sample solution + grading rubric
-  - question_id: ft-s-02-q-01
-    type: code_write
-    sample_solution: |
-      async function fetchAll(urls) &#123;
-        return Promise.all(urls.map(url =&gt;
-          fetch(url).then(r =&gt; r.json()).catch(() =&gt; null)
-        ));
-      &#125;
-    grading_rubric:
-      - criterion: "Returns array same length as urls"
-        points: 10
-      - criterion: "Failed requests return null"
-        points: 15
-      - criterion: "Requests run in parallel"
-        points: 10
-    points: 35
-
-assignment_review_guides:
-  - assignment_id: cassign-ch-01
-    what_to_look_for:
-      - All functions are pure (no side effects)
-      - Tests present and passing
-    common_mistakes:
-      - Using Math.random() inside a pure function
-    pass_threshold: 60</code>
-    </div>
-    <div class="docs-callout docs-callout--danger">
-      <span class="docs-callout__icon">🔒</span>
-      <div class="docs-callout__body">Add <code>solutions.yaml</code> to <code>.gitignore</code> before your first commit. The grader accesses it at runtime from a secure private location — it is never served publicly.</div>
-    </div>
-  </section>
-
-  <section id="assets" class="docs-section">
-    <h2 class="docs-section-title">Assets</h2>
+  <!-- ═══════════════════════════════════════════════════ SECTION 1: METADATA -->
+  <section id="s1-metadata" class="docs-section">
+    <h2 class="docs-section-title">
+      §1 — Metadata
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#a78bfa 12%,transparent);color:#a78bfa;border:1px solid color-mix(in srgb,#a78bfa 30%,transparent)">Required</span>
+    </h2>
+    <p>Top-level identifiers and lifecycle state. The automation engine uses these fields to route issues, update labels, and build the public course listing.</p>
     <div class="docs-table-wrap">
       <table class="docs-table">
-        <thead><tr><th>Directory</th><th>Contents</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Field</th><th>Type</th><th>Values / Notes</th></tr></thead>
         <tbody>
-          <tr><td><code>assets/images/</code></td><td>thumbnail, banner, og image, badge</td><td>thumbnail 16:9 min 800×450px · banner 3:1 min 1200×400px · og 1200×630px · badge square</td></tr>
-          <tr><td><code>assets/code/</code></td><td>Runnable code examples</td><td>Organised by chapter: <code>code/ch01/example.js</code>. Referenced in lesson <code>code_blocks[].file</code>.</td></tr>
-          <tr><td><code>assets/docs/</code></td><td>PDFs, cheatsheets, assignment briefs</td><td>Referenced in lesson <code>files[]</code> and assignment <code>content.files[]</code>.</td></tr>
+          <tr><td><code>id</code></td><td>string</td><td>kebab-case, globally unique URL slug, e.g. <code>git-mastery</code></td></tr>
+          <tr><td><code>version</code></td><td>string</td><td>semver — bump on every meaningful change, e.g. <code>"1.0.0"</code></td></tr>
+          <tr><td><code>schema_version</code></td><td>string</td><td>Always <code>"3.0"</code> — do not change</td></tr>
+          <tr><td><code>status</code></td><td>enum</td><td><code>draft</code> · <code>review</code> · <code>published</code> · <code>archived</code> · <code>deprecated</code></td></tr>
+          <tr><td><code>visibility</code></td><td>enum</td><td><code>public</code> · <code>unlisted</code> · <code>private</code></td></tr>
+          <tr><td><code>created_at</code></td><td>string</td><td>ISO 8601 date, e.g. <code>"2025-01-15"</code></td></tr>
+          <tr><td><code>updated_at</code></td><td>string</td><td>ISO 8601 — update every time you change the file</td></tr>
+          <tr><td><code>published_at</code></td><td>string | null</td><td>Set by automation on publish; start as <code>null</code></td></tr>
+          <tr><td><code>language</code></td><td>string</td><td>ISO 639-1 code, e.g. <code>en</code>, <code>hi</code>, <code>ta</code></td></tr>
+          <tr><td><code>locale</code></td><td>string</td><td>Optional. e.g. <code>en-US</code></td></tr>
+          <tr><td><code>slug_aliases</code></td><td>string[]</td><td>Optional. Old slugs that redirect to this course</td></tr>
+          <tr><td><code>solutions_file</code></td><td>string</td><td>Path to companion solutions.yaml — used by grader at runtime</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="docs-callout docs-callout--tip">
-      <span class="docs-callout__icon">💡</span>
-      <div class="docs-callout__body">There is no <code>tests/</code> or <code>starter/</code> directory in the new format. Dynamic test generators go inside <code>chapter_tests</code> questions directly. Starter repos are linked via <code>lesson.content.exercise.starter_repo</code>.</div>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>metadata:
+  id: git-mastery
+  version: "1.0.0"
+  schema_version: "3.0"
+  status: draft
+  visibility: public
+  created_at: "2025-01-15"
+  updated_at: "2025-01-15"
+  published_at: null
+  language: en
+  solutions_file: solutions.yaml</code>
     </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════════════════ SECTION 2: IDENTITY -->
+  <section id="s2-identity" class="docs-section">
+    <h2 class="docs-section-title">§2 — Identity</h2>
+    <p>What students see on the course listing and player. The <code>description.full</code> field supports GitHub Flavored Markdown.</p>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>title</code></td><td>string</td><td>Course title, max ~60 chars for display</td></tr>
+          <tr><td><code>tagline</code></td><td>string</td><td>One-sentence hook, ~100 chars</td></tr>
+          <tr><td><code>description.short</code></td><td>string</td><td>Plain text, 1–2 sentences, used in cards and meta tags</td></tr>
+          <tr><td><code>description.full</code></td><td>markdown</td><td>Full course description — shown in player. GFM supported.</td></tr>
+          <tr><td><code>cover.thumbnail</code></td><td>URL/path</td><td>16:9, min 800×450px — course card image</td></tr>
+          <tr><td><code>cover.banner</code></td><td>URL/path</td><td>3:1, min 1200×400px — hero banner</td></tr>
+          <tr><td><code>cover.og_image</code></td><td>URL/path</td><td>1200×630px for social sharing</td></tr>
+          <tr><td><code>cover.color_primary</code></td><td>hex</td><td>Brand accent color, e.g. <code>#f59e0b</code></td></tr>
+          <tr><td><code>cover.color_secondary</code></td><td>hex</td><td>Secondary accent color</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ SECTION 3: CLASSIFICATION ══ -->
+  <section id="s3-classify" class="docs-section">
+    <h2 class="docs-section-title">§3 — Classification</h2>
+    <p>Drives the track filter, search, and prerequisite graph on the courses page.</p>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>category</code></td><td>string</td><td>Must be one of the 12 valid track slugs (see below)</td></tr>
+          <tr><td><code>subcategory</code></td><td>string</td><td>Free-form sub-topic, e.g. <code>version-control</code></td></tr>
+          <tr><td><code>tags</code></td><td>string[]</td><td>3–8 lowercase tags for search</td></tr>
+          <tr><td><code>topics</code></td><td>string[]</td><td>More specific concepts covered</td></tr>
+          <tr><td><code>level</code></td><td>enum</td><td><code>beginner</code> · <code>intermediate</code> · <code>advanced</code> · <code>mixed</code></td></tr>
+          <tr><td><code>target_audience</code></td><td>string[]</td><td>Who this course is for</td></tr>
+          <tr><td><code>skills_gained</code></td><td>string[]</td><td>Specific skills students leave with — shown in player sidebar</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Valid <code>category</code> track slugs:</strong></p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code># 12 valid track slugs for classification.category:
+foundations   # Git, DS&amp;A, algorithms, discrete math, theory
+languages     # C, C++, Rust, Python, Java, Haskell, SQL, ...
+web           # HTML, CSS, JS/TS, React, Vue, iOS, Android, ...
+backend       # REST APIs, SQL, NoSQL, microservices, GraphQL
+systems       # OS, compilers, Docker, Kubernetes, CI/CD, cloud
+networks      # TCP/IP, HTTP/3, TLS, BGP, WebRTC, ...
+data          # ETL, ML, deep learning, LLMs, MLOps, Spark
+security      # OWASP, crypto, pentesting, zero-knowledge
+architecture  # system design, patterns, DDD, TDD, CQRS
+creative      # graphics, shaders, game engines, procedural gen
+emerging      # quantum, neuromorphic, blockchain, formal verification
+applied       # bioinformatics, robotics, HPC, scientific computing</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════ SECTION 4: EFFORT ══ -->
+  <section id="s4-effort" class="docs-section">
+    <h2 class="docs-section-title">§4 — Effort</h2>
+    <p>Time estimates shown to students on the course card and player header. Be realistic — overpromising undermines trust.</p>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>video_hours</code></td><td>number</td><td>Total video content hours (decimals allowed)</td></tr>
+          <tr><td><code>reading_hours</code></td><td>number</td><td>Estimated reading time across all lessons</td></tr>
+          <tr><td><code>exercise_hours</code></td><td>number</td><td>Hands-on exercises and assignments</td></tr>
+          <tr><td><code>total_hours</code></td><td>number</td><td>Sum of the three above — used for the duration display</td></tr>
+          <tr><td><code>pace</code></td><td>enum</td><td><code>self-paced</code> · <code>scheduled</code></td></tr>
+          <tr><td><code>weekly_commitment_hours</code></td><td>number</td><td>Recommended hours per week</td></tr>
+          <tr><td><code>completion_weeks</code></td><td>number</td><td>Estimated weeks at the recommended pace</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════ SECTION 5: PEOPLE ══ -->
+  <section id="s5-people" class="docs-section">
+    <h2 class="docs-section-title">§5 — People</h2>
+    <p>The <code>curator</code> is the primary author who maintains the course. <code>contributors</code> and <code>reviewers</code> are optional but credited on the site and in the certificate.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>people:
+  curator:
+    name: "Jane Smith"
+    github: janesmith
+    role: "Course Author"
+    bio: "Senior engineer specializing in distributed systems."
+    avatar: null                  # null = use GitHub avatar
+
+  contributors:
+    - name: "Alex Kumar"
+      github: alexkumar
+      role: reviewer
+      contributions: ["exercises", "solutions review"]
+
+  reviewers:
+    - name: "Maria Garcia"
+      github: mariagarcia
+      expertise: "security"</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════ SECTION 6: CREDITS ══ -->
+  <section id="s6-credits" class="docs-section">
+    <h2 class="docs-section-title">§6 — Credits</h2>
+    <p>Every external resource (video, article, repo, dataset, book) used in the curriculum must have a credit entry. Lessons reference credits by their <code>id</code> field via <code>credit_id</code>.</p>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>e.g. <code>src-01</code> — referenced by lessons via <code>credit_id: src-01</code></td></tr>
+          <tr><td><code>type</code></td><td>enum</td><td><code>video</code> · <code>repo</code> · <code>article</code> · <code>book</code> · <code>tool</code> · <code>dataset</code> · <code>course</code> · <code>podcast</code></td></tr>
+          <tr><td><code>title</code></td><td>string</td><td>Full title of the resource</td></tr>
+          <tr><td><code>author</code></td><td>string</td><td>Creator or author name</td></tr>
+          <tr><td><code>organization</code></td><td>string?</td><td>Optional. Company, university, or channel</td></tr>
+          <tr><td><code>url</code></td><td>string</td><td>Canonical URL</td></tr>
+          <tr><td><code>license</code></td><td>string</td><td>e.g. <code>CC BY 4.0</code>, <code>MIT</code>, <code>YouTube Standard</code></td></tr>
+          <tr><td><code>license_url</code></td><td>string?</td><td>Link to license text</td></tr>
+          <tr><td><code>accessed_at</code></td><td>string</td><td>ISO 8601 date you last verified the URL</td></tr>
+          <tr><td><code>notes</code></td><td>string?</td><td>Any curation notes</td></tr>
+          <tr><td><code>archived_url</code></td><td>string?</td><td>Archive.org or Wayback link for link-rot protection</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ SECTION 7: PREREQUISITES ══ -->
+  <section id="s7-prereqs" class="docs-section">
+    <h2 class="docs-section-title">§7 — Prerequisites</h2>
+    <p>Shown in the course player sidebar. <code>courses</code> entries create edges in the prerequisite graph on the /tracks page.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>prerequisites:
+  knowledge:
+    - "Basic command-line navigation (cd, ls, mkdir)"
+    - "Comfortable reading plain-text files"
+
+  courses:
+    - linux-foundations       # other course id — creates graph edge
+
+  tools:
+    - name: Git
+      url: https://git-scm.com/downloads
+      required: true
+      version_minimum: "2.40"
+      install_guide: "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+
+  accounts:
+    - service: GitHub
+      url: https://github.com/join
+      required: true
+      reason: "All submissions, enrollment, and certificates flow through GitHub Issues"</code>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════ SECTION 8: OUTCOMES ══ -->
+  <section id="s8-outcomes" class="docs-section">
+    <h2 class="docs-section-title">§8 — Outcomes</h2>
+    <p>Learning outcomes drive marketing copy and are surfaced in the course player. Write outcomes in active voice: "You will be able to…"</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>outcomes:
+  by_completion:
+    - "Use Git for solo and team workflows confidently"
+    - "Understand the object model: blobs, trees, commits, refs"
+    - "Resolve merge conflicts systematically"
+    - "Write meaningful commit messages and clean history"
+
+  by_chapter:
+    ch-01:
+      - "Clone, init, and add files to a Git repository"
+      - "Explain what HEAD and the index represent"
+    ch-02:
+      - "Create, switch, and merge branches"
+      - "Understand fast-forward vs three-way merges"</code>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════ SECTION 9: CURRICULUM ══ -->
+  <section id="s9-curriculum" class="docs-section">
+    <h2 class="docs-section-title">§9 — Curriculum</h2>
+    <p>The content hierarchy is: <strong>course → chapter → section (optional) → subsection (optional) → lesson</strong>. Lessons are the leaf nodes — one learning unit each.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>curriculum:
+  chapters:
+    - id: ch-01
+      title: "Getting Started with Git"
+      description: "Install Git, initialise a repo, make your first commit."
+      duration_minutes: 90
+      free_preview: false
+      outcomes:
+        - "Initialise a Git repository"
+        - "Stage and commit changes"
+
+      # Direct lessons (no sections needed for simple chapters):
+      lessons:
+        - id: ch-01-l-01
+          title: "What is Version Control?"
+          type: video
+          duration_minutes: 12
+          free_preview: true
+          description: "Overview of why version control exists and what problem Git solves."
+          content:
+            video:
+              url: "https://www.youtube.com/watch?v=VIDEO_ID"
+              source: youtube
+              channel: "Fireship"
+              credit_id: src-01        # references credits[].id
+              subtitles_available: true
+              timestamps:
+                - label: "Intro"
+                  time: "0:00"
+                - label: "Why version control?"
+                  time: "0:45"
+                - label: "Git vs SVN"
+                  time: "2:10"
+            text:
+              format: markdown
+              body: |
+                ## Curator Notes
+                This video gives an excellent 12-minute overview.
+                Pay special attention to the **object model** at 6:30 —
+                it's the foundation of everything else in this course.
+            links:
+              - label: "Git official documentation"
+                url: "https://git-scm.com/doc"
+                type: documentation
+                required: true
+
+      # Sections (optional grouping within a chapter):
+      sections:
+        - id: ch-01-s-01
+          title: "Installation &amp; Setup"
+          lessons:
+            - id: ch-01-s-01-l-01
+              title: "Installing Git"
+              type: reading
+              duration_minutes: 8
+              content:
+                reading:
+                  url: "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+                  source: "Pro Git (Chacon &amp; Straub)"
+                  credit_id: src-02
+                  estimated_minutes: 8
+                  sections_to_read: ["Installing on Linux", "Installing on macOS"]
+                text:
+                  format: markdown
+                  body: |
+                    Read the installation section for your OS.
+                    After installing, run `git --version` to verify.
+
+      chapter_test_id: ctest-ch-01      # must match a chapter_tests[].id below
+      chapter_assignment_id: cassign-ch-01   # optional</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════ LESSON TYPE REFERENCE ══ -->
+  <section id="lesson-types" class="docs-section">
+    <h2 class="docs-section-title">Lesson Types — Full Reference</h2>
+    <p>Every lesson has a <code>type</code> field. The type determines what fields appear under <code>content:</code> and how the course player renders it.</p>
+
+    <div class="lesson-type-grid">
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">▶</span><span class="lt-card__name">video</span></div>
+        <div class="lt-card__desc">Curated video with timestamps and curator notes. YouTube (privacy-enhanced embed) and Vimeo supported automatically.</div>
+        <div class="lt-card__fields">
+          <div><code>video.url</code> — original link [REQUIRED]</div>
+          <div><code>video.embed_url</code> — override auto-derived iframe src [optional]</div>
+          <div><code>video.source</code> — "youtube" | "vimeo" | etc.</div>
+          <div><code>video.channel</code> — channel/creator name</div>
+          <div><code>video.credit_id</code> — links to credits[].id</div>
+          <div><code>video.subtitles_available</code> — true/false</div>
+          <div><code>video.timestamps[]</code> — &#123;label, time&#125; pairs</div>
+          <div><code>text.body</code> — curator notes (markdown)</div>
+          <div><code>links[]</code> — related resources</div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">📖</span><span class="lt-card__name">reading</span></div>
+        <div class="lt-card__desc">Link to an article, doc page, or book chapter. The player shows a "Read on source" button with curator notes alongside.</div>
+        <div class="lt-card__fields">
+          <div><code>reading.url</code> — canonical URL [REQUIRED]</div>
+          <div><code>reading.source</code> — publication name</div>
+          <div><code>reading.credit_id</code> — links to credits[].id</div>
+          <div><code>reading.estimated_minutes</code> — reading time</div>
+          <div><code>reading.sections_to_read[]</code> — which sections</div>
+          <div><code>reading.sections_to_skip[]</code> — sections to skip</div>
+          <div><code>text.body</code> — curator notes (markdown)</div>
+          <div><code>supplemental[]</code> — extra reading</div>
+          <div><code>links[]</code> — related resources</div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">💻</span><span class="lt-card__name">code</span></div>
+        <div class="lt-card__desc">Annotated code walkthrough. Supports multiple code blocks per lesson, each with syntax highlighting, explanation, and expected output.</div>
+        <div class="lt-card__fields">
+          <div><code>text.body</code> — intro/context (markdown)</div>
+          <div><code>code_blocks[].id</code> — unique block id</div>
+          <div><code>code_blocks[].title</code> — display name</div>
+          <div><code>code_blocks[].language</code> — e.g. python, js, bash</div>
+          <div><code>code_blocks[].snippet</code> — the code [REQUIRED]</div>
+          <div><code>code_blocks[].explanation</code> — inline prose</div>
+          <div><code>code_blocks[].expected_output</code> — output to show</div>
+          <div><code>code_blocks[].runnable</code> — true/false hint</div>
+          <div><code>links[]</code> — related resources</div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">🛠</span><span class="lt-card__name">exercise</span></div>
+        <div class="lt-card__desc">Hands-on task. Student clones a starter repo, implements a solution, and submits. Hints reveal progressively.</div>
+        <div class="lt-card__fields">
+          <div><code>text.body</code> — task instructions (markdown)</div>
+          <div><code>exercise.starter_repo</code> — GitHub URL [REQUIRED]</div>
+          <div><code>exercise.solution_repo</code> — private reference</div>
+          <div><code>exercise.branch</code> — branch name</div>
+          <div><code>exercise.test_command</code> — e.g. "npm test"</div>
+          <div><code>exercise.submission_type</code> — github_url | file_upload | inline</div>
+          <div><code>hints[].level</code> — 1, 2, 3 (progressive)</div>
+          <div><code>hints[].text</code> — hint content</div>
+          <div><code>files[]</code> — assets provided</div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">📋</span><span class="lt-card__name">reference</span></div>
+        <div class="lt-card__desc">Cheatsheet, table, or quick-reference card. Pure curator-authored content with supporting files and links.</div>
+        <div class="lt-card__fields">
+          <div><code>text.body</code> — reference content (markdown)</div>
+          <div><code>files[]</code> — downloadable PDFs, images</div>
+          <div><code>links[]</code> — external references</div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">📝</span><span class="lt-card__name">quiz</span></div>
+        <div class="lt-card__desc">Ungraded formative check with instant feedback. Questions live inside the lesson — NOT in chapter_tests (which are graded).</div>
+        <div class="lt-card__fields">
+          <div><code>questions[].id</code></div>
+          <div><code>questions[].type</code> — mcq | truefalse | short</div>
+          <div><code>questions[].question</code></div>
+          <div><code>questions[].options[]</code> — for mcq</div>
+          <div><code>questions[].answer</code> — shown after attempt</div>
+          <div><code>questions[].explanation</code></div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">💬</span><span class="lt-card__name">discussion</span></div>
+        <div class="lt-card__desc">Open-ended prompt for GitHub Discussions. Creates a pinned discussion thread when the chapter is unlocked.</div>
+        <div class="lt-card__fields">
+          <div><code>text.body</code> — the discussion prompt (markdown)</div>
+        </div>
+      </div>
+
+      <div class="lt-card">
+        <div class="lt-card__head"><span class="lt-card__icon">🚀</span><span class="lt-card__name">project</span></div>
+        <div class="lt-card__desc">Multi-lesson deliverable within a chapter. Used for mini-projects that span several lesson nodes before a submission.</div>
+        <div class="lt-card__fields">
+          <div>Same fields as <code>exercise</code></div>
+          <div>Spans multiple lessons — mark each phase as a project lesson</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 10: CHAPTER TESTS ══ -->
+  <section id="s10-tests" class="docs-section">
+    <h2 class="docs-section-title">§10 — Chapter Tests</h2>
+    <p>A top-level array of graded assessments. Each chapter references one test via <code>chapter_test_id</code>. Tests contain no answers — answers live exclusively in <code>solutions.yaml</code>.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>chapter_tests:
+  - id: ctest-ch-01
+    title: "Chapter 1 Test: Git Foundations"
+    attached_to: ch-01
+    gates_next_chapter: true      # student can't proceed until passing
+    passing_score: 70             # percent 0–100
+    max_attempts: 3
+    time_limit_minutes: 30
+    randomize_questions: true
+    randomize_options: true
+    show_answers_after: passed    # passed | attempted | never
+
+    sections:
+      - id: ctest-ch-01-s-01
+        title: "Core Concepts"
+        weight: 60                # percent of total test score
+        questions:
+          - id: ctest-ch-01-s-01-q-01
+            type: mcq
+            points: 2
+            difficulty: easy
+            topic: "git-objects"
+            question: "Which Git object stores a directory listing?"
+            options:
+              - "blob"
+              - "tree"
+              - "commit"
+              - "tag"
+            # Answer is in solutions.yaml — NOT here
+
+          - id: ctest-ch-01-s-01-q-02
+            type: truefalse
+            points: 1
+            difficulty: easy
+            question: "The working tree and the staging area (index) are the same thing."
+            # Answer: false — in solutions.yaml
+
+      - id: ctest-ch-01-s-02
+        title: "Applied Git"
+        weight: 40
+        questions:
+          - id: ctest-ch-01-s-02-q-01
+            type: code_output
+            points: 3
+            difficulty: medium
+            question: "What does this command output?"
+            code:
+              language: bash
+              snippet: |
+                git log --oneline -3
+            options:
+              - "The last 3 commit hashes only"
+              - "The last 3 commits with abbreviated hash and subject line"
+              - "All commits by 3 authors"
+              - "An error — -3 is not a valid flag"</code>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════ SECTION 11: CH ASSIGNMENTS ══ -->
+  <section id="s11-assign" class="docs-section">
+    <h2 class="docs-section-title">§11 — Chapter Assignments</h2>
+    <p>Optional hands-on projects attached to chapters. Unlike tests, assignments require human review or run through the Docker sandbox grader.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>chapter_assignments:
+  - id: cassign-ch-01
+    title: "Build Your First Repository"
+    attached_to: ch-01
+    required_for_progress: false
+    submission_type: github_url
+    due_after_enrollment_days: 7
+    max_resubmissions: 2
+    content:
+      text:
+        format: markdown
+        body: |
+          ## Task
+          Create a public GitHub repository with at least 5 meaningful commits.
+          The commit history should tell a coherent story of building something small.
+      links:
+        - label: "Example repository"
+          url: "https://github.com/..."
+          type: repo
+    rubric:
+      - criterion: "Minimum 5 commits with descriptive messages"
+        points: 10
+      - criterion: "Uses feature branches with clear names"
+        points: 5
+      - criterion: "Includes a README with project purpose"
+        points: 5
+    total_points: 20
+    passing_score: 70
+    review:
+      type: maintainer
+      sla_days: 3
+      feedback_required: true</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 12: FINAL TEST ═══ -->
+  <section id="s12-final-test" class="docs-section">
+    <h2 class="docs-section-title">§12 — Final Test</h2>
+    <p>Comprehensive exam covering the entire course. Required for certificate generation when <code>required_for_certificate: true</code>. Structure mirrors chapter tests — sections of questions, no answers embedded here.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>final_test:
+  id: final-test
+  title: "Git Mastery — Final Assessment"
+  attached_to: final
+  unlocks: final-assignment      # unlocks capstone after passing
+  passing_score: 75
+  max_attempts: 2
+  time_limit_minutes: 60
+  randomize_questions: true
+  show_answers_after: passed
+  required_for_certificate: true
+  coverage:
+    - ch-01
+    - ch-02
+    - ch-03
+  sections:
+    - id: final-s-01
+      title: "Git Internals"
+      weight: 40
+      questions:
+        - id: final-s-01-q-01
+          type: short
+          points: 5
+          question: "Explain the difference between a merge commit and a rebase. When should you prefer each?"
+          keywords: ["history", "linear", "shared branch", "collaboration"]</code>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════ SECTION 13: FINAL ASSIGNMENT ══ -->
+  <section id="s13-final-proj" class="docs-section">
+    <h2 class="docs-section-title">§13 — Final Assignment</h2>
+    <p>The capstone project — a substantial deliverable unlocked after passing the final test. Supports milestones for phased submission.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>final_assignment:
+  id: final-assignment
+  title: "Capstone: Collaborative Git Workflow"
+  attached_to: final
+  unlocked_by: final-test
+  required_for_certificate: true
+  submission_type: github_url
+  due_after_unlock_days: 14
+  max_resubmissions: 1
+  content:
+    text:
+      format: markdown
+      body: |
+        ## Capstone Project
+        Contribute a meaningful PR to an open-source project using everything
+        you've learned in this course. Document your process in a writeup.
+  milestones:
+    - id: m1
+      title: "Pick a project and open a discussion issue"
+      due_day: 3
+    - id: m2
+      title: "Submit a draft PR with at least 10 meaningful commits"
+      due_day: 10
+    - id: m3
+      title: "Final PR merged or writeup submitted"
+      due_day: 14
+  rubric:
+    - criterion: "PR addresses a real issue (not trivial typo)"
+      points: 20
+    - criterion: "Commit history is clean and descriptive"
+      points: 20
+    - criterion: "Code review comments are addressed thoughtfully"
+      points: 20
+    - criterion: "Writeup explains decisions and learnings"
+      points: 20
+    - criterion: "Project is publicly accessible"
+      points: 20
+  total_points: 100
+  passing_score: 70
+  review:
+    type: maintainer
+    sla_days: 5
+    feedback_required: true</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 14: CERTIFICATE ══ -->
+  <section id="s14-cert" class="docs-section">
+    <h2 class="docs-section-title">§14 — Certificate</h2>
+    <p>When all requirements are met, the automation issues a <strong>GPG-signed SVG certificate</strong> with embedded <strong>Open Badges 3.0 metadata</strong> as a GitHub Release — verifiable by anyone with the project's public GPG key.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>certificate:
+  enabled: true
+  title: "Git Mastery Certificate"
+  subtitle: "Awarded for demonstrating professional Git proficiency"
+  requirements:
+    - type: final_test
+      id: final-test
+      min_score: 75
+    - type: final_assignment
+      id: final-assignment
+      min_score: 70
+    # type: chapter_test + id + min_score also valid
+  template: default                 # default | minimal | dark
+  custom_template: null             # path to custom SVG template (optional)
+  badge:
+    enabled: true
+    image: assets/images/badge.png
+    description: "Issued for completing Git Mastery with ≥75% on all assessments"</code>
+    </div>
+    <div class="docs-callout docs-callout--tip">
+      <span class="docs-callout__icon">✅</span>
+      <div class="docs-callout__body">The certificate SVG is published as a GitHub Release asset and linked from the student's enrollment issue. Anyone can verify it using <code>gpg --verify certificate.svg</code> with the project's public key.</div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════ SECTION 15: ASSETS ══ -->
+  <section id="s15-assets" class="docs-section">
+    <h2 class="docs-section-title">§15 — Assets</h2>
+    <p>File manifests for static assets. All paths are relative to the course directory. The parser checks that referenced files exist.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>assets:
+  images:
+    - assets/images/thumbnail.png
+    - assets/images/banner.png
+    - assets/images/og.png
+    - assets/images/badge.png
+  code:
+    - assets/code/ch-01/hello.py
+    - assets/code/ch-02/starter.js
+  docs:
+    - assets/docs/ch-01-reference-card.pdf
+    - assets/docs/cheatsheet.pdf
+  data:
+    - assets/data/sample-dataset.csv
+  slides:
+    - assets/slides/ch-01.pdf</code>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════ SECTION 16: TRIGGERS ══ -->
+  <section id="s16-triggers" class="docs-section">
+    <h2 class="docs-section-title">§16 — Triggers</h2>
+    <p>GitHub Actions workflow names to fire on course lifecycle events. Leave empty or omit if you don't need custom automation beyond the standard pipeline.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>triggers:
+  on_publish:              ["sync-site-data.yml"]
+  on_enrollment:           ["notify-curator.yml"]
+  on_chapter_complete:     ["update-leaderboard.yml"]
+  on_test_submit:          ["run-quiz.yml"]
+  on_assignment_submit:    ["grade-assignment.yml"]
+  on_final_test_pass:      ["issue-cert.yml"]
+  on_certificate_earn:     ["send-cert-email.yml"]
+  on_update:               ["sync-site-data.yml", "deploy-site.yml"]</code>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════ SECTION 17: DISCUSSION ══ -->
+  <section id="s17-discussion" class="docs-section">
+    <h2 class="docs-section-title">§17 — Discussion</h2>
+    <p>Enable GitHub Discussions integration. When <code>per_chapter: true</code>, the bot creates a pinned discussion thread when each chapter unlocks.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>discussion:
+  enabled: true
+  category: "Course Q&amp;A"
+  per_chapter: true
+  pinned_resources:
+    - title: "Course Syllabus"
+      file: assets/docs/syllabus.pdf
+    - title: "Community Discord"
+      url: "https://discord.gg/..."</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ SECTION 18: CHANGELOG ══ -->
+  <section id="s18-changelog" class="docs-section">
+    <h2 class="docs-section-title">§18 — Changelog</h2>
+    <p>Required before setting <code>metadata.status: review</code>. Add an entry every time you bump <code>metadata.version</code>. The most recent entry appears on the course listing page.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>changelog:
+  - version: "1.1.0"
+    date: "2025-03-20"
+    author: janesmith
+    changes:
+      - "Added Chapter 3: Advanced Branching Strategies"
+      - "Updated all video links to use youtube-nocookie embeds"
+      - "Fixed typo in Chapter 2 assignment rubric"
+
+  - version: "1.0.0"
+    date: "2025-01-15"
+    author: janesmith
+    changes:
+      - "Initial release — Chapters 1–2 with final test"</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════ SOLUTIONS.YAML ══ -->
+  <section id="solutions" class="docs-section">
+    <h2 class="docs-section-title">
+      solutions.yaml — Complete Reference
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#ef4444 12%,transparent);color:#ef4444;border:1px solid color-mix(in srgb,#ef4444 30%,transparent)">Private only</span>
+    </h2>
+    <p><code>solutions.yaml</code> is the companion file to <code>course.yaml</code>. It contains all answers, grading rubrics, and sample solutions — one entry per question. The automation engine joins them at runtime using <code>question_id</code>.</p>
+    <div class="docs-callout docs-callout--danger">
+      <span class="docs-callout__icon">🔒</span>
+      <div class="docs-callout__body"><strong>Never commit solutions.yaml to a public branch.</strong> Store it in a private branch, GitHub encrypted secret, or private repository. The grader fetches it at runtime via a privileged bot token.</div>
+    </div>
+
+    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.5rem 0 0.5rem">Metadata</h3>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>metadata:
+  course_id: git-mastery          # must match course.yaml metadata.id exactly
+  course_version: "1.0.0"         # must match course.yaml metadata.version
+  schema_version: "3.0"           # do not change
+  updated_at: "2025-01-15"        # update whenever any answer changes
+  maintainer: janesmith           # GitHub username
+  visibility: private             # NEVER change — always private</code>
+    </div>
+
+    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.5rem 0 0.5rem">Answer format by question type</h3>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Type</th><th>Answer field(s)</th><th>Format</th></tr></thead>
+        <tbody>
+          <tr><td><code>mcq</code></td><td><code>answer</code></td><td>0-indexed integer: <code>1</code> means option B</td></tr>
+          <tr><td><code>multi</code></td><td><code>answers</code></td><td>List of 0-indexed integers: <code>[0, 2]</code> means A and C</td></tr>
+          <tr><td><code>truefalse</code></td><td><code>answer</code></td><td>Boolean: <code>true</code> or <code>false</code></td></tr>
+          <tr><td><code>short</code></td><td><code>sample_answer</code> + <code>keywords[]</code></td><td>Free text + required keyword list for scoring</td></tr>
+          <tr><td><code>code_output</code></td><td><code>answer</code></td><td>0-indexed integer (index into options[])</td></tr>
+          <tr><td><code>code_fix</code></td><td><code>correct_code</code></td><td>Full corrected code block as a literal YAML string</td></tr>
+          <tr><td><code>code_write</code></td><td><code>sample_solution</code></td><td>One correct implementation + optional alternatives</td></tr>
+          <tr><td><code>code_reading</code></td><td><code>answer</code></td><td>0-indexed integer (index into options[])</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:1.5rem 0 0.5rem">Solution entries</h3>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>solutions:
+
+  # ── mcq ──────────────────────────────────────────────────────────────────
+  - question_id: ctest-ch-01-s-01-q-01     # exact copy from course.yaml
+    type: mcq
+    points: 2
+    difficulty: easy
+    answer: 1                               # 0-indexed: option B = "tree"
+    explanation: |
+      A tree object in Git stores a directory listing — it records the name,
+      mode, and SHA-1 of each blob or subtree it contains.
+
+  # ── truefalse ─────────────────────────────────────────────────────────────
+  - question_id: ctest-ch-01-s-01-q-02
+    type: truefalse
+    points: 1
+    difficulty: easy
+    answer: false
+    explanation: |
+      The working tree contains your actual files on disk. The staging area
+      (index) is a snapshot of what will go into the next commit.
+
+  # ── short ─────────────────────────────────────────────────────────────────
+  - question_id: final-s-01-q-01
+    type: short
+    points: 5
+    difficulty: medium
+    sample_answer: |
+      Merge creates a merge commit preserving both branch histories.
+      Rebase rewrites commits onto the target branch creating a linear history.
+      Prefer merge for shared/public branches; prefer rebase for local cleanup
+      before merging a feature branch.
+    keywords:
+      - "merge commit"
+      - "linear"
+      - "rebase"
+      - "shared"
+      - "history"
+    grading_rubric:
+      - criterion: "Correctly defines merge commit"
+        points: 1
+      - criterion: "Correctly defines rebase"
+        points: 1
+      - criterion: "Identifies when to use each"
+        points: 2
+      - criterion: "Mentions shared branch concern"
+        points: 1
+    explanation: |
+      Rebase on a shared branch rewrites history others have based work on,
+      causing divergent histories. Use merge for shared branches.
+
+  # ── code_write ───────────────────────────────────────────────────────────
+  - question_id: ctest-ch-02-s-01-q-03
+    type: code_write
+    points: 5
+    difficulty: medium
+    sample_solution: |
+      def two_sum(nums, target):
+          seen = &#123;&#125;
+          for i, n in enumerate(nums):
+              if target - n in seen:
+                  return [seen[target - n], i]
+              seen[n] = i
+    alternative_solutions:
+      - |
+        def two_sum(nums, target):
+            for i in range(len(nums)):
+                for j in range(i + 1, len(nums)):
+                    if nums[i] + nums[j] == target:
+                        return [i, j]
+    grading_rubric:
+      - criterion: "Returns correct indices"
+        points: 2
+      - criterion: "Handles duplicate values"
+        points: 1
+      - criterion: "Runs in better than O(n²) time"
+        points: 2
+    explanation: |
+      The hash-map approach runs in O(n) time and O(n) space.
+      The brute force nested loop is O(n²) and receives partial credit.
+
+  # ── code_fix ──────────────────────────────────────────────────────────────
+  - question_id: ctest-ch-03-s-02-q-01
+    type: code_fix
+    points: 3
+    difficulty: medium
+    correct_code: |
+      def factorial(n):
+          if n == 0:
+              return 1
+          return n * factorial(n - 1)
+    bugs_fixed:
+      - "Missing base case — original returned None for n=0"
+      - "Off-by-one: original compared n == 1 not n == 0"
+    grading_rubric:
+      - criterion: "Correct base case n == 0"
+        points: 2
+      - criterion: "Recursive call is correct"
+        points: 1
+    explanation: |
+      The factorial of 0 is 1 by mathematical definition.
+      Without this base case the recursion infinitely recurses.
+
+# ── Assignment review guides (optional) ─────────────────────────────────────
+assignment_review_guides:
+  - assignment_id: cassign-ch-01
+    what_to_look_for:
+      - "At least 5 commits with descriptive, imperative subject lines"
+      - "Feature branches used and merged"
+      - "README explains what the project does"
+    common_mistakes:
+      - "Commits named 'fix' or 'update' with no context"
+      - "All work done directly on main"
+    edge_cases:
+      - "Private repos: ask student to add reviewer as collaborator"
+    feedback_notes: "Encourage conventional commit style for next assignment"
+    feedback_template: |
+      Hi @&#123;github_username&#125;,
+
+      Thanks for your submission. Here's feedback on your repository:
+
+      **Strengths:**
+      &#123;strengths&#125;
+
+      **Areas to improve:**
+      &#123;improvements&#125;
+
+      Your score: &#123;score&#125;/20 (&#123;percentage&#125;%)
+      Status: &#123;pass_fail&#125;</code>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════ QUESTION TYPES ═══════ -->
+  <section id="questions" class="docs-section">
+    <h2 class="docs-section-title">Question Types — Full Reference</h2>
+    <p>All 8 question types work in chapter tests, the final test, and ungraded in-lesson quizzes. In chapter tests and final tests, answers must be in <code>solutions.yaml</code>.</p>
+    <div class="docs-table-wrap">
+      <table class="docs-table">
+        <thead><tr><th>Type</th><th>Course.yaml fields</th><th>Grading</th><th>Partial credit</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>mcq</code></td>
+            <td><code>question</code>, <code>options[]</code>, <code>points</code></td>
+            <td>Exact match on 0-indexed answer</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><code>multi</code></td>
+            <td><code>question</code>, <code>options[]</code>, <code>points</code></td>
+            <td>Score = correct_selected / total_correct × points</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>truefalse</code></td>
+            <td><code>question</code>, <code>points</code></td>
+            <td>Exact match on boolean</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><code>short</code></td>
+            <td><code>question</code>, <code>keywords[]</code>, <code>points</code></td>
+            <td>Keyword matching: matched_keywords / total_keywords × points</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>code_output</code></td>
+            <td><code>question</code>, <code>code</code>, <code>options[]</code>, <code>points</code></td>
+            <td>Exact match on 0-indexed option</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td><code>code_fix</code></td>
+            <td><code>question</code>, <code>code</code>, <code>grading</code>, <code>points</code></td>
+            <td>Structural diff against correct_code; or Docker sandbox execution</td>
+            <td>Via rubric</td>
+          </tr>
+          <tr>
+            <td><code>code_write</code></td>
+            <td><code>question</code>, <code>starter</code>, <code>grading</code>, <code>points</code></td>
+            <td>Docker sandbox: passed_tests / total_tests × points</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>code_reading</code></td>
+            <td><code>question</code>, <code>code</code>, <code>options[]</code>, <code>points</code></td>
+            <td>Exact match on 0-indexed option</td>
+            <td>No</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="docs-callout docs-callout--info">
+      <span class="docs-callout__icon">ℹ️</span>
+      <div class="docs-callout__body">All grading is deterministic. There is no AI, no semantic matching. Code questions run in a Docker sandbox: <code>--network none --memory 256m --cpus 1 --read-only --user 1001:1001 --security-opt no-new-privileges</code>.</div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════ PR WORKFLOW ══════ -->
   <section id="pr-workflow" class="docs-section">
-    <h2 class="docs-section-title">PR Workflow</h2>
+    <h2 class="docs-section-title">PR Workflow — Publish a Course</h2>
     <div class="docs-steps" style="--ch-color:#a78bfa">
       <div class="docs-step">
         <div class="docs-step__line"><div class="docs-step__num">1</div><div class="docs-step__connector"></div></div>
         <div class="docs-step__body">
-          <p class="docs-step__title">Create a branch and copy the template</p>
-          <p class="docs-step__desc"><code>git checkout -b course/your-slug</code> then <code>cp -r engine/courses/template engine/courses/your-slug</code></p>
+          <p class="docs-step__title">Copy the template and write your course</p>
+          <p class="docs-step__desc">
+            <code>cp -r engine/courses/template engine/courses/your-slug</code><br>
+            Fill in <code>course.yaml</code> (all REQUIRED fields). Write your <code>solutions.yaml</code> on a <strong>separate private branch</strong>. Set <code>metadata.status: review</code> when ready.
+          </p>
         </div>
       </div>
       <div class="docs-step">
         <div class="docs-step__line"><div class="docs-step__num">2</div><div class="docs-step__connector"></div></div>
         <div class="docs-step__body">
-          <p class="docs-step__title">Edit course.yaml and add assets</p>
-          <p class="docs-step__desc">Fill in all 18 sections. Write lessons and tests in YAML. Add images, code files, and docs to <code>assets/</code>. Keep <code>solutions.yaml</code> gitignored — never push to main.</p>
+          <p class="docs-step__title">Open a Pull Request</p>
+          <p class="docs-step__desc">PR title: <code>[Course] your-slug — Course Title</code>. The PR must only contain <code>engine/courses/your-slug/</code> files. Do not include <code>solutions.yaml</code> in the PR.</p>
         </div>
       </div>
       <div class="docs-step">
         <div class="docs-step__line"><div class="docs-step__num">3</div><div class="docs-step__connector"></div></div>
         <div class="docs-step__body">
-          <p class="docs-step__title">Open a PR → validate-pr.yml runs</p>
-          <p class="docs-step__desc">Automatically parses <code>course.yaml</code>, validates all required fields, checks for engine path tampering, and posts a validation report as a PR comment.</p>
+          <p class="docs-step__title"><code>validate-pr.yml</code> runs automatically</p>
+          <p class="docs-step__desc">Validates the YAML schema, checks all required fields, verifies asset file references, and reports warnings as a PR comment. Fix any errors before requesting review.</p>
         </div>
       </div>
       <div class="docs-step">
         <div class="docs-step__line"><div class="docs-step__num">4</div><div class="docs-step__connector"></div></div>
         <div class="docs-step__body">
-          <p class="docs-step__title">Merge → automated publish</p>
-          <p class="docs-step__desc"><code>course-publish.yml</code> generates <code>course.json</code> + <code>contributors.json</code>. <code>sync-site-data.yml</code> aggregates. <code>deploy-site.yml</code> rebuilds. Live in ~90 seconds.</p>
+          <p class="docs-step__title">Maintainer reviews and merges</p>
+          <p class="docs-step__desc">The lead maintainer reviews content quality, fact-checks credits, and merges the PR. Set <code>metadata.status: published</code> before merge.</p>
+        </div>
+      </div>
+      <div class="docs-step">
+        <div class="docs-step__line"><div class="docs-step__num">5</div><div class="docs-step__connector"></div></div>
+        <div class="docs-step__body">
+          <p class="docs-step__title"><code>course-publish.yml</code> fires on merge</p>
+          <p class="docs-step__desc">Runs <code>parse-course.ts</code> → writes <code>course.json</code> and <code>course-detail.json</code>. Then <code>sync-site-data.yml</code> aggregates all course data. Then <code>deploy-site.yml</code> rebuilds the site. Live in ~90 seconds.</p>
         </div>
       </div>
     </div>
-    <div class="docs-callout docs-callout--danger">
-      <span class="docs-callout__icon">🔒</span>
-      <div class="docs-callout__body">The <code>id</code> in <code>metadata.id</code> is permanent once published. Changing it invalidates all existing enrollment issues for that course. Add old IDs to <code>metadata.slug_aliases</code> if you must rename.</div>
-    </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════════════════════ CHECKLIST ════ -->
   <section id="checklist" class="docs-section">
-    <h2 class="docs-section-title">Course Creator Checklist</h2>
+    <h2 class="docs-section-title">Pre-PR Checklist</h2>
+    <p>Check every item before opening your PR. The validator catches most issues — this checklist catches the rest.</p>
     <ul class="docs-checklist">
-      <li><code>metadata.id</code> is lowercase-hyphen and globally unique</li>
-      <li><code>metadata.status</code> is <code>draft</code> initially — change to <code>review</code> when ready for merge</li>
-      <li><code>identity.description.short</code> is under 200 characters</li>
+      <li><code>metadata.id</code> is kebab-case, globally unique, matches your directory name</li>
+      <li><code>metadata.status</code> is set to <code>review</code> or <code>published</code> (not <code>draft</code>)</li>
+      <li><code>schema_version</code> is <code>"3.0"</code> — not changed</li>
+      <li>Every chapter has a matching <code>chapter_test_id</code> in <code>chapter_tests[]</code></li>
+      <li>Every <code>chapter_tests[]</code> section has at least one question</li>
+      <li>Every question <code>id</code> is globally unique within the course</li>
+      <li>Every <code>credit_id</code> referenced in a lesson has a matching entry in <code>credits[]</code></li>
       <li><code>classification.category</code> is one of the 12 valid track slugs</li>
-      <li>All <code>credits[].id</code> values are unique and referenced via <code>credit_id</code> in lessons</li>
-      <li><code>prerequisites.courses</code> references only valid, published course IDs</li>
-      <li>Every chapter has a <code>chapter_test_id</code> that matches an entry in <code>chapter_tests[]</code></li>
-      <li>Chapter test section weights sum to 100 per test</li>
-      <li>Each chapter test has at least 3 questions</li>
-      <li><code>passing_score</code> is 50–90 on all tests and assignments</li>
-      <li>Short-answer questions have at least 3 keywords; answers in <code>solutions.yaml</code></li>
-      <li><code>solutions.yaml</code> is in <code>.gitignore</code> — never committed to main</li>
-      <li>Banner image is at least 1200×400px (3:1 ratio)</li>
-      <li><code>people.curator.github</code> is set</li>
-      <li><code>effort.total_hours</code> is realistic</li>
-      <li><code>certificate.requirements</code> references valid test/assignment IDs</li>
-      <li><code>changelog</code> has at least one entry</li>
-      <li>YAML validated locally before opening the PR</li>
+      <li>All asset files listed in <code>assets[]</code> actually exist in the directory</li>
+      <li>Thumbnail is 16:9, banner is 3:1, og_image is 1200×630</li>
+      <li><code>changelog</code> has at least one entry with a version, date, and changes</li>
+      <li><code>solutions.yaml</code> is NOT included in the PR (private branch only)</li>
+      <li>Every question in <code>chapter_tests[]</code> and <code>final_test</code> has a matching entry in <code>solutions.yaml</code></li>
+      <li><code>certificate.enabled</code> is set and requirements are correct</li>
+      <li>All video URLs are reachable (run <code>check-links.yml</code> locally if in doubt)</li>
+      <li>PR only touches files under <code>engine/courses/your-slug/</code></li>
     </ul>
   </section>
 </DocsLayout>
+
+<style>
+/* Download grid */
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1rem 0;
+}
+@media (max-width: 600px) { .dl-grid { grid-template-columns: 1fr; } }
+
+.dl-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  align-items: flex-start;
+}
+.dl-card:hover {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #a78bfa 30%, transparent), 0 4px 16px rgba(0,0,0,0.1);
+}
+.dl-card--private { border-color: color-mix(in srgb, #ef4444 30%, transparent); }
+.dl-card--private:hover { border-color: #ef4444; }
+
+.dl-card__icon { font-size: 2rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.dl-card__body { flex: 1; min-width: 0; }
+.dl-card__title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 2px; }
+.dl-card__sub { font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 6px; }
+.dl-card__desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+.dl-card__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: color-mix(in srgb, #a78bfa 12%, var(--bg-raised));
+  border: 1px solid color-mix(in srgb, #a78bfa 35%, transparent);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a78bfa;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.dl-card--private .dl-card__btn {
+  background: color-mix(in srgb, #ef4444 12%, var(--bg-raised));
+  border-color: color-mix(in srgb, #ef4444 35%, transparent);
+  color: #ef4444;
+}
+
+/* Lesson type grid */
+.lesson-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+@media (max-width: 700px) { .lesson-type-grid { grid-template-columns: 1fr; } }
+
+.lt-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.lt-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-default);
+}
+.lt-card__icon { font-size: 1rem; }
+.lt-card__name {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+.lt-card__desc {
+  padding: 0.6rem 0.875rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  border-bottom: 1px solid var(--border-default);
+}
+.lt-card__fields {
+  padding: 0.5rem 0.875rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lt-card__fields div {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  line-height: 1.4;
+}
+</style>

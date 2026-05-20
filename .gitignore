@@ -55,8 +55,17 @@ coverage/
 /tmp/test-results.json
 
 # ── Course reference solutions (keep private) ─────────────────────────────────
+# solutions.yaml must NEVER appear on a public branch — it contains all answers.
+# The template copy in engine/courses/template/ is the only exception.
+engine/courses/*/solutions.yaml
+!engine/courses/template/solutions.yaml
 engine/courses/*/assets/solutions/**
 !engine/courses/*/assets/solutions/.gitkeep
+
+# ── Auto-generated course output (committed by CI, not by hand) ──────────────
+# course.json and course-detail.json are written by parse-course.ts.
+# course-details/ in site/src/data/ is written by sync-site-data.ts.
+# These are committed via the course-publish workflow (CI bot), not manually.
 
 # ── Spec files (not shipped) ─────────────────────────────────────────────────
 GITHUB-COURSE-ENGINE.md
@@ -65,7 +74,6 @@ SETUP_AND_TESTING.md
 
 # ── Reference / design prototype (not shipped) ───────────────────────────────
 opencourses/
-files/
 
 # ── Site lock file (bun.lockb is canonical) ──────────────────────────────────
 site/package-lock.json

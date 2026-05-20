@@ -1,388 +1,1661 @@
 ---
+/**
+ * [slug].astro — Udemy/Coursera-style course player.
+ *
+ * For courses with a course-detail.json (published via parse-course), renders
+ * the full interactive player: embedded videos, code blocks, reading links,
+ * exercise instructions, etc.
+ *
+ * For courses that only have a summary entry in OC.COURSES (no detail file),
+ * falls back to a minimal info page.
+ */
 import Base from '../../layouts/Base.astro';
 import TrackBadge from '../../components/TrackBadge.astro';
 import DifficultyBadge from '../../components/DifficultyBadge.astro';
-import GitStatus from '../../components/GitStatus.astro';
-import VersionTag from '../../components/VersionTag.astro';
 import Avatar from '../../components/Avatar.astro';
-import Sparkline from '../../components/Sparkline.astro';
 import OC from '../../data/oc';
-import type { Course } from '../../data/oc';
+import type { CourseDetailJson } from '../../types/course';
 
-export function getStaticPaths() {
-  return OC.COURSES.map(c => ({ params: { slug: c.slug }, props: { course: c } }));
+// ── Load all course-detail JSON files at build time ───────────────────────────
+const detailModules = import.meta.glob<{ default: CourseDetailJson }>(
+  '../../data/course-details/*.json',
+  { eager: true },
+);
+
+const detailMap = new Map<string, CourseDetailJson>();
+for (const [, mod] of Object.entries(detailModules)) {
+  const d = mod.default ?? (mod as unknown as CourseDetailJson);
+  if (d?.id) detailMap.set(d.id, d);
 }
 
-interface Props { course: Course; }
-const { course } = Astro.props;
+// ── Static paths ──────────────────────────────────────────────────────────────
+export function getStaticPaths() {
+  const detailMods = import.meta.glob<{ default: CourseDetailJson }>(
+    '../../data/course-details/*.json',
+    { eager: true },
+  );
+
+  const paths: Array<{ params: { slug: string }; props: { detail: CourseDetailJson | null; slugFallback: string } }> = [];
+  const seen = new Set<string>();
+
+  for (const [, mod] of Object.entries(detailMods)) {
+    const d = mod.default ?? (mod as unknown as CourseDetailJson);
+    if (!d?.id) continue;
+    paths.push({ params: { slug: d.id }, props: { detail: d, slugFallback: d.id } });
+    seen.add(d.id);
+  }
+
+  // Add any OC.COURSES that don't have a detail file yet
+  for (const c of OC.COURSES) {
+    if (!seen.has(c.slug)) {
+      paths.push({ params: { slug: c.slug }, props: { detail: null, slugFallback: c.slug } });
+    }
+  }
+
+  return paths;
+}
+
+interface Props {
+  detail: CourseDetailJson | null;
+  slugFallback: string;
+}
+
+const { detail, slugFallback } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-const related = OC.COURSES.filter(c => c.track === course.track && c.slug !== course.slug).slice(0, 3);
+// Fallback summary from OC.COURSES
+const summaryFallback = OC.COURSES.find(c => c.slug === slugFallback);
 
-// Module list — real template for rust-fundamentals, heuristic for others
-const MODULE_TITLES = ['Introduction','Core concepts','Hands-on: first project','Common patterns','Edge cases & pitfalls','Performance considerations','Testing strategies','Real-world examples','Capstone exercise','Going further','Reference & resources','Conclusion','Appendix A','Appendix B','Glossary','Index'];
-const MODULE_DURATIONS = [20,45,40,50,55,35,40,30,40,60,50,10,25,25,15,10];
+// Helpers
+function fmtDuration(mins: number): string {
+  if (!mins) return '—';
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
 
-const tpl = OC.MODULE_TEMPLATES[course.slug];
-const modules = tpl
-  ? tpl.slice(0, course.modules)
-  : Array.from({ length: course.modules }, (_, i) => ({
-      title: MODULE_TITLES[i] || `Module ${i + 1}`,
-      duration: `${20 + ((i * 13) % 50)}min`,
-      body: 'An overview of this module\'s content. Covers key ideas, links to relevant code, and points to additional reading.',
-    }));
+function lessonIcon(type: string): string {
+  const icons: Record<string, string> = {
+    video: '▶',
+    reading: '📖',
+    code: '💻',
+    exercise: '🛠',
+    reference: '📋',
+    quiz: '📝',
+    discussion: '💬',
+    project: '🚀',
+    live: '🔴',
+  };
+  return icons[type] ?? '•';
+}
 
-const diffLines = [
-  { type: 'context', text: `# ${course.title} — Changelog` },
-  { type: 'context', text: '' },
-  { type: 'context', text: `## ${course.version} (${course.updatedAt.slice(0, 10)})` },
-  { type: 'added', text: 'Added new module with worked examples' },
-  { type: 'added', text: 'Updated all code samples to latest version' },
-  { type: 'removed', text: 'Removed outdated deprecated patterns' },
-  { type: 'added', text: 'New: cleaner explanation throughout' },
-];
+// Build flat lesson list with chapter info for navigation
+const flatLessons: Array<{ chIdx: number; lIdx: number; lesson: CourseDetailJson['chapters'][number]['lessons'][number]; chapterId: string }> = [];
+if (detail) {
+  for (let ci = 0; ci < detail.chapters.length; ci++) {
+    const ch = detail.chapters[ci]!;
+    for (let li = 0; li < ch.lessons.length; li++) {
+      flatLessons.push({ chIdx: ci, lIdx: li, lesson: ch.lessons[li]!, chapterId: ch.id });
+    }
+  }
+}
+
+const title  = detail?.title  ?? summaryFallback?.title  ?? slugFallback;
+const tagline = detail?.tagline ?? summaryFallback?.description ?? '';
+const color  = detail?.cover.color_primary ?? summaryFallback?.tags?.[0] ? '#4f9eff' : '#4f9eff';
+const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.duration ?? '—');
 ---
 
-<Base title={course.title} description={course.description} currentPath={`/courses/${course.slug}`}>
-  <div class="container">
-    <!-- Breadcrumb + title -->
-    <header class="course-hero">
-      <div class="course-hero__top">
-        <a href={`${base}/`} style="color:var(--text-muted)">~</a>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="m9 18 6-6-6-6"/></svg>
-        <a href={`${base}/courses`} style="color:var(--text-muted)">courses</a>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><path d="m9 18 6-6-6-6"/></svg>
-        <span style="color:var(--text-secondary)">{course.slug}</span>
-        <span style="margin-left:auto"><VersionTag version={course.version} /></span>
-      </div>
+<Base
+  title={title}
+  description={tagline}
+  currentPath={`/courses/${slugFallback}`}
+>
+  {detail ? (
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- FULL COURSE PLAYER                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="cp-root">
 
-      <h1 class="course-hero__title">{course.title}</h1>
-      <p style="font-size:var(--text-lg);color:var(--text-secondary);max-width:720px;margin:0 0 24px">{course.description}</p>
-
-      <div class="course-hero__meta">
-        <TrackBadge track={course.track} />
-        <DifficultyBadge level={course.difficulty} />
-        <span class="course-card__sep">·</span>
-        <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          {course.modules} modules
-        </span>
-        <span class="course-card__sep">·</span>
-        <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          {course.duration}
-        </span>
-        <span class="course-card__sep">·</span>
-        <span style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
-          Updated {OC.relativeTime(course.updatedAt)}
-        </span>
-        <span style="margin-left:auto;display:inline-flex;align-items:center;gap:16px;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted)">
-          <span style="display:inline-flex;align-items:center;gap:4px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-            {course.stars}
-          </span>
-          <span>{course.forks} forks</span>
-          <span>{course.openIssues} issues</span>
-        </span>
-      </div>
-
-      <div style="display:flex;flex-wrap:wrap;gap:4px">
-        {course.tags.map(t => <span class="tag-chip">{t}</span>)}
-      </div>
-
-      <div class="course-hero__actions">
-        <div class="source-toggle">
-          <button class="source-toggle__btn" data-active="true" data-view-toggle="rendered">Rendered</button>
-          <button class="source-toggle__btn" data-view-toggle="source">Source</button>
-        </div>
-        <a href={`https://github.com/${course.repo}`} class="btn btn-primary" target="_blank" rel="noopener">
-          Start course
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      <!-- ── Top bar ──────────────────────────────────────────────────────── -->
+      <header class="cp-topbar">
+        <a href={`${base}/courses`} class="cp-topbar__back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Courses
         </a>
-        <a href={`https://github.com/${course.repo}`} class="btn btn-secondary" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.68-1.27-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.34.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
-          Suggest edit on GitHub
-        </a>
-      </div>
-    </header>
-
-    <div class="course-detail-layout">
-      <!-- MAIN -->
-      <main>
-        <!-- Rendered content (shown by default) -->
-        <div id="view-rendered" class="prose">
-          <p><strong>{course.title}</strong> teaches you {course.description.toLowerCase()}</p>
-          <p>
-            Maintained by <a href={`https://github.com/${course.maintainer}`} target="_blank">@{course.maintainer}</a>
-            {course.contributors.length > 1 && ` and ${course.contributors.length - 1} other contributor${course.contributors.length === 2 ? '' : 's'}`}.
-            Currently at <code>{course.version}</code>, last updated <strong>{OC.relativeTime(course.updatedAt)}</strong>.
-          </p>
-          <h2>Prerequisites</h2>
-          {course.prerequisites.length > 0 ? (
-            <ul>
-              {course.prerequisites.map(p => {
-                const pre = OC.COURSES.find(c => c.slug === p);
-                return <li><a href={`${base}/courses/${p}`}>{pre?.title || p}</a></li>;
-              })}
-            </ul>
-          ) : (
-            <p>No formal prerequisites. Basic familiarity with the command line is helpful.</p>
-          )}
-          <h2>What you'll learn</h2>
-          <ul>
-            <li>The core model the rest of the field is built on — and why it's shaped that way</li>
-            <li>Common patterns, when to use each, and how to recognize them in the wild</li>
-            <li>Failure modes: what breaks, why, and what to do about it</li>
-            <li>How professionals actually structure work in this domain</li>
-          </ul>
-          <h2>How this course works</h2>
-          <p>Each module is a markdown file in <code>{course.repo}</code>. Read it, do the worked example, attempt the take-home prompts. Open an issue if anything is unclear — we'll fix it and credit you.</p>
+        <div class="cp-topbar__title">{detail.title}</div>
+        <div class="cp-topbar__meta">
+          <TrackBadge track={detail.track} />
+          <DifficultyBadge level={detail.level} />
+          <span class="cp-topbar__duration">{totalH}</span>
         </div>
-
-        <!-- Source view (hidden by default) -->
-        <div id="view-source" hidden>
-          <pre class="source-pre"><code>{`---
-title: ${course.title}
-track: ${course.track}
-difficulty: ${course.difficulty}
-duration: ${course.duration}
-modules: ${course.modules}
-maintainer: ${course.maintainer}
-version: ${course.version}
-license: MIT
----
-
-# ${course.title}
-
-${course.description}
-
-## Prerequisites
-
-${course.prerequisites.length === 0 ? 'None — basic CLI familiarity helps.' : course.prerequisites.map(p => `- [${OC.COURSES.find(c => c.slug === p)?.title || p}](/courses/${p})`).join('\n')}
-
-## What you'll learn
-
-- The core model the rest of the field is built on
-- Common patterns and when to use each
-- Failure modes and how to debug them
-- How professionals structure work
-
-## How this course works
-
-Each module is a markdown file in \`${course.repo}\`.
-Read it, do the example, attempt the prompts.`}</code></pre>
+        <!-- Progress bar (driven by JS) -->
+        <div class="cp-topbar__progress" id="cp-progress-wrap">
+          <div class="cp-topbar__progress-bar" id="cp-progress-bar" style="width:0%"></div>
         </div>
+        <span class="cp-topbar__progress-label" id="cp-progress-label">0 / {flatLessons.length}</span>
+      </header>
 
-        <!-- Modules accordion -->
-        <section style="margin-top:48px">
-          <h2 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--text-primary);margin:0 0 16px">Modules</h2>
-          <div class="module-accordion" id="module-accordion">
-            {modules.map((m, i) => {
-              const blame = course.contributors[i % course.contributors.length];
-              return (
-                <div class="module-item" data-module={i}>
-                  <button class="module-item__head" data-accordion-btn={i}>
-                    <svg class="module-item__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                    <span class="module-item__num">{String(i + 1).padStart(2, '0')}</span>
-                    <span style="flex:1">{m.title}</span>
-                    <span class="module-item__blame">
-                      @{blame} · {((i * 7) % 30) + 1}d ago
-                    </span>
-                    <span class="module-item__dur">{m.duration}</span>
-                  </button>
-                  <div class="module-item__body" hidden>
-                    <p style="margin:0">{m.body}</p>
-                    <ul>
-                      <li>Read the linked reference material before the exercises</li>
-                      <li>Try the worked example, then attempt the take-home prompts</li>
-                      <li>Open an issue if anything is unclear — we'll fix it</li>
-                    </ul>
+      <!-- ── Player body: sidebar + content ───────────────────────────────── -->
+      <div class="cp-body">
+
+        <!-- Sidebar: chapter / lesson tree -->
+        <nav class="cp-sidebar" id="cp-sidebar">
+          <div class="cp-sidebar__inner">
+            <!-- Course info mini card -->
+            <div class="cp-sidebar__course-info">
+              {detail.cover.thumbnail && (
+                <img src={detail.cover.thumbnail} alt={detail.title} class="cp-sidebar__thumb" loading="lazy" />
+              )}
+              <div class="cp-sidebar__course-meta">
+                <div class="cp-sidebar__course-title">{detail.title}</div>
+                <div class="cp-sidebar__course-sub">
+                  {detail.totalChapters} chapters · {detail.totalLessons} lessons
+                </div>
+              </div>
+            </div>
+
+            <!-- Chapter list -->
+            {detail.chapters.map((ch, ci) => (
+              <div class="cp-chapter" id={`cp-ch-${ch.id}`}>
+                <button class="cp-chapter__head" data-ch-toggle={ci}>
+                  <svg class="cp-chapter__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <span class="cp-chapter__num">{String(ci + 1).padStart(2, '0')}</span>
+                  <span class="cp-chapter__title">{ch.title}</span>
+                  <span class="cp-chapter__count">{ch.lessonCount}</span>
+                </button>
+                <div class="cp-chapter__lessons" data-ch-lessons={ci}>
+                  {ch.lessons.map((lesson, li) => {
+                    const globalIdx = flatLessons.findIndex(fl => fl.chapterId === ch.id && fl.lIdx === li);
+                    return (
+                      <button
+                        class="cp-lesson-btn"
+                        data-lesson={globalIdx}
+                        data-lesson-id={lesson.id}
+                        id={`cp-lessonbtn-${globalIdx}`}
+                      >
+                        <span class="cp-lesson-btn__icon">{lessonIcon(lesson.type)}</span>
+                        <span class="cp-lesson-btn__title">{lesson.title}</span>
+                        {lesson.duration_minutes > 0 && (
+                          <span class="cp-lesson-btn__dur">{fmtDuration(lesson.duration_minutes)}</span>
+                        )}
+                        <span class="cp-lesson-btn__check" id={`cp-check-${globalIdx}`}></span>
+                      </button>
+                    );
+                  })}
+                  <!-- Chapter test pill -->
+                  <div class="cp-chapter-test-pill">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Chapter Test · {ch.test_summary.question_count}q · {ch.test_summary.passing_score}% pass
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <!-- Diff view -->
-        <section style="margin-top:48px">
-          <h2 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--text-primary);margin:0 0 16px">What changed</h2>
-          <div class="diff-view">
-            <div class="diff-view__head">
-              <span style="font-weight:700;color:var(--text-primary)">What changed</span>
-              <VersionTag version="v2.0.0 → v2.1.0" />
-              <span style="margin-left:auto">+8 −3 across 4 files</span>
-            </div>
-            <div style="padding-block:8px">
-              {diffLines.map((l, i) => (
-                <div class={`diff-line diff-line--${l.type}`}>
-                  <span class="diff-line__marker">{l.type === 'added' ? '+' : l.type === 'removed' ? '-' : ' '}</span>
-                  <span>{l.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <!-- Contribute -->
-        <section style="margin-top:48px">
-          <h2 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--text-primary);margin:0 0 16px">Contribute</h2>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
-            <a href={`https://github.com/${course.repo}`} class="detail-card" style="display:flex;flex-direction:column;gap:8px;text-decoration:none" target="_blank" rel="noopener">
-              <strong style="color:var(--text-primary)">Fork this course</strong>
-              <span style="font-size:13px;color:var(--text-secondary)">Make your own version. Send improvements back upstream.</span>
-              <span style="margin-top:8px;color:var(--accent-blue);font-family:var(--font-mono);font-size:12px">$ git clone {course.repo}</span>
-            </a>
-            <a href={`https://github.com/${course.repo}/issues`} class="detail-card" style="display:flex;flex-direction:column;gap:8px;text-decoration:none" target="_blank" rel="noopener">
-              <strong style="color:var(--text-primary)">Open an issue</strong>
-              <span style="font-size:13px;color:var(--text-secondary)">Spotted something off? Tell us. We'll fix it and credit you.</span>
-              <span style="margin-top:8px;color:var(--accent-blue);font-family:var(--font-mono);font-size:12px">{course.openIssues} open issues</span>
-            </a>
-          </div>
-        </section>
-      </main>
-
-      <!-- SIDEBAR -->
-      <aside class="detail-sidebar">
-        <!-- YAML panel -->
-        <div class="yaml-panel">
-          <button class="yaml-panel__head" id="yaml-panel-toggle">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(90deg)"><path d="m9 18 6-6-6-6"/></svg>
-            <span>course.yml</span>
-            <span style="margin-left:auto;color:var(--text-muted)">collapse</span>
-          </button>
-          <div class="yaml-panel__body" id="yaml-panel-body">
-            <div><span class="yaml-comment"># {course.slug}</span></div>
-            <div><span class="yaml-key">title:</span> <span class="yaml-val">{course.title}</span></div>
-            <div><span class="yaml-key">track:</span> <span class="yaml-val">{course.track}</span></div>
-            <div><span class="yaml-key">difficulty:</span> <span class="yaml-val">{course.difficulty}</span></div>
-            <div><span class="yaml-key">duration:</span> <span class="yaml-val">{course.duration}</span></div>
-            <div><span class="yaml-key">modules:</span> <span class="yaml-num">{course.modules}</span></div>
-            <div><span class="yaml-key">maintainer:</span> <span class="yaml-tag">@{course.maintainer}</span></div>
-            <div><span class="yaml-key">version:</span> <span class="yaml-tag">{course.version}</span></div>
-            <div><span class="yaml-key">license:</span> <span class="yaml-val">MIT</span></div>
-            <div><span class="yaml-key">repo:</span> <span class="yaml-val">{course.repo}</span></div>
-          </div>
-        </div>
-
-        <!-- Module list -->
-        <div class="detail-card">
-          <h4 class="detail-card__title">Modules</h4>
-          <div class="module-list">
-            {modules.map((m, i) => (
-              <div class="module-list__item">
-                <span class="module-list__num">{String(i + 1).padStart(2, '0')}</span>
-                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{m.title}</span>
-                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">{m.duration}</span>
               </div>
             ))}
-          </div>
-        </div>
 
-        <!-- Contributors -->
-        <div class="detail-card">
-          <h4 class="detail-card__title">Contributors</h4>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            {course.contributors.map(login => {
-              const c = OC.CONTRIBUTORS.find(x => x.login === login);
-              return (
-                <div style="display:flex;align-items:center;gap:10px">
-                  <Avatar login={login} size="sm" />
-                  <div style="min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary)">@{login}</div>
-                    <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">{c ? `${c.commits} commits` : 'Contributor'}</div>
+            <!-- Final Test / Assignment pills -->
+            {detail.final_test && (
+              <div class="cp-final-pill cp-final-pill--test">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Final Test · {detail.final_test.question_count}q
+              </div>
+            )}
+            {detail.final_assignment && (
+              <div class="cp-final-pill cp-final-pill--assign">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Final Assignment
+              </div>
+            )}
+
+            <!-- Enroll CTA -->
+            <a
+              href={`https://github.com/manojpisini/opencourses/issues/new?template=enroll.yml&title=[Enrolled]+@YOUR_USERNAME+—+${detail.id}&labels=enrollment-request`}
+              class="cp-enroll-btn"
+              target="_blank"
+              rel="noopener"
+            >
+              Enroll via GitHub Issues
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+        </nav>
+
+        <!-- Sidebar toggle (mobile) -->
+        <button class="cp-sidebar-toggle" id="cp-sidebar-toggle" aria-label="Toggle course outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <!-- ── Main content area ─────────────────────────────────────────── -->
+        <main class="cp-content" id="cp-content">
+
+          <!-- All lesson panes (show one at a time via JS) -->
+          {flatLessons.map(({ lesson, chIdx, lIdx }, globalIdx) => {
+            const ch = detail.chapters[chIdx]!;
+            const isFirst = globalIdx === 0;
+            return (
+              <article
+                class="cp-pane"
+                id={`cp-pane-${globalIdx}`}
+                data-lesson-id={lesson.id}
+                hidden={!isFirst}
+              >
+                <!-- Pane header -->
+                <div class="cp-pane__header">
+                  <div class="cp-pane__breadcrumb">
+                    <span class="cp-pane__ch-name">{ch.title}</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    <span class="cp-pane__lesson-type">{lesson.type}</span>
                   </div>
+                  <h1 class="cp-pane__title">{lesson.title}</h1>
+                  {lesson.description && (
+                    <p class="cp-pane__desc">{lesson.description}</p>
+                  )}
+                  {lesson.duration_minutes > 0 && (
+                    <div class="cp-pane__dur">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      {fmtDuration(lesson.duration_minutes)}
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        </div>
 
-        <!-- Related -->
-        {related.length > 0 && (
-          <div class="detail-card">
-            <h4 class="detail-card__title">Related</h4>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              {related.map(r => (
-                <a href={`${base}/courses/${r.slug}`} class="related-link" style="display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:6px;text-decoration:none">
-                  <span style="font-size:13px;font-weight:500;color:var(--text-primary)">{r.title}</span>
-                  <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">{r.modules} modules · {r.duration}</span>
-                </a>
-              ))}
+                <!-- ── VIDEO ─────────────────────────────────────────────── -->
+                {lesson.video && (
+                  <div class="cp-video-wrap">
+                    <iframe
+                      class="cp-video"
+                      data-src={lesson.video.embed_url}
+                      src={isFirst ? lesson.video.embed_url : undefined}
+                      title={lesson.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowfullscreen
+                      loading="lazy"
+                    ></iframe>
+                  </div>
+                )}
+                {lesson.video && (
+                  <div class="cp-video-meta">
+                    <a href={lesson.video.url} target="_blank" rel="noopener" class="cp-video-meta__link">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      Open on {lesson.video.source}
+                    </a>
+                    {lesson.video.channel && (
+                      <span class="cp-video-meta__channel">by {lesson.video.channel}</span>
+                    )}
+                    {lesson.video.subtitles_available && (
+                      <span class="cp-video-meta__subs">CC available</span>
+                    )}
+                  </div>
+                )}
+
+                <!-- Video timestamps -->
+                {lesson.video?.timestamps && lesson.video.timestamps.length > 0 && (
+                  <div class="cp-timestamps">
+                    <div class="cp-timestamps__title">Chapters</div>
+                    <div class="cp-timestamps__list">
+                      {lesson.video.timestamps.map(ts => (
+                        <div class="cp-timestamp">
+                          <code class="cp-timestamp__time">{ts.time}</code>
+                          <span class="cp-timestamp__label">{ts.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <!-- ── READING ────────────────────────────────────────────── -->
+                {lesson.reading && (
+                  <div class="cp-reading">
+                    <div class="cp-reading__source">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                      <a href={lesson.reading.url} target="_blank" rel="noopener" class="cp-reading__link">
+                        Read on {lesson.reading.source}
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      </a>
+                      {lesson.reading.estimated_minutes && (
+                        <span class="cp-reading__est">~{lesson.reading.estimated_minutes} min read</span>
+                      )}
+                    </div>
+                    {lesson.reading.sections_to_read && lesson.reading.sections_to_read.length > 0 && (
+                      <div class="cp-reading__sections">
+                        <strong>Read these sections:</strong>
+                        <ul>
+                          {lesson.reading.sections_to_read.map(s => <li>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <!-- ── TEXT / CURATOR NOTES ───────────────────────────────── -->
+                {lesson.text_md && (
+                  <div class="cp-notes">
+                    <div class="cp-notes__label">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Curator Notes
+                    </div>
+                    <div class="cp-notes__body prose">{lesson.text_md}</div>
+                  </div>
+                )}
+
+                <!-- ── CODE BLOCKS ────────────────────────────────────────── -->
+                {lesson.code_blocks && lesson.code_blocks.length > 0 && (
+                  <div class="cp-code-section">
+                    {lesson.code_blocks.map(cb => (
+                      <div class="cp-code-block">
+                        <div class="cp-code-block__bar">
+                          <div class="cp-code-block__dots">
+                            <span></span><span></span><span></span>
+                          </div>
+                          <span class="cp-code-block__title">{cb.title}</span>
+                          <span class="cp-code-block__lang">{cb.language}</span>
+                          <button class="cp-code-block__copy" data-copy-src={cb.snippet}>Copy</button>
+                        </div>
+                        <pre class="cp-code-block__pre"><code class={`language-${cb.language}`}>{cb.snippet}</code></pre>
+                        {cb.explanation && (
+                          <div class="cp-code-block__explain">{cb.explanation}</div>
+                        )}
+                        {cb.expected_output && (
+                          <div class="cp-code-block__output">
+                            <span class="cp-code-block__output-label">Expected output</span>
+                            <pre><code>{cb.expected_output}</code></pre>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <!-- ── EXERCISE ───────────────────────────────────────────── -->
+                {lesson.exercise && (
+                  <div class="cp-exercise">
+                    <div class="cp-exercise__header">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                      Hands-on Exercise
+                    </div>
+                    <div class="cp-exercise__body">
+                      <a href={lesson.exercise.starter_repo} class="cp-exercise__repo" target="_blank" rel="noopener">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.68-1.27-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.34.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
+                        Open Starter Repo
+                      </a>
+                      {lesson.exercise.test_command && (
+                        <div class="cp-exercise__cmd">
+                          <span class="cp-exercise__cmd-label">Run tests:</span>
+                          <code>{lesson.exercise.test_command}</code>
+                        </div>
+                      )}
+                      {lesson.exercise.submission_type && (
+                        <div class="cp-exercise__submit">
+                          Submit via: <strong>{lesson.exercise.submission_type}</strong>
+                        </div>
+                      )}
+                    </div>
+                    {lesson.hints && lesson.hints.length > 0 && (
+                      <details class="cp-hints">
+                        <summary class="cp-hints__toggle">Hints ({lesson.hints.length})</summary>
+                        <div class="cp-hints__list">
+                          {lesson.hints.map((h, hi) => (
+                            <div class="cp-hint">
+                              <span class="cp-hint__level">Hint {hi + 1}</span>
+                              <p>{h.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                )}
+
+                <!-- ── LINKS ──────────────────────────────────────────────── -->
+                {lesson.links && lesson.links.length > 0 && (
+                  <div class="cp-links">
+                    <div class="cp-links__title">Resources</div>
+                    <ul class="cp-links__list">
+                      {lesson.links.map(link => (
+                        <li class="cp-link-item">
+                          <a href={link.url} target="_blank" rel="noopener" class="cp-link-item__a">
+                            <span class="cp-link-item__label">{link.label}</span>
+                            <span class="cp-link-item__type">{link.type}</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                          {link.required && <span class="cp-link-item__req">Required</span>}
+                          {link.note && <span class="cp-link-item__note">{link.note}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <!-- ── SUPPLEMENTAL ───────────────────────────────────────── -->
+                {lesson.supplemental && lesson.supplemental.length > 0 && (
+                  <div class="cp-links">
+                    <div class="cp-links__title">Supplemental Reading</div>
+                    <ul class="cp-links__list">
+                      {lesson.supplemental.map(link => (
+                        <li class="cp-link-item">
+                          <a href={link.url} target="_blank" rel="noopener" class="cp-link-item__a">
+                            <span class="cp-link-item__label">{link.label}</span>
+                            <span class="cp-link-item__type">{link.type}</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <!-- Prev / Next navigation -->
+                <div class="cp-pane__nav">
+                  {globalIdx > 0 && (
+                    <button class="cp-pane__nav-btn cp-pane__nav-btn--prev" data-go-lesson={globalIdx - 1}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                      {flatLessons[globalIdx - 1]?.lesson.title ?? 'Previous'}
+                    </button>
+                  )}
+                  {globalIdx < flatLessons.length - 1 && (
+                    <button class="cp-pane__nav-btn cp-pane__nav-btn--next" data-go-lesson={globalIdx + 1}>
+                      {flatLessons[globalIdx + 1]?.lesson.title ?? 'Next'}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+
+          <!-- Overview pane (course intro — shown before any lesson is selected on fresh load) -->
+          {flatLessons.length === 0 && (
+            <div class="cp-pane" style="padding:3rem 2rem">
+              <h1 style="margin:0 0 1rem">{detail.title}</h1>
+              <p style="color:var(--text-secondary)">{detail.description_short}</p>
+              <p style="color:var(--text-muted);font-size:0.85rem">This course has no lessons yet — check back after publish.</p>
+            </div>
+          )}
+        </main>
+
+        <!-- ── Right info panel ──────────────────────────────────────────── -->
+        <aside class="cp-infopanel">
+
+          <!-- About this course -->
+          <div class="cp-card">
+            <div class="cp-card__title">About this course</div>
+            <p class="cp-card__text">{detail.description_short}</p>
+            <div class="cp-card__pills">
+              {detail.tags.map(t => <span class="cp-tag">{t}</span>)}
             </div>
           </div>
-        )}
 
-        <!-- Last commit -->
-        <div class="detail-card">
-          <h4 class="detail-card__title">Last commit</h4>
-          <div style="display:flex;align-items:flex-start;gap:10px">
-            <Avatar login={course.maintainer} size="sm" />
-            <div style="min-width:0;flex:1">
-              <div style="font-size:13px;color:var(--text-primary);margin-bottom:4px">{course.lastCommit}</div>
-              <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">
-                @{course.maintainer} · {OC.relativeTime(course.updatedAt)} · <span style="color:var(--accent-blue)">3a8f1c2</span>
+          <!-- Skills gained -->
+          {detail.skills_gained.length > 0 && (
+            <div class="cp-card">
+              <div class="cp-card__title">Skills you'll gain</div>
+              <ul class="cp-skills">
+                {detail.skills_gained.slice(0, 8).map(s => (
+                  <li class="cp-skill">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <!-- Prerequisites -->
+          {(detail.prerequisites.knowledge.length > 0 || detail.prerequisites.courses.length > 0 || detail.prerequisites.tools.length > 0) && (
+            <div class="cp-card">
+              <div class="cp-card__title">Prerequisites</div>
+              {detail.prerequisites.knowledge.length > 0 && (
+                <ul class="cp-skills" style="margin-bottom:0.5rem">
+                  {detail.prerequisites.knowledge.map(k => (
+                    <li class="cp-skill">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                      {k}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {detail.prerequisites.courses.length > 0 && (
+                <div>
+                  {detail.prerequisites.courses.map(cid => {
+                    const c = OC.COURSES.find(x => x.slug === cid);
+                    return (
+                      <a href={`${base}/courses/${cid}`} class="cp-prereq-course">
+                        📚 {c?.title ?? cid}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
+              {detail.prerequisites.tools.length > 0 && (
+                <ul class="cp-skills" style="margin-top:0.5rem">
+                  {detail.prerequisites.tools.map(t => (
+                    <li class="cp-skill">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                      <a href={t.url} target="_blank" rel="noopener">{t.name}</a>
+                      {t.required && <span style="color:var(--text-muted);font-size:0.7em">required</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <!-- Outcomes -->
+          {detail.outcomes.by_completion.length > 0 && (
+            <div class="cp-card">
+              <div class="cp-card__title">What you'll learn</div>
+              <ul class="cp-skills">
+                {detail.outcomes.by_completion.map(o => (
+                  <li class="cp-skill">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4f9eff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    {o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <!-- Curator -->
+          <div class="cp-card">
+            <div class="cp-card__title">Curator</div>
+            <div class="cp-curator">
+              <Avatar login={detail.curator.github} size="sm" />
+              <div>
+                <div class="cp-curator__name">{detail.curator.name}</div>
+                <div class="cp-curator__role">@{detail.curator.github} · {detail.curator.role}</div>
               </div>
             </div>
+            {detail.curator.bio && <p class="cp-curator__bio">{detail.curator.bio}</p>}
           </div>
-        </div>
-      </aside>
+
+          <!-- Certificate -->
+          {detail.certificate.enabled && (
+            <div class="cp-card cp-card--cert">
+              <div class="cp-card__title">Certificate</div>
+              <div class="cp-cert-title">{detail.certificate.title}</div>
+              {detail.certificate.subtitle && (
+                <div class="cp-cert-sub">{detail.certificate.subtitle}</div>
+              )}
+              <div class="cp-cert-req">
+                {detail.certificate.requirements.map(r => (
+                  <div class="cp-cert-req__item">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    {r.type.replace(/_/g, ' ')} ≥ {r.min_score}%
+                  </div>
+                ))}
+              </div>
+              <div class="cp-cert-badge">GPG-signed SVG · Open Badges 3.0</div>
+            </div>
+          )}
+
+          <!-- Enroll -->
+          <a
+            href={`https://github.com/manojpisini/opencourses/issues/new?template=enroll.yml&title=[Enrolled]+@YOUR_USERNAME+—+${detail.id}&labels=enrollment-request`}
+            class="cp-enroll-btn cp-enroll-btn--full"
+            target="_blank"
+            rel="noopener"
+          >
+            Enroll via GitHub Issues
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </aside>
+      </div>
     </div>
-  </div>
+
+  ) : (
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- FALLBACK: minimal course info page (no detail file yet)                -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="container" style="padding-top:2rem;padding-bottom:4rem">
+      <div style="display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);margin-bottom:1.5rem">
+        <a href={`${base}/`} style="color:var(--text-muted)">~</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <a href={`${base}/courses`} style="color:var(--text-muted)">courses</a>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span>{slugFallback}</span>
+      </div>
+
+      <h1 style="font-size:2rem;font-weight:800;margin:0 0 0.5rem;letter-spacing:-0.02em">{title}</h1>
+      <p style="font-size:1rem;color:var(--text-secondary);margin:0 0 2rem;max-width:640px">{tagline}</p>
+
+      {summaryFallback && (
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin-bottom:2rem">
+          <TrackBadge track={summaryFallback.track} />
+          <DifficultyBadge level={summaryFallback.difficulty} />
+          <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{summaryFallback.duration}</span>
+          <span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">{summaryFallback.modules} chapters</span>
+        </div>
+      )}
+
+      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:1.5rem;max-width:480px">
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">Course content is being published. Full player coming soon.</div>
+        <a
+          href={`https://github.com/manojpisini/opencourses/issues/new?template=enroll.yml&title=[Enrolled]+@YOUR_USERNAME+—+${slugFallback}&labels=enrollment-request`}
+          style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent-blue,#4f9eff);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem"
+          target="_blank" rel="noopener"
+        >
+          Enroll via GitHub Issues
+        </a>
+      </div>
+    </div>
+  )}
+
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" is:inline></script>
 
   <script is:inline>
-    // Source / rendered toggle
-    (function(){
-      var btns = document.querySelectorAll('[data-view-toggle]');
-      var rendered = document.getElementById('view-rendered');
-      var source = document.getElementById('view-source');
-      btns.forEach(function(btn){
-        btn.addEventListener('click', function(){
-          var v = btn.dataset.viewToggle;
-          btns.forEach(function(b){ b.removeAttribute('data-active'); });
-          btn.setAttribute('data-active','true');
-          if(rendered) rendered.hidden = v !== 'rendered';
-          if(source) source.hidden = v !== 'source';
-        });
+  (function () {
+    'use strict';
+
+    // ── Highlight.js init ──────────────────────────────────────────────────
+    if (typeof hljs !== 'undefined') {
+      document.querySelectorAll('pre code[class^="language-"]').forEach(function (el) {
+        hljs.highlightElement(el);
       });
-      // Module accordion
-      document.querySelectorAll('[data-accordion-btn]').forEach(function(btn){
-        btn.addEventListener('click', function(){
-          var item = btn.closest('.module-item');
-          var body = item && item.querySelector('.module-item__body');
-          var chevron = item && item.querySelector('.module-item__chevron');
-          var isOpen = item && item.hasAttribute('data-open');
-          // Close all
-          document.querySelectorAll('.module-item').forEach(function(m){
-            m.removeAttribute('data-open');
-            var b = m.querySelector('.module-item__body');
-            if(b) b.hidden = true;
-          });
-          // Open clicked if it was closed
-          if(!isOpen && body && item){
-            item.setAttribute('data-open','');
-            body.hidden = false;
-          }
-        });
+    }
+
+    // ── State ──────────────────────────────────────────────────────────────
+    var STORAGE_KEY_LESSON   = 'oc-player-lesson-' + (window.location.pathname);
+    var STORAGE_KEY_PROGRESS = 'oc-player-done-'   + (window.location.pathname);
+
+    var totalLessons = document.querySelectorAll('[data-lesson]').length;
+    if (!totalLessons) return; // fallback page, nothing to do
+
+    function getDone() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY_PROGRESS) || '[]'); }
+      catch { return []; }
+    }
+    function saveDone(arr) {
+      try { localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(arr)); }
+      catch {}
+    }
+    function getSavedLesson() {
+      try { return parseInt(localStorage.getItem(STORAGE_KEY_LESSON) || '0', 10) || 0; }
+      catch { return 0; }
+    }
+    function saveCurrentLesson(idx) {
+      try { localStorage.setItem(STORAGE_KEY_LESSON, String(idx)); }
+      catch {}
+    }
+
+    var done = getDone();
+    var currentLesson = 0;
+
+    // ── Update progress bar ────────────────────────────────────────────────
+    function updateProgress() {
+      var bar   = document.getElementById('cp-progress-bar');
+      var label = document.getElementById('cp-progress-label');
+      if (bar)   bar.style.width = (done.length / totalLessons * 100) + '%';
+      if (label) label.textContent = done.length + ' / ' + totalLessons;
+    }
+
+    // ── Show a lesson pane ─────────────────────────────────────────────────
+    function showLesson(idx) {
+      // Hide all panes
+      document.querySelectorAll('.cp-pane').forEach(function (pane) {
+        pane.hidden = true;
       });
-      // YAML panel toggle
-      var yamlBtn = document.getElementById('yaml-panel-toggle');
-      var yamlBody = document.getElementById('yaml-panel-body');
-      yamlBtn && yamlBtn.addEventListener('click', function(){
-        var open = !yamlBody.hidden;
-        yamlBody.hidden = open;
-        var lbl = yamlBtn.querySelector('span:last-child');
-        if(lbl) lbl.textContent = open ? 'expand' : 'collapse';
-        var chevron = yamlBtn.querySelector('svg');
-        if(chevron) chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+      // Show target pane
+      var pane = document.getElementById('cp-pane-' + idx);
+      if (!pane) return;
+      pane.hidden = false;
+
+      // Activate sidebar button
+      document.querySelectorAll('[data-lesson]').forEach(function (btn) {
+        btn.classList.toggle('active', parseInt(btn.dataset.lesson, 10) === idx);
       });
-      // Open first module
-      var first = document.querySelector('.module-item');
-      if(first){
-        first.setAttribute('data-open','');
-        var firstBody = first.querySelector('.module-item__body');
-        if(firstBody) firstBody.hidden = false;
+
+      // Lazy-load iframe: set src from data-src
+      var iframe = pane.querySelector('iframe.cp-video');
+      if (iframe && iframe.dataset.src && !iframe.src) {
+        iframe.src = iframe.dataset.src;
+      }
+
+      // Mark done when navigating away (previous lesson is done)
+      if (currentLesson !== idx && done.indexOf(currentLesson) === -1) {
+        done.push(currentLesson);
+        saveDone(done);
+        updateProgress();
+      }
+
+      currentLesson = idx;
+      saveCurrentLesson(idx);
+
+      // Update check marks
+      done.forEach(function (doneIdx) {
+        var chk = document.getElementById('cp-check-' + doneIdx);
+        if (chk) chk.textContent = '✓';
+      });
+
+      // Scroll to top of content
+      var content = document.getElementById('cp-content');
+      if (content) content.scrollTop = 0;
+
+      // Update URL hash without scrolling
+      history.replaceState(null, '', '#lesson-' + idx);
+    }
+
+    // ── Restore lesson from URL hash or localStorage ───────────────────────
+    var hashMatch = window.location.hash.match(/^#lesson-(\d+)$/);
+    var initLesson = hashMatch ? parseInt(hashMatch[1], 10) : getSavedLesson();
+    initLesson = Math.max(0, Math.min(initLesson, totalLessons - 1));
+
+    // Render done checkmarks
+    updateProgress();
+    done.forEach(function (doneIdx) {
+      var chk = document.getElementById('cp-check-' + doneIdx);
+      if (chk) chk.textContent = '✓';
+    });
+
+    // Show initial lesson (first pane is rendered visible from SSR)
+    if (initLesson > 0) {
+      showLesson(initLesson);
+    } else {
+      // Activate first sidebar button
+      var firstBtn = document.querySelector('[data-lesson="0"]');
+      if (firstBtn) firstBtn.classList.add('active');
+    }
+
+    // ── Sidebar lesson click ───────────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-lesson]');
+      if (btn) {
+        var idx = parseInt(btn.dataset.lesson, 10);
+        showLesson(idx);
+        return;
+      }
+
+      // Prev / Next navigation buttons inside pane
+      var navBtn = e.target.closest('[data-go-lesson]');
+      if (navBtn) {
+        var toIdx = parseInt(navBtn.dataset.goLesson, 10);
+        showLesson(toIdx);
+        return;
+      }
+
+      // Copy button on code blocks
+      var copyBtn = e.target.closest('[data-copy-src]');
+      if (copyBtn) {
+        var text = copyBtn.dataset.copySrc;
+        navigator.clipboard.writeText(text).then(function () {
+          var orig = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function () { copyBtn.textContent = orig; }, 1500);
+        }).catch(function () {});
+        return;
+      }
+    });
+
+    // ── Chapter accordion toggle ──────────────────────────────────────────
+    document.querySelectorAll('[data-ch-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var ci = btn.dataset.chToggle;
+        var lessons = document.querySelector('[data-ch-lessons="' + ci + '"]');
+        var chevron = btn.querySelector('.cp-chapter__chevron');
+        if (!lessons) return;
+        var open = !lessons.hidden;
+        lessons.hidden = open;
+        if (chevron) chevron.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+      });
+    });
+
+    // Open chapter that contains current lesson
+    (function () {
+      var activeBtn = document.getElementById('cp-lessonbtn-' + initLesson);
+      if (!activeBtn) return;
+      // Find parent [data-ch-lessons]
+      var parent = activeBtn.closest('[data-ch-lessons]');
+      if (!parent) return;
+      parent.hidden = false;
+      var ci = parent.dataset.chLessons;
+      var head = document.querySelector('[data-ch-toggle="' + ci + '"]');
+      if (head) {
+        var chevron = head.querySelector('.cp-chapter__chevron');
+        if (chevron) chevron.style.transform = 'rotate(90deg)';
       }
     })();
+
+    // ── Mobile sidebar toggle ─────────────────────────────────────────────
+    var sidebarToggle = document.getElementById('cp-sidebar-toggle');
+    var sidebar = document.getElementById('cp-sidebar');
+    if (sidebarToggle && sidebar) {
+      sidebarToggle.addEventListener('click', function () {
+        sidebar.classList.toggle('cp-sidebar--open');
+      });
+    }
+
+  })();
   </script>
 </Base>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* COURSE PLAYER LAYOUT                                                        */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.cp-root {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+.cp-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 1rem;
+  height: 48px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.cp-topbar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.cp-topbar__back:hover { color: var(--text-primary); }
+.cp-topbar__title {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.cp-topbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cp-topbar__duration {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.cp-topbar__progress {
+  width: 80px;
+  height: 4px;
+  background: var(--border-default);
+  border-radius: 2px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cp-topbar__progress-bar {
+  height: 100%;
+  background: #34d399;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.cp-topbar__progress-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.cp-body {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  grid-template-areas: "sidebar content infopanel";
+  height: calc(100vh - 56px - 48px);
+  overflow: hidden;
+}
+@media (max-width: 1280px) {
+  .cp-body {
+    grid-template-columns: 260px 1fr;
+    grid-template-areas: "sidebar content";
+  }
+  .cp-infopanel { display: none; }
+}
+@media (max-width: 800px) {
+  .cp-body {
+    grid-template-columns: 1fr;
+    grid-template-areas: "content";
+  }
+  .cp-sidebar { display: none; }
+  .cp-sidebar-toggle { display: flex; }
+}
+
+/* ── Sidebar: chapter/lesson tree ────────────────────────────────────────── */
+.cp-sidebar {
+  grid-area: sidebar;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-right: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+}
+.cp-sidebar--open {
+  display: flex;
+  position: fixed;
+  top: 104px;
+  left: 0;
+  width: 280px;
+  height: calc(100vh - 104px);
+  z-index: 200;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+}
+.cp-sidebar__inner { padding: 0 0 2rem; flex: 1; }
+
+/* Course info mini card */
+.cp-sidebar__course-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-default);
+}
+.cp-sidebar__thumb {
+  width: 48px;
+  height: 27px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.cp-sidebar__course-meta { min-width: 0; }
+.cp-sidebar__course-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cp-sidebar__course-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Chapter accordion */
+.cp-chapter { border-bottom: 1px solid var(--border-default); }
+.cp-chapter__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  transition: background 0.12s;
+}
+.cp-chapter__head:hover { background: var(--bg-raised); }
+.cp-chapter__chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transform: rotate(90deg);
+  transition: transform 0.2s;
+}
+.cp-chapter__num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.cp-chapter__title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-chapter__count {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+/* Lesson buttons */
+.cp-chapter__lessons { background: var(--bg-base); }
+.cp-lesson-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px 8px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  border-left: 2px solid transparent;
+  transition: background 0.1s, border-color 0.1s;
+}
+.cp-lesson-btn:hover { background: var(--bg-surface); }
+.cp-lesson-btn.active {
+  background: color-mix(in srgb, #4f9eff 8%, var(--bg-surface));
+  border-left-color: #4f9eff;
+}
+.cp-lesson-btn__icon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  width: 16px;
+  text-align: center;
+}
+.cp-lesson-btn__title {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  .cp-lesson-btn.active & { color: #4f9eff; font-weight: 600; }
+}
+.cp-lesson-btn__dur {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.cp-lesson-btn__check {
+  font-size: 0.7rem;
+  color: #34d399;
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+}
+
+/* Chapter test pill */
+.cp-chapter-test-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 20px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  border-top: 1px solid var(--border-default);
+}
+
+/* Final test/assignment pills */
+.cp-final-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-default);
+}
+.cp-final-pill--test  { color: #fb923c; }
+.cp-final-pill--assign { color: #a78bfa; }
+
+/* Enroll button in sidebar */
+.cp-enroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 1rem;
+  padding: 10px 14px;
+  background: #4f9eff;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.cp-enroll-btn:hover { background: #3b82f6; }
+.cp-enroll-btn--full { justify-content: center; width: 100%; box-sizing: border-box; }
+
+/* Sidebar toggle (mobile) */
+.cp-sidebar-toggle {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 300;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  color: var(--text-secondary);
+}
+
+/* ── Main content: lesson panes ──────────────────────────────────────────── */
+.cp-content {
+  grid-area: content;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  background: var(--bg-base);
+}
+
+/* Pane */
+.cp-pane {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+@media (max-width: 600px) { .cp-pane { padding: 0 1rem 3rem; } }
+
+.cp-pane__header {
+  padding: 2rem 0 1.5rem;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 1.5rem;
+}
+.cp-pane__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+.cp-pane__ch-name { color: var(--text-muted); }
+.cp-pane__lesson-type {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 1px 6px;
+  color: var(--text-muted);
+}
+.cp-pane__title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+.cp-pane__desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+  line-height: 1.6;
+}
+.cp-pane__dur {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Video */
+.cp-video-wrap {
+  position: relative;
+  padding-top: 56.25%; /* 16:9 */
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.cp-video {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+.cp-video-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.78rem;
+}
+.cp-video-meta__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #4f9eff;
+  text-decoration: none;
+}
+.cp-video-meta__link:hover { text-decoration: underline; }
+.cp-video-meta__channel, .cp-video-meta__subs { color: var(--text-muted); }
+
+/* Timestamps */
+.cp-timestamps {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.cp-timestamps__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+  margin-bottom: 0.5rem;
+}
+.cp-timestamps__list { display: flex; flex-direction: column; gap: 4px; }
+.cp-timestamp { display: flex; align-items: center; gap: 10px; }
+.cp-timestamp__time {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #4f9eff;
+  min-width: 48px;
+}
+.cp-timestamp__label { font-size: 0.82rem; color: var(--text-secondary); }
+
+/* Reading */
+.cp-reading {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.cp-reading__source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cp-reading__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4f9eff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.cp-reading__link:hover { text-decoration: underline; }
+.cp-reading__est { font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); }
+.cp-reading__sections { margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
+.cp-reading__sections ul { margin: 0.3rem 0 0 1.2rem; padding: 0; }
+.cp-reading__sections li { margin-bottom: 0.2rem; }
+
+/* Curator notes */
+.cp-notes {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.cp-notes__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0.6rem 1rem;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-default);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cp-notes__body {
+  padding: 1rem 1.25rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Code blocks */
+.cp-code-section { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
+.cp-code-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cp-code-block__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-default);
+}
+.cp-code-block__dots { display: flex; gap: 5px; }
+.cp-code-block__dots span {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.cp-code-block__dots span:nth-child(1) { background: #ef4444; opacity: 0.7; }
+.cp-code-block__dots span:nth-child(2) { background: #f59e0b; opacity: 0.7; }
+.cp-code-block__dots span:nth-child(3) { background: #22c55e; opacity: 0.7; }
+.cp-code-block__title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex: 1;
+}
+.cp-code-block__lang {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cp-code-block__copy {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+.cp-code-block__copy:hover { color: var(--text-primary); }
+.cp-code-block__pre {
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+.cp-code-block__pre code {
+  display: block;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono);
+}
+.cp-code-block__explain {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-default);
+  line-height: 1.6;
+}
+.cp-code-block__output {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-base);
+}
+.cp-code-block__output-label {
+  display: block;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+.cp-code-block__output pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #34d399;
+}
+
+/* Exercise */
+.cp-exercise {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.cp-exercise__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.25rem;
+  background: color-mix(in srgb, #a78bfa 8%, var(--bg-raised));
+  border-bottom: 1px solid var(--border-default);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+.cp-exercise__body {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.cp-exercise__repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+.cp-exercise__repo:hover { border-color: #4f9eff; }
+.cp-exercise__cmd { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
+.cp-exercise__cmd code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  background: var(--bg-base);
+  border-radius: 4px;
+  color: #34d399;
+}
+.cp-exercise__submit { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Hints */
+.cp-hints { border-top: 1px solid var(--border-default); }
+.cp-hints__toggle {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  list-style: none;
+}
+.cp-hints__list { padding: 0 1.25rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.cp-hint { font-size: 0.82rem; color: var(--text-secondary); }
+.cp-hint__level { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 2px; }
+.cp-hint p { margin: 0; }
+
+/* Links */
+.cp-links {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.cp-links__title {
+  padding: 0.6rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-default);
+}
+.cp-links__list { list-style: none; padding: 0; margin: 0; }
+.cp-link-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  border-bottom: 1px solid var(--border-default);
+}
+.cp-link-item:last-child { border-bottom: none; }
+.cp-link-item__a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  flex: 1;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.cp-link-item__a:hover { background: var(--bg-raised); }
+.cp-link-item__label {
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.cp-link-item__type {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.cp-link-item__req {
+  font-size: 0.65rem;
+  color: #fb923c;
+  font-family: var(--font-mono);
+  padding-right: 8px;
+}
+.cp-link-item__note { font-size: 0.75rem; color: var(--text-muted); padding: 0 8px 6px; width: 100%; }
+
+/* Pane prev/next nav */
+.cp-pane__nav {
+  display: flex;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-default);
+}
+.cp-pane__nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cp-pane__nav-btn:hover { border-color: #4f9eff; color: #4f9eff; }
+.cp-pane__nav-btn--next { margin-left: auto; }
+
+/* ── Right info panel ────────────────────────────────────────────────────── */
+.cp-infopanel {
+  grid-area: infopanel;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border-left: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cp-card {
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+}
+.cp-card--cert { border-color: color-mix(in srgb, #fb923c 30%, transparent); }
+.cp-card__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+  margin-bottom: 0.6rem;
+}
+.cp-card__text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; margin: 0 0 0.5rem; }
+.cp-card__pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.cp-tag {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.cp-skills { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.cp-skill {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.cp-skill svg { flex-shrink: 0; margin-top: 2px; }
+
+.cp-prereq-course {
+  display: block;
+  font-size: 0.8rem;
+  color: #4f9eff;
+  text-decoration: none;
+  padding: 4px 0;
+}
+.cp-prereq-course:hover { text-decoration: underline; }
+
+.cp-curator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.5rem;
+}
+.cp-curator__name { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+.cp-curator__role { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+.cp-curator__bio { font-size: 0.78rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+
+.cp-cert-title { font-size: 0.9rem; font-weight: 700; color: #fb923c; margin-bottom: 2px; }
+.cp-cert-sub { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.cp-cert-req { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0.5rem; }
+.cp-cert-req__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.cp-cert-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+</style>

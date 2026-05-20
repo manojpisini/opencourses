@@ -27,9 +27,10 @@ const { owner, repo } = repoFromEnv();
 
 // ─── Path helpers ─────────────────────────────────────────────────────────────
 
-const COURSES_DIR  = path.join('courses');
-const SITE_DATA    = path.join('..', 'site', 'src', 'data');
-const SITE_PUBLIC  = path.join('..', 'site', 'public');
+const COURSES_DIR       = path.join('courses');
+const SITE_DATA         = path.join('..', 'site', 'src', 'data');
+const SITE_DATA_DETAILS = path.join(SITE_DATA, 'course-details');
+const SITE_PUBLIC       = path.join('..', 'site', 'public');
 
 function siteFile(name: string): string {
   return path.join(SITE_DATA, name);
@@ -130,6 +131,13 @@ function scanCourseDirs(): string[] {
 
 function readCourseJson(slug: string): ParsedCourse | null {
   const p = path.join(COURSES_DIR, slug, 'course.json');
+  if (!fs.existsSync(p)) return null;
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch { return null; }
+}
+
+function readCourseDetailJson(slug: string): unknown | null {
+  const p = path.join(COURSES_DIR, slug, 'course-detail.json');
   if (!fs.existsSync(p)) return null;
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
   catch { return null; }
@@ -433,6 +441,22 @@ async function main() {
   write('activity.json',     activity);
   write('stats.json',        stats);
   writePublicStats(stats);   // also write to site/public/ for shields.io dynamic badges
+
+  // Copy per-course detail JSON to site/src/data/course-details/{slug}.json
+  if (!fs.existsSync(SITE_DATA_DETAILS)) {
+    fs.mkdirSync(SITE_DATA_DETAILS, { recursive: true });
+  }
+  let detailCount = 0;
+  for (const slug of slugs) {
+    const detail = readCourseDetailJson(slug);
+    if (!detail) continue;
+    const dest = path.join(SITE_DATA_DETAILS, `${slug}.json`);
+    fs.writeFileSync(dest, JSON.stringify(detail, null, 2) + '\n');
+    detailCount++;
+  }
+  if (detailCount > 0) {
+    console.log(`✓ site/src/data/course-details/ — ${detailCount} detail file(s) written`);
+  }
 
   console.log(`\nSync complete — ${courses.length} courses, ${contributors.length} contributors`);
 }
