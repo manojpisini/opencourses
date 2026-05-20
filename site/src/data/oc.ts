@@ -198,9 +198,15 @@ export const TRACKS: Track[] = [
 
 // ============================================================
 // Contributors — auto-populated by sync-site-data workflow
-// manojpisini is always index 0 as Lead Maintainer
+// manojpisini is always index 0 as Lead Maintainer.
+// Fallback guarantees at least the lead card exists so that
+// /contributors/manojpisini is always a valid static route
+// even before the first sync-site-data run.
 // ============================================================
-export const CONTRIBUTORS = contributorsRaw as unknown as Contributor[];
+const _rawContribs = contributorsRaw as unknown as Contributor[];
+export const CONTRIBUTORS: Contributor[] = _rawContribs.length > 0
+  ? _rawContribs
+  : [{ login: 'manojpisini', name: 'Manoj Pisini', role: 'Lead Maintainer', commits: 0, courses: 0, hue: 220 }];
 
 // ============================================================
 // Module detail — populated per-course from course.json
