@@ -269,10 +269,22 @@ async function main() {
   const { data: issue } = await octokit.issues.get({ owner, repo, issue_number: issueNumber });
   const body = issue.body ?? '';
 
-  const resolvedCourse = parseIssueField(body, 'Course').toLowerCase().trim().replace(/\s+/g, '-');
-  const resolvedTestId = parseIssueField(body, 'Test ID').trim();
+  // TEST_TYPE=final is set by run-quiz.yml when grading a final-test label issue.
+  // Final test submissions use a different issue template that has no Test ID field —
+  // the test ID is derived from course.final_test.id after the course is loaded.
+  const isFinalSubmission = (process.env['TEST_TYPE'] ?? '').toLowerCase() === 'final';
 
-  if (!resolvedCourse || !resolvedTestId) {
+  // Parse course from both "Course Slug" (final-test template) and "Course" (quiz-submit template)
+  const resolvedCourse = (
+    parseIssueField(body, 'Course Slug') ||
+    parseIssueField(body, 'Course')
+  ).toLowerCase().trim().replace(/\s+/g, '-');
+
+  // For chapter tests: Test ID comes from the issue form field.
+  // For final test:    Test ID is resolved from course.final_test.id (no form field).
+  let resolvedTestId = isFinalSubmission ? '__final__' : parseIssueField(body, 'Test ID').trim();
+
+  if (!resolvedCourse || (!isFinalSubmission && !resolvedTestId)) {
     await postComment(octokit, owner, repo, issueNumber,
       `@${student} — Could not find **Course** or **Test ID** fields.\n\nPlease use the [quiz submit template](../../issues/new?template=quiz-submit.yml).`);
     process.exit(1);
@@ -295,6 +307,16 @@ async function main() {
   }
   const courseDir = path.dirname(path.resolve(coursePath));
   const course    = parseCourseFile(coursePath);
+
+  // Resolve sentinel: for final-test submissions, use the course's actual final_test id.
+  if (resolvedTestId === '__final__') {
+    if (!course.final_test) {
+      await postComment(octokit, owner, repo, issueNumber,
+        `@${student} — Course \`${resolvedCourse}\` does not have a final test configured.`);
+      process.exit(1);
+    }
+    resolvedTestId = course.final_test.id;
+  }
 
   const found = findTest(course, resolvedTestId);
   if (!found) {
