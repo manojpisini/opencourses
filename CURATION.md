@@ -1,4 +1,4 @@
-# Curation Standards
+﻿# Curation Standards
 
 This document defines what gets into OpenCourses, how quality is evaluated, and how content gaps are filled. Read this before proposing a new course or resource.
 
@@ -44,7 +44,7 @@ Resources that are **not acceptable:**
 
 ### 4. Structure
 - A course must have a clear progression — learners know what they're building toward
-- At minimum: a learning objective, prerequisites, and a chapter-based curriculum outline in `course.md`
+- At minimum: a learning objective, prerequisites, and a chapter-based curriculum outline in `course.yaml`
 - Courses with graded stages must have at least one completable chapter with a defined `pass_score`
 
 ### 5. Licensing Compatibility
@@ -56,7 +56,7 @@ Resources that are **not acceptable:**
 
 ## Quality Bar for Graded Chapters
 
-Chapter tests and code assignments defined in `course.md` must:
+Chapter tests and code assignments defined in `course.yaml` must:
 
 - Test understanding, not memorisation — questions should require the learner to apply knowledge
 - Have unambiguous pass/fail criteria set in the chapter's `chapter_test.pass_score` field
@@ -93,7 +93,7 @@ When a content gap is identified (via issues, community feedback, or maintainer 
 
 1. **Open an issue** tagged `content-gap` describing what's missing and why it matters
 2. **Research existing resources** — prefer the best freely available material over creating new explanatory text
-3. **Draft in a branch** — copy the template to `engine/courses/{slug}/` and set `meta.status: "draft"` in `course.md`
+3. **Draft in a branch** — copy the template to `engine/courses/{slug}/` and set `metadata.status: "draft"` in `course.yaml`
 4. **Review cycle** — at least one other contributor reads the full course page before it goes `active`
 5. **Graded chapters are optional** — a course can ship as `active` with site content only; chapter tests and code assignments can follow
 
@@ -111,7 +111,7 @@ When a content gap is identified (via issues, community feedback, or maintainer 
 
 ## Maintaining Existing Courses
 
-Courses are reviewed annually (or when a maintainer flags `meta.status: "attention"` in `course.md`):
+Courses are reviewed annually (or when a maintainer flags `metadata.status: "attention"` in `course.yaml`):
 
 - Resources that go offline or become paywalled must be replaced or removed
 - Courses using deprecated tooling get an `attention` status and a 90-day window to update

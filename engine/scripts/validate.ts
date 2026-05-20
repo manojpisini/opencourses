@@ -12,7 +12,7 @@
 import { Octokit } from '@octokit/rest';
 import * as fs from 'fs';
 import * as path from 'path';
-import { parseCourse } from '../lib/course-parser.js';
+import { parseCourseFile } from '../lib/course-parser.ts';
 
 const mode = process.argv.includes('--mode') ? process.argv[process.argv.indexOf('--mode') + 1] : 'schema';
 const octokit = new Octokit({ auth: process.env['GITHUB_TOKEN'] });
@@ -21,13 +21,13 @@ const prNumber = parseInt(process.env['PR_NUMBER'] ?? '0', 10);
 
 // ─── Course Validation ──────────────────────────────────────────────────────
 
-function findCourseMdFiles(dir: string): string[] {
+function findCourseYamlFiles(dir: string): string[] {
   const results: string[] = [];
   if (!fs.existsSync(dir)) return results;
 
   const entries = fs.readdirSync(dir, { recursive: true, withFileTypes: true });
   for (const entry of entries) {
-    if (entry.isFile() && entry.name === 'course.md') {
+    if (entry.isFile() && entry.name === 'course.yaml') {
       results.push(path.join(entry.parentPath ?? entry.path, entry.name));
     }
   }
@@ -35,14 +35,13 @@ function findCourseMdFiles(dir: string): string[] {
 }
 
 function validateAllCourses(): { errors: string[]; validated: number } {
-  const courseFiles = findCourseMdFiles('courses');
+  const courseFiles = findCourseYamlFiles('courses');
   const errors: string[] = [];
   let validated = 0;
 
   for (const file of courseFiles) {
     try {
-      const raw = fs.readFileSync(file, 'utf-8');
-      parseCourse(raw);          // throws ParseError on any schema violation
+      parseCourseFile(file);     // throws on any schema violation
       validated++;
       console.log(`  ✓ ${file}`);
     } catch (e) {
@@ -102,7 +101,7 @@ async function validatePR(): Promise<void> {
 
 async function main() {
   if (mode === 'schema') {
-    console.log('Validating course.md files in courses/...');
+    console.log('Validating course.yaml files in courses/...');
     const { errors, validated } = validateAllCourses();
     console.log(`\nValidated ${validated} course(s)`);
     if (errors.length > 0) {

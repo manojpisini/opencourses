@@ -26,7 +26,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="docs-pre">
       <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">pipeline</span></div>
       <code>COURSE CREATION
-  course.md edited → PR opened
+  course.yaml edited → PR opened
     └─ validate-pr.yml: parse + tamper-check → PR comment report
   PR merged
     └─ course-publish.yml:
@@ -74,7 +74,7 @@ MAINTENANCE
       <table class="docs-table">
         <thead><tr><th>Workflow</th><th>Trigger</th><th>Permissions</th><th>Key vars</th></tr></thead>
         <tbody>
-          <tr><td><code>course-publish.yml</code></td><td>Push <code>engine/courses/**/course.md</code> + manual</td><td>contents:write</td><td>GITHUB_TOKEN</td></tr>
+          <tr><td><code>course-publish.yml</code></td><td>Push <code>engine/courses/**/course.yaml</code> + manual</td><td>contents:write</td><td>GITHUB_TOKEN</td></tr>
           <tr><td><code>sync-site-data.yml</code></td><td>After course-publish, nightly 03:00, manual</td><td>contents:write</td><td>GITHUB_TOKEN, REPO</td></tr>
           <tr><td><code>deploy-site.yml</code></td><td>Push <code>site/**</code> + manual</td><td>pages:write, id-token:write</td><td>—</td></tr>
           <tr><td><code>enroll.yml</code></td><td>Issue labeled <code>enrollment-request</code></td><td>issues:write, contents:write</td><td>GITHUB_TOKEN, REPO, ISSUE_NUMBER, ISSUE_AUTHOR</td></tr>

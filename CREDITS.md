@@ -1,4 +1,4 @@
-# Credits & Attributions
+﻿# Credits & Attributions
 
 OpenCourses courses are built from curated open-source videos, repositories, official documentation, and public resources. Original authors retain full copyright over their work. We link; we do not copy.
 
@@ -11,7 +11,7 @@ This file records attributions for any material that has been adapted (summarise
 Each entry follows this structure:
 
 ```
-### [Course Title](engine/courses/<slug>/course.md)
+### [Course Title](engine/courses/<slug>/course.yaml)
 
 | Resource | Author / Organisation | Source | License |
 |---|---|---|---|

@@ -37,26 +37,31 @@ function siteFile(name: string): string {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface CourseMeta {
-  slug: string;
+/** Shape of course.json written by parse-course.ts (course.yaml → course.json) */
+interface ParsedCourse {
+  id: string;
   title: string;
-  version: string;
+  tagline: string;
   description: string;
   track: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'draft';
+  level: 'beginner' | 'intermediate' | 'advanced' | 'mixed';
   tags: string[];
+  topics: string[];
   prerequisites: string[];
-  estimated_hours: number;
+  total_hours: number;
   thumbnail?: string;
-  license: string;
-  repo?: string;
-}
-
-interface ParsedCourse {
-  meta: CourseMeta;
-  contributors: Array<{ name: string; github: string; role: string }>;
-  chapters: Array<{ id: string; title: string; description?: string; lessonCount: number; hasProject: boolean }>;
-  changelog?: Array<{ version: string; date: string; changes: Array<{ type: string; text: string }> }>;
+  banner?: string;
+  color_primary?: string;
+  status: 'draft' | 'review' | 'published' | 'archived' | 'deprecated';
+  version: string;
+  curator: string;
+  chapters: Array<{ id: string; title: string; description?: string; lessonCount: number; hasAssignment: boolean }>;
+  totalLessons: number;
+  totalChapterTests: number;
+  hasFinaTest: boolean;
+  hasFinalAssignment: boolean;
+  certificate: { enabled: boolean };
+  changelog?: Array<{ version: string; date: string; author?: string; changes: string[] }>;
   generatedAt: string;
 }
 
@@ -166,12 +171,13 @@ async function fetchLastCommit(): Promise<string> {
 // ─── Compute course status ────────────────────────────────────────────────────
 
 function computeStatus(course: ParsedCourse): 'added' | 'modified' | 'stable' | 'attention' {
+  if (course.status === 'draft') return 'attention';
   const cl = course.changelog?.[0];
   if (!cl) return 'stable';
   const diffDays = (Date.now() - new Date(cl.date).getTime()) / 86_400_000;
-  const type = cl.changes[0]?.type;
-  if (diffDays <= 7 && type === 'added')    return 'added';
-  if (diffDays <= 30 && type !== 'added')   return 'modified';
+  const firstChange = cl.changes[0] ?? '';
+  if (diffDays <= 7 && firstChange.toLowerCase().includes('initial'))  return 'added';
+  if (diffDays <= 30)   return 'modified';
   return 'stable';
 }
 
@@ -209,41 +215,36 @@ async function buildCourses(slugs: string[]): Promise<SiteCourse[]> {
     const parsed = readCourseJson(slug);
     if (!parsed) continue;
 
-    const { meta, chapters, contributors } = parsed;
-    const repoUrl = meta.repo ?? '';
+    // Skip drafts from the public site listing
+    if (parsed.status === 'draft') continue;
 
-    if (repoUrl && !repoMetaCache.has(repoUrl)) {
-      repoMetaCache.set(repoUrl, await fetchRepoMeta(repoUrl));
-    }
-    const gh = repoMetaCache.get(repoUrl) ?? { stars: 0, forks: 0, openIssues: 0 };
+    const durationH = parsed.total_hours ?? parsed.totalLessons;
+    const duration  = durationH >= 1 ? `${durationH}h` : `${Math.round(durationH * 60)}m`;
+    const maintainer = parsed.curator ?? LEAD_LOGIN;
 
-    const lessonCount = chapters.reduce((s, c) => s + c.lessonCount, 0);
-    const durationH   = meta.estimated_hours ?? lessonCount;
-    const duration    = durationH >= 1 ? `${durationH}h` : `${Math.round(durationH * 60)}m`;
-
-    const maintainer   = contributors.find(c => c.role === 'author' || c.role === 'maintainer')?.github
-                         ?? LEAD_LOGIN;
-    const contribLogins = contributors.map(c => c.github).filter(Boolean);
+    // Read contributor logins from per-course contributors.json
+    const contribData = readContributorsJson(slug);
+    const contribLogins = (contribData?.contributors ?? []).map((c) => c.github).filter(Boolean);
 
     courses.push({
-      slug,
-      title:        meta.title,
-      description:  meta.description,
-      track:        meta.track,
-      difficulty:   meta.difficulty,
+      slug:         parsed.id,
+      title:        parsed.title,
+      description:  parsed.description,
+      track:        parsed.track,
+      difficulty:   parsed.level,
       duration,
-      modules:      chapters.length,
+      modules:      parsed.chapters.length,
       maintainer,
       contributors: contribLogins,
-      tags:         meta.tags ?? [],
-      prerequisites: meta.prerequisites ?? [],
-      repo:         repoUrl,
-      version:      meta.version,
+      tags:         parsed.tags ?? [],
+      prerequisites: parsed.prerequisites ?? [],
+      repo:         '',   // course.yaml no longer has a single repo URL
+      version:      parsed.version,
       updatedAt:    parsed.generatedAt,
       featured:     false,
-      stars:        gh.stars,
-      forks:        gh.forks,
-      openIssues:   gh.openIssues,
+      stars:        0,
+      forks:        0,
+      openIssues:   0,
       status:       computeStatus(parsed),
       lastCommit:   parsed.generatedAt,
       sparklineDays: Array(90).fill(0),

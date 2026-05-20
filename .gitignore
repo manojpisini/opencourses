@@ -65,6 +65,7 @@ SETUP_AND_TESTING.md
 
 # ── Reference / design prototype (not shipped) ───────────────────────────────
 opencourses/
+files/
 
 # ── Site lock file (bun.lockb is canonical) ──────────────────────────────────
 site/package-lock.json

@@ -1,0 +1,747 @@
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                   OPENCOURSES COURSE MANIFEST v3.0                       ║
+# ║               course.yaml — Single Source of Truth                       ║
+# ║                                                                          ║
+# ║  Copy this template: cp -r engine/courses/template engine/courses/slug   ║
+# ║  Validate locally:  python -c "import yaml,sys; yaml.safe_load(sys.stdin)" < course.yaml
+# ║  Answers: store in solutions.yaml (same dir, NEVER commit to main)       ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 1 — METADATA
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+metadata:
+  id: your-course-slug                          # [REQUIRED] kebab-case, globally unique, permanent
+  version: "1.0.0"                              # [REQUIRED] semver — bump on every meaningful update
+  schema_version: "3.0"                         # [REQUIRED] do not change
+  status: draft                                 # [REQUIRED] draft | review | published | archived | deprecated
+  visibility: public                            # [REQUIRED] public | unlisted | private
+  created_at: "2026-01-01"                      # [REQUIRED] ISO 8601
+  updated_at: "2026-01-01"                      # [REQUIRED] update on every change
+  published_at: null                            # set by automation on publish — leave null
+  language: en                                  # [REQUIRED] ISO 639-1
+  locale: en-IN                                 # [OPTIONAL] full locale
+  slug_aliases: []                              # old slugs that redirect here (add when renaming)
+  solutions_file: solutions.yaml                # [REQUIRED] companion file with all answers
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 2 — IDENTITY
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+identity:
+  title: "Your Course Title"
+  tagline: "One compelling sentence describing what students will achieve."
+
+  description:
+    short: >
+      One or two sentences summarising the course. Shown in course cards.
+      Keep under 200 characters.
+    full: |
+      Full multi-paragraph description. Supports Markdown formatting.
+
+      Describe what the course covers, who it is for, and what makes it
+      worth taking. Use real examples and be specific.
+
+  cover:
+    thumbnail: assets/images/thumbnail.png      # 16:9, min 800×450px
+    banner: assets/images/banner.png            # 3:1, min 1200×400px
+    og_image: assets/images/og.png              # 1200×630px for social sharing
+    color_primary: "#38BDF8"                    # brand colour (hex)
+    color_secondary: "#2DD4BF"
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 3 — CLASSIFICATION
+# Track must be one of:
+#   foundations | languages | web | backend | systems | networks
+#   data | security | architecture | creative | emerging | applied
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+classification:
+  category: web                                 # one of the 12 track slugs above
+  subcategory: javascript                       # more specific topic
+  tags:
+    - javascript
+    - beginner
+  topics:
+    - variables-and-scope
+    - functions
+  level: beginner                               # beginner | intermediate | advanced | mixed
+  target_audience:
+    - Students learning to code for the first time
+  skills_gained:
+    - JavaScript
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 4 — EFFORT & PACE
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+effort:
+  video_hours: 0
+  reading_hours: 0
+  exercise_hours: 0
+  total_hours: 0                                # sum of the three above
+  pace: self-paced                              # self-paced | scheduled
+  weekly_commitment_hours: 5
+  completion_weeks: 4
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 5 — PEOPLE
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+people:
+  curator:
+    name: manojpisini
+    github: manojpisini                         # [REQUIRED] GitHub username
+    role: Curator & Maintainer
+    bio: "Building OpenCourses to make structured learning free for everyone."
+    avatar: null                                # auto-pulled from GitHub if null
+
+  contributors: []                              # add after others contribute
+
+  reviewers: []                                 # add after peer review
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 6 — CREDITS & ATTRIBUTION
+# Every external resource used anywhere in this course must have an entry here.
+# Reference by id (credit_id: src-01) inside lesson content blocks.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+credits:
+  - id: src-01
+    type: video                                 # video | repo | article | book | tool | dataset | course | podcast
+    title: "Video or Resource Title"
+    author: "Author Name"
+    organization: "Organization Name"
+    url: "https://example.com"
+    license: "YouTube Standard License"
+    license_url: null
+    accessed_at: "2026-01-01"
+    notes: "Used for chapter 1"
+    archived_url: null
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 7 — PREREQUISITES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+prerequisites:
+  knowledge:
+    - No prior programming experience required
+
+  courses: []                                   # other OpenCourses IDs required first
+
+  tools:
+    - name: VS Code
+      url: "https://code.visualstudio.com"
+      required: true
+      install_guide: "https://code.visualstudio.com/docs/setup/setup-overview"
+      version_minimum: null
+
+  accounts:
+    - service: GitHub
+      url: "https://github.com/signup"
+      required: true
+      reason: "Required for submitting assignments and tracking progress"
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 8 — OUTCOMES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+outcomes:
+  by_completion:
+    - Describe what students will be able to do after finishing
+    - Use specific, measurable verbs (build, write, explain, debug)
+
+  by_chapter:
+    ch-01:
+      - Outcome 1 for chapter 1
+      - Outcome 2 for chapter 1
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 9 — CURRICULUM
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# CONTENT NODE TYPES
+# ─────────────────
+#   chapter → sections → subsections → lessons  (or flatten any level)
+#
+# LESSON TYPES
+# ────────────
+#   video | reading | code | exercise | reference | project | quiz | discussion | live
+#
+# TEXT FORMAT LABELS (content.text.format)
+# ─────────────────────────────────────────
+#   markdown | plain | html
+
+curriculum:
+
+  chapters:
+
+  # ════════════════════════════════════════════════════════════════════════
+  # CHAPTER 1
+  # ════════════════════════════════════════════════════════════════════════
+
+    - id: ch-01
+      title: "Chapter 1 Title"
+      description: >
+        Brief description of what this chapter covers.
+      duration_minutes: 60
+      free_preview: true
+      outcomes:
+        - Outcome for chapter 1
+
+      sections:
+
+        - id: ch-01-s-01
+          title: "Section 1.1 Title"
+          description: "Brief section description."
+
+          subsections:
+
+            - id: ch-01-s-01-sub-01
+              title: "Subsection Title"
+              description: "Brief subsection description."
+
+              lessons:
+
+                # ── VIDEO LESSON ──────────────────────────────────────────
+
+                - id: ch-01-s-01-sub-01-l-01
+                  title: "Lesson Title"
+                  type: video
+                  duration_minutes: 15
+                  free_preview: true
+                  description: >
+                    Brief description of what this video covers.
+
+                  content:
+
+                    video:
+                      url: "https://youtube.com/watch?v=XXXXXXXXXXX"
+                      embed_url: "https://www.youtube-nocookie.com/embed/XXXXXXXXXXX"
+                      source: YouTube
+                      channel: "Channel Name"
+                      credit_id: src-01
+                      duration_seconds: 900
+                      quality: "1080p"
+                      subtitles_available: true
+                      timestamps:
+                        - label: "Introduction"
+                          time: "00:00"
+                        - label: "Main topic"
+                          time: "02:00"
+
+                    text:
+                      format: markdown
+                      body: |
+                        ## Watch Guide
+
+                        Notes and context for the video.
+
+                        ## Key Takeaways
+
+                        - Point 1
+                        - Point 2
+
+                    links:
+                      - label: "Resource title"
+                        url: "https://example.com"
+                        type: documentation
+
+                  tags: [tag1, tag2]
+
+                # ── READING LESSON ────────────────────────────────────────
+
+                - id: ch-01-s-01-sub-01-l-02
+                  title: "Reading: Resource Title"
+                  type: reading
+                  duration_minutes: 15
+                  free_preview: false
+                  description: "Brief description."
+
+                  content:
+
+                    reading:
+                      url: "https://example.com/article"
+                      source: "Source Name"
+                      credit_id: src-01
+                      estimated_minutes: 15
+                      sections_to_read:
+                        - "Section 1"
+                      sections_to_skip: []
+
+                    text:
+                      format: markdown
+                      body: |
+                        ## Before You Read
+
+                        Context and reading guide.
+
+                  tags: [reading]
+
+                # ── EXERCISE LESSON ───────────────────────────────────────
+
+                - id: ch-01-s-01-sub-01-l-03
+                  title: "Exercise: Task Title"
+                  type: exercise
+                  duration_minutes: 30
+                  free_preview: false
+                  description: "Brief description."
+
+                  content:
+
+                    text:
+                      format: markdown
+                      body: |
+                        ## Setup
+
+                        ```bash
+                        git clone https://github.com/example/starter-repo
+                        cd starter-repo
+                        npm install
+                        npm test
+                        ```
+
+                        ## Instructions
+
+                        Complete the tasks in `src/`. All tests must pass.
+
+                    exercise:
+                      starter_repo: "https://github.com/example/starter-repo"
+                      solution_repo: null           # see solutions.yaml
+                      branch: main
+                      entry_file: "src/index.js"
+                      test_command: "npm test"
+                      submission_type: github_url
+
+                    hints:
+                      - level: 1
+                        reveal_after_minutes: 10
+                        text: "Hint after 10 minutes"
+                      - level: 2
+                        reveal_after_minutes: 20
+                        text: "Hint after 20 minutes"
+
+                    files:
+                      - label: "Exercise Brief PDF"
+                        file: assets/docs/ch01-exercise.pdf
+                        type: pdf
+
+                  tags: [exercise]
+
+      chapter_test_id: ctest-ch-01
+      chapter_assignment_id: cassign-ch-01
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 10 — CHAPTER TESTS
+# Answers and solutions are in solutions.yaml — referenced by question id.
+# This file contains questions only. No answers here.
+#
+# QUESTION TYPES
+# ─────────────────────────────────────────────────────────────────────────────
+#   mcq          — single correct answer, multiple choice
+#   multi        — multiple correct answers, multiple choice
+#   truefalse    — true or false
+#   short        — free-text answer (graded by keywords)
+#   code_output  — "what does this code log?" with options
+#   code_fix     — fix the bug in provided code
+#   code_write   — write code from scratch
+#   code_reading — read code and answer a question about it
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+chapter_tests:
+
+  - id: ctest-ch-01
+    title: "Chapter 1 — Knowledge Check"
+    attached_to: ch-01
+    gates_next_chapter: true
+    passing_score: 70                           # percentage (0–100)
+    max_attempts: 3
+    time_limit_minutes: 30
+    randomize_questions: true
+    randomize_options: true
+    show_answers_after: passed                  # passed | attempted | never
+
+    sections:
+
+      - id: ctest-ch-01-s-01
+        title: "Conceptual Understanding"
+        weight: 50                              # percentage weight of this section
+
+        questions:
+
+          - id: ctest-ch-01-s-01-q-01
+            type: mcq
+            points: 10
+            difficulty: easy                    # easy | medium | hard
+            topic: your-topic
+            question: "Your question text here?"
+            options:
+              - "Option A"
+              - "Option B"
+              - "Option C"
+              - "Option D"
+            # answer: see solutions.yaml → ctest-ch-01-s-01-q-01
+
+          - id: ctest-ch-01-s-01-q-02
+            type: truefalse
+            points: 5
+            difficulty: easy
+            topic: your-topic
+            question: "This statement is true."
+            # answer: see solutions.yaml → ctest-ch-01-s-01-q-02
+
+          - id: ctest-ch-01-s-01-q-03
+            type: multi
+            points: 15
+            difficulty: medium
+            topic: your-topic
+            question: "Which of the following are true? (Select all that apply)"
+            options:
+              - "Option A"
+              - "Option B"
+              - "Option C"
+              - "Option D"
+            # answers: see solutions.yaml → ctest-ch-01-s-01-q-03
+
+      - id: ctest-ch-01-s-02
+        title: "Code Reading"
+        weight: 50
+
+        questions:
+
+          - id: ctest-ch-01-s-02-q-01
+            type: code_output
+            points: 20
+            difficulty: medium
+            topic: your-topic
+            question: "What does this code log to the console?"
+            code:
+              language: javascript
+              snippet: |
+                // paste code here
+                console.log("example");
+            options:
+              - "Option A"
+              - "Option B"
+              - "Option C"
+              - "Option D"
+            # answer: see solutions.yaml → ctest-ch-01-s-02-q-01
+
+          - id: ctest-ch-01-s-02-q-02
+            type: code_fix
+            points: 25
+            difficulty: hard
+            topic: your-topic
+            question: "Fix the bug in this code."
+            code:
+              language: javascript
+              snippet: |
+                // broken code here
+            grading: diff
+            # answer: see solutions.yaml → ctest-ch-01-s-02-q-02
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 11 — CHAPTER ASSIGNMENTS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+chapter_assignments:
+
+  - id: cassign-ch-01
+    title: "Chapter 1 — Assignment Title"
+    attached_to: ch-01
+    required_for_progress: true
+    submission_type: github_url                 # github_url | file_upload | inline
+    due_after_enrollment_days: 7
+    max_resubmissions: 2
+
+    content:
+      text:
+        format: markdown
+        body: |
+          ## Assignment: Title
+
+          Assignment description and requirements.
+
+          ### Requirements
+
+          - Requirement 1
+          - Requirement 2
+
+          ### Submission
+
+          Push to a public GitHub repository and paste the URL in your
+          submission comment on your enrollment issue.
+
+      files:
+        - label: "Assignment Brief PDF"
+          file: assets/docs/ch01-assignment.pdf
+          type: pdf
+
+    rubric:
+      - criterion: "Requirement 1 met"
+        points: 40
+      - criterion: "Requirement 2 met"
+        points: 40
+      - criterion: "Code quality and documentation"
+        points: 20
+    total_points: 100
+    passing_score: 60
+
+    review:
+      type: maintainer
+      sla_days: 3
+      feedback_required: true
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 12 — FINAL TEST
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+final_test:
+  id: final-test
+  title: "Final Test — Full Course Assessment"
+  attached_to: final
+  unlocks: final-assignment
+  passing_score: 75
+  max_attempts: 2
+  time_limit_minutes: 60
+  randomize_questions: true
+  randomize_options: true
+  show_answers_after: never
+  required_for_certificate: true
+  coverage: [ch-01]
+
+  sections:
+
+    - id: ft-s-01
+      title: "Core Theory"
+      weight: 50
+      questions:
+
+        - id: ft-s-01-q-01
+          type: mcq
+          points: 20
+          difficulty: medium
+          chapter: ch-01
+          topic: your-topic
+          question: "Final test question?"
+          options:
+            - "Option A"
+            - "Option B"
+            - "Option C"
+            - "Option D"
+          # answer: see solutions.yaml → ft-s-01-q-01
+
+    - id: ft-s-02
+      title: "Applied Skills"
+      weight: 50
+      questions:
+
+        - id: ft-s-02-q-01
+          type: code_write
+          points: 30
+          difficulty: hard
+          chapter: ch-01
+          topic: your-topic
+          question: "Write a function that does X."
+          language: javascript
+          starter: |
+            function yourFunction() {
+              // your code here
+            }
+          grading: manual
+          # sample_solution: see solutions.yaml → ft-s-02-q-01
+
+        - id: ft-s-02-q-02
+          type: short
+          points: 20
+          difficulty: hard
+          chapter: ch-01
+          topic: your-topic
+          question: "Explain concept X in your own words."
+          grading: manual
+          keywords:
+            - keyword1
+            - keyword2
+            - keyword3
+          # sample_answer: see solutions.yaml → ft-s-02-q-02
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 13 — FINAL ASSIGNMENT
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+final_assignment:
+  id: final-assignment
+  title: "Final Assignment — Capstone Project"
+  attached_to: final
+  unlocked_by: final-test
+  required_for_certificate: true
+  submission_type: github_url
+  due_after_unlock_days: 14
+  max_resubmissions: 1
+
+  content:
+    text:
+      format: markdown
+      body: |
+        ## Capstone Project
+
+        Build a complete project that demonstrates mastery of the course.
+
+        ### Requirements
+
+        - [ ] Requirement 1
+        - [ ] Requirement 2
+        - [ ] All tests pass (`npm test`)
+        - [ ] README with purpose, setup, and usage
+
+        ### Submission
+
+        Post your public GitHub repository URL as a comment on your
+        enrollment issue and add the label `final-submission`.
+
+    files:
+      - label: "Project Brief PDF"
+        file: assets/docs/final-project-brief.pdf
+        type: pdf
+
+  milestones:
+    - id: ms-01
+      title: "Repository Setup"
+      due_day: 3
+    - id: ms-02
+      title: "Core Functionality"
+      due_day: 8
+    - id: ms-03
+      title: "Final Submission"
+      due_day: 14
+
+  rubric:
+    - criterion: "Correct and complete functionality"
+      points: 40
+    - criterion: "Error handling and edge cases"
+      points: 20
+    - criterion: "Test coverage"
+      points: 20
+    - criterion: "Code quality and documentation"
+      points: 20
+  total_points: 100
+  passing_score: 70
+
+  review:
+    type: maintainer
+    sla_days: 5
+    feedback_required: true
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 14 — CERTIFICATE
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+certificate:
+  enabled: true
+  title: "Certificate of Completion"
+  subtitle: "OpenCourses — Your Course Title"
+  requirements:
+    - type: final_test
+      id: final-test
+      min_score: 75
+    - type: final_assignment
+      id: final-assignment
+      min_score: 70
+  template: default
+  custom_template: null
+  badge:
+    enabled: true
+    image: assets/images/badge.png
+    description: "Awarded for completing Your Course Title on OpenCourses"
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 15 — ASSETS MANIFEST
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Directory structure:
+#   assets/images/   — thumbnail.png (800×450+), banner.png (1200×400+),
+#                      og.png (1200×630), badge.png
+#   assets/code/     — runnable code examples (organized by chapter)
+#   assets/docs/     — PDFs, cheatsheets, assignment briefs
+#   (no tests/ — test generators are embedded in chapter_tests sections)
+#   (no solutions/ — all solutions go in solutions.yaml, never committed)
+
+assets:
+  images:
+    - assets/images/thumbnail.png
+    - assets/images/banner.png
+    - assets/images/og.png
+    - assets/images/badge.png
+  code: []
+  docs: []
+  data: []
+  slides: []
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 16 — AUTOMATION TRIGGERS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+triggers:
+  on_publish:
+    - build-course-page
+    - update-sitemap
+  on_enrollment:
+    - create-student-issue
+    - assign-enrolled-label
+    - send-welcome-comment
+  on_chapter_complete:
+    - unlock-chapter-test
+  on_test_submit:
+    - grade-test
+    - update-progress
+    - check-gate
+  on_assignment_submit:
+    - flag-for-review
+    - notify-maintainer
+  on_final_test_pass:
+    - unlock-final-assignment
+  on_certificate_earn:
+    - generate-certificate
+    - assign-certified-label
+    - post-congratulations-comment
+  on_update:
+    - rebuild-course-page
+    - bump-version
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 17 — DISCUSSION
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+discussion:
+  enabled: true
+  category: Courses
+  per_chapter: false
+  pinned_resources: []
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 18 — CHANGELOG
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+changelog:
+  - version: "1.0.0"
+    date: "2026-01-01"
+    author: manojpisini
+    changes:
+      - Initial draft

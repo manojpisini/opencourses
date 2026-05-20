@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'engine/courses/**/course.md'
+      - 'engine/courses/**/course.yaml'
   workflow_dispatch:
     inputs:
       course_path:
-        description: 'Path to course.md (leave blank to scan all)'
+        description: 'Path to course.yaml (leave blank to scan all)'
         required: false
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   validate:
-    name: Parse & validate course.md
+    name: Parse & validate course.yaml
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,9 +47,9 @@ jobs:
           if [ -n "${{ github.event.inputs.course_path }}" ]; then
             bun run scripts/parse-course.ts --path "../${{ github.event.inputs.course_path }}"
           else
-            # Detect changed course.md files on push
+            # Detect changed course.yaml files on push
             CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-              | grep 'engine/courses/.*/course\.md' || true)
+              | grep 'engine/courses/.*/course\.yaml' || true)
             if [ -n "$CHANGED" ]; then
               for f in $CHANGED; do
                 bun run scripts/parse-course.ts --path "../$f"
@@ -87,10 +87,10 @@ jobs:
       - name: Detect contributors for changed courses
         run: |
           CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-            | grep 'engine/courses/.*/course\.md' || true)
+            | grep 'engine/courses/.*/course\.yaml' || true)
           if [ -z "$CHANGED" ]; then
             # Scan all
-            CHANGED=$(find engine/courses -name 'course.md' 2>/dev/null || true)
+            CHANGED=$(find engine/courses -name 'course.yaml' 2>/dev/null || true)
           fi
           for f in $CHANGED; do
             SLUG=$(basename $(dirname $f))

@@ -66,45 +66,58 @@ git checkout -b course/your-course-slug
 cp -r engine/courses/template engine/courses/your-course-slug
 ```
 
-### 3c. Edit `course.md`
+### 3c. Edit `course.yaml`
 
-Open `engine/courses/your-course-slug/course.md` — this is the **single source of truth**.
-All site data (course page, contributor list, knowledge graph) is auto-generated from it.
+Open `engine/courses/your-course-slug/course.yaml` — this is the **single source of truth**.
+It is a pure YAML file (no Markdown frontmatter). All site data is auto-generated from it.
 **Do not edit `site/src/data/*.json` directly — they are machine-generated.**
 
-Minimum required frontmatter:
+Minimum required fields (see `engine/courses/template/course.yaml` for the full 18-section template):
 
 ```yaml
----
-meta:
-  slug: your-course-slug     # kebab-case, unique, permanent after publish
+metadata:
+  id: your-course-slug       # kebab-case, unique, permanent after publish
+  version: "1.0.0"
+  status: draft              # draft | review | published | archived | deprecated
+  solutions_file: solutions.yaml  # companion file — never commit to main
+
+identity:
   title: "Your Course Title"
-  description: "One sentence — what students will be able to do."
-  track: web                 # must be one of the 12 valid slugs:
+  tagline: "One compelling sentence."
+  description:
+    short: "Shown in course cards — under 200 characters."
+    full: "Full multi-paragraph Markdown description."
+  cover:
+    thumbnail: assets/images/thumbnail.png
+    banner: assets/images/banner.png
+    og_image: assets/images/og.png
+    color_primary: "#38BDF8"
+    color_secondary: "#2DD4BF"
+
+classification:
+  category: web              # must be one of the 12 valid track slugs:
                              # foundations | languages | web | backend | systems
                              # networks | data | security | architecture | creative
                              # emerging | applied
-  difficulty: beginner       # beginner | intermediate | advanced
-  duration: "4 weeks"
-  version: "v1.0.0"
-  maintainer: your-github-login
+  level: beginner            # beginner | intermediate | advanced | mixed
   tags: [tag1, tag2]
-  prerequisites: []          # array of course slugs; [] for none
 
-changelog:
-  - date: "2026-05-19"
-    message: "Initial release"
----
+people:
+  curator:
+    name: manojpisini
+    github: manojpisini
+    role: Curator & Maintainer
 
-## Overview
-...
+# ... curriculum, chapter_tests, chapter_assignments, final_test,
+#     final_assignment, certificate, changelog ...
+# See engine/courses/template/course.yaml for every section and every field.
 ```
 
-The body of `course.md` is the course content — chapters, lessons, chapter tests, projects.
-See `engine/courses/template/course.md` for the full field reference and chapter structure.
+**Answers are in `solutions.yaml`, never in `course.yaml`.** Add `solutions.yaml` to your
+`.gitignore` before your first commit — it must never reach the main branch.
 
-**Contributor attribution is automatic.** `sync-site-data.ts` reads Git history and derives
-all contributor data. You do not need to edit any contributor list manually.
+**Contributor attribution is automatic.** `sync-site-data.ts` derives all contributor data
+from Git history and `people.curator`. You do not edit any contributor list manually.
 
 ### 3d. Open a PR
 
@@ -114,7 +127,7 @@ git commit -m "course: add Your Course Title"
 git push -u origin course/your-course-slug
 ```
 
-Open a PR. `validate-pr.yml` checks the `course.md` schema automatically.
+Open a PR. `validate-pr.yml` parses `course.yaml` and checks the schema automatically.
 On merge: `course-publish.yml` generates `course.json` → `sync-site-data.yml` aggregates →
 `deploy-site.yml` rebuilds the site. **Live in ~90 seconds.**
 
@@ -124,7 +137,7 @@ On merge: `course-publish.yml` generates `course.json` → `sync-site-data.yml` 
 
 For typos, broken links, or outdated information:
 
-1. Edit `engine/courses/{slug}/course.md`
+1. Edit `engine/courses/{slug}/course.yaml`
 2. Open a PR with a brief description of what changed and why
 3. If reporting rather than fixing, use the `false-content.yml` issue template
 
@@ -183,7 +196,7 @@ writes to `site/src/data/*.json`. If adding a new data field to courses, update 
 - [ ] No TypeScript errors (`cd engine && bun run tsc --noEmit`)
 - [ ] Course `meta.slug` is unique and matches the directory name
 - [ ] Course `meta.track` is one of the 12 valid slugs
-- [ ] `course.md` frontmatter is complete and valid YAML
+- [ ] `course.yaml` is complete, valid YAML, and validated locally
 - [ ] No hardcoded URLs — use `${base}/` for internal site links
 - [ ] PR description explains _why_, not just _what_
 

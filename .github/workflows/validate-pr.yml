@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Validate changed course.md files
+      - name: Validate changed course.yaml files
         run: bun run validate --mode schema
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
