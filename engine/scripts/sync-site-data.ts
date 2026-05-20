@@ -311,6 +311,8 @@ function buildContributors(slugs: string[]): SiteContributor[] {
 
 // ─── Build changelog ──────────────────────────────────────────────────────────
 
+type ChangeType = 'added' | 'removed' | 'modified';
+
 interface ChangelogMonth {
   month: string;
   entries: Array<{
@@ -318,8 +320,16 @@ interface ChangelogMonth {
     slug: string;
     version: string;
     date: string;
-    changes: Array<{ type: string; text: string }>;
+    changes: Array<{ type: ChangeType; text: string }>;
   }>;
+}
+
+/** Infer a ChangeType from a plain-text changelog string. */
+function inferChangeType(text: string): ChangeType {
+  const t = text.toLowerCase().trimStart();
+  if (t.startsWith('add') || t.startsWith('new') || t.startsWith('introduc')) return 'added';
+  if (t.startsWith('remov') || t.startsWith('delet') || t.startsWith('drop'))   return 'removed';
+  return 'modified';
 }
 
 function buildChangelog(slugs: string[]): ChangelogMonth[] {
@@ -332,11 +342,11 @@ function buildChangelog(slugs: string[]): ChangelogMonth[] {
       const m = entry.date.slice(0, 7); // "YYYY-MM"
       const arr = byMonth.get(m) ?? [];
       arr.push({
-        course:  parsed.meta.title,
+        course:  parsed.title,
         slug,
         version: entry.version,
         date:    entry.date,
-        changes: entry.changes,
+        changes: (entry.changes as string[]).map((text) => ({ type: inferChangeType(text), text })),
       });
       byMonth.set(m, arr);
     }

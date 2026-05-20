@@ -14,7 +14,7 @@ import * as crypto from 'crypto';
 import { execSync } from 'child_process';
 
 const octokit = new Octokit({ auth: process.env['GITHUB_TOKEN'] });
-const [owner, repo] = (process.env['REPO'] ?? '').split('/');
+const [owner = '', repo = ''] = (process.env['REPO'] ?? '').split('/');
 const student = process.env['STUDENT'] ?? '';
 const course = process.env['COURSE'] ?? '';
 const issueNumber = parseInt(process.env['ISSUE_NUMBER'] ?? '0', 10);

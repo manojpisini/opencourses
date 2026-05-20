@@ -62,13 +62,17 @@ function parseSandboxOutput(): SandboxOutput {
 
 function loadProjectPassScore(): number {
   if (!courseSlug || !projectId) return 75;
-  const paths = [`engine/courses/${courseSlug}/course.md`, `courses/${courseSlug}/course.md`];
+  const paths = [`engine/courses/${courseSlug}/course.yaml`, `courses/${courseSlug}/course.yaml`];
   for (const p of paths) {
     if (!fs.existsSync(p)) continue;
     try {
-      const { course } = parseCourseFile(p);
-      for (const ch of course.chapters) {
-        if (ch.project?.id === projectId) return ch.project.pass_score;
+      const course = parseCourseFile(p);
+      // Check chapter assignments
+      const chAssign = course.chapter_assignments?.find((a) => a.id === projectId);
+      if (chAssign?.passing_score != null) return chAssign.passing_score;
+      // Check final assignment
+      if (course.final_assignment?.id === projectId && course.final_assignment.passing_score != null) {
+        return course.final_assignment.passing_score;
       }
     } catch { /* ignore */ }
   }

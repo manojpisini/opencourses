@@ -34,12 +34,12 @@ const issueAuthor     = process.env['ISSUE_AUTHOR'] ?? '';
 
 function loadCourse(slug: string): Course | null {
   const candidates = [
-    `engine/courses/${slug}/course.md`,
-    `courses/${slug}/course.md`,
+    `engine/courses/${slug}/course.yaml`,
+    `courses/${slug}/course.yaml`,
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) {
-      try { return parseCourseFile(p).course; } catch { return null; }
+      try { return parseCourseFile(p); } catch { return null; }
     }
   }
   return null;
@@ -49,8 +49,21 @@ function listAvailableCourses(): string[] {
   const base = 'engine/courses';
   if (!fs.existsSync(base)) return [];
   return fs.readdirSync(base, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && fs.existsSync(`${base}/${e.name}/course.md`))
+    .filter((e) => e.isDirectory() && fs.existsSync(`${base}/${e.name}/course.yaml`))
     .map((e) => e.name);
+}
+
+// ─── Helpers to flatten lessons from chapter ──────────────────────────────────
+
+function getLessonsFromChapter(ch: Course['curriculum']['chapters'][number]) {
+  if (ch.lessons && ch.lessons.length > 0) return ch.lessons;
+  if (ch.sections) {
+    return ch.sections.flatMap((sec) => {
+      if (sec.lessons) return sec.lessons;
+      return (sec.subsections ?? []).flatMap((sub) => sub.lessons);
+    });
+  }
+  return [];
 }
 
 // ─── Welcome comment ──────────────────────────────────────────────────────────
@@ -61,43 +74,63 @@ function buildWelcomeComment(
   course: Course,
   enrollmentIssue: number,
 ): string {
-  const curriculum = course.chapters.map((ch, i) => {
-    const lessons = ch.lessons
+  const courseId   = course.metadata.id;
+  const courseTitle = course.identity.title;
+
+  // Build per-chapter summary
+  const curriculum = course.curriculum.chapters.map((ch, i) => {
+    const lessons = getLessonsFromChapter(ch);
+    const lessonLines = lessons
       .map((l) => `  - **${l.title}** — ${l.type}${l.duration_minutes ? ` (${l.duration_minutes} min)` : ''}`)
       .join('\n');
-    const testLine = `  📝 **Chapter Test:** \`${ch.chapter_test.id}\` · pass: ${ch.chapter_test.pass_score}% · attempts: ${ch.chapter_test.max_attempts}`;
-    const projLine = ch.project
-      ? `\n  🛠️ **Project:** \`${ch.project.id}\` — ${ch.project.title}`
+
+    // Look up this chapter's test
+    const chTest = course.chapter_tests.find((t) => t.id === ch.chapter_test_id);
+    const testLine = chTest
+      ? `  📝 **Chapter Test:** \`${chTest.id}\` · pass: ${chTest.passing_score}% · attempts: ${chTest.max_attempts}`
+      : `  📝 **Chapter Test:** \`${ch.chapter_test_id}\``;
+
+    // Look up this chapter's assignment (if any)
+    const assignment = ch.chapter_assignment_id
+      ? course.chapter_assignments?.find((a) => a.id === ch.chapter_assignment_id)
+      : null;
+    const assignLine = assignment
+      ? `\n  🛠️ **Assignment:** \`${assignment.id}\` — ${assignment.title}`
       : '';
-    return `**Chapter ${i + 1} · ${ch.title}**\n${lessons}\n${testLine}${projLine}`;
+
+    return `**Chapter ${i + 1} · ${ch.title}**\n${lessonLines}\n${testLine}${assignLine}`;
   }).join('\n\n');
 
-  const finalTestSection = course.certificate.final_test
-    ? `\n\n---\n### 🏁 Final Test\n\n\`${course.certificate.final_test.id}\` · pass: ${course.certificate.final_test.pass_score}% · attempts: ${course.certificate.final_test.max_attempts}\n\nThe final test unlocks after all chapter tests are passed.`
+  // Final test section
+  const finalTestSection = course.final_test
+    ? `\n\n---\n### 🏁 Final Test\n\n\`${course.final_test.id}\` · pass: ${course.final_test.passing_score}% · attempts: ${course.final_test.max_attempts}\n\nThe final test unlocks after all chapter tests are passed.`
     : '';
 
+  // Certificate requirements
   const certRequirements: string[] = [];
-  if (course.certificate.requires_all_chapter_tests)
-    certRequirements.push('All chapter tests passed');
-  if (course.certificate.requires_final_project)
-    certRequirements.push('Final project submitted and passed');
-  if (course.certificate.final_test)
-    certRequirements.push(`Final test passed (≥ ${course.certificate.final_test.pass_score}%)`);
-  certRequirements.push(`Overall average ≥ ${course.certificate.min_overall_score}%`);
+  const hasChapterTestReq   = course.certificate.requirements.some((r) => r.type === 'chapter_test');
+  const hasFinalTestReq     = course.certificate.requirements.some((r) => r.type === 'final_test');
+  const hasFinalAssignReq   = course.certificate.requirements.some((r) => r.type === 'final_assignment');
+
+  if (hasChapterTestReq)   certRequirements.push('All chapter tests passed');
+  if (hasFinalAssignReq)   certRequirements.push('Final assignment submitted and passed');
+  if (hasFinalTestReq)     certRequirements.push(`Final test passed (≥ ${course.certificate.requirements.find((r) => r.type === 'final_test')?.min_score ?? 70}%)`);
 
   const certDelivery = certEmail
     ? `Certificate will be delivered to \`${certEmail}\` and posted to your enrollment issue.`
     : `Certificate will be posted to this issue (no email provided).`;
 
-  return `## 🎉 Welcome to ${course.meta.title}!
+  const finalTestId = course.final_test?.id ?? 'final-test';
+
+  return `## 🎉 Welcome to ${courseTitle}!
 
 | | |
 |---|---|
 | **Student** | [@${profile.login}](${profile.profileUrl}) · ${profile.name} |
-| **Course** | ${course.meta.title} \`v${course.meta.version}\` |
-| **Track** | ${course.meta.track} |
-| **Difficulty** | ${course.meta.difficulty} |
-| **Estimated time** | ~${course.meta.estimated_hours} hours |
+| **Course** | ${courseTitle} \`v${course.metadata.version}\` |
+| **Track** | ${course.classification.category} |
+| **Level** | ${course.classification.level} |
+| **Estimated time** | ~${course.effort.total_hours} hours |
 
 > Your GitHub username **@${profile.login}** is your identity for all chapter tests, the final test, and certificate issuance. No other login needed.
 
@@ -111,7 +144,7 @@ ${curriculum}${finalTestSection}
 
 ## 🎓 Certificate Requirements
 
-${certRequirements.map((r) => `- ${r}`).join('\n')}
+${certRequirements.length > 0 ? certRequirements.map((r) => `- ${r}`).join('\n') : '- Complete all course requirements'}
 
 ${certDelivery}
 
@@ -120,15 +153,15 @@ ${certDelivery}
 ## 🚀 How to Progress
 
 1. **Study each chapter** — follow lessons, watch videos, complete exercises
-2. **Submit a chapter test** → [Open a Quiz Submit issue](../../issues/new?template=quiz-submit.yml) using test ID from the curriculum above
-3. **Submit projects** → [Open a Project Submit issue](../../issues/new?template=project-submit.yml)
-4. **Pass the final test** (if required) → same quiz submit flow, use \`${course.certificate.final_test?.id ?? 'final-test'}\` as test ID
+2. **Submit a chapter test** → [Open a Chapter Test issue](../../issues/new?template=quiz-submit.yml) using the test ID from the curriculum above
+3. **Submit assignments** → [Open an Assignment Submit issue](../../issues/new?template=quiz-attempt.yml)
+4. **Pass the final test** (if required) → same quiz submit flow, use \`${finalTestId}\` as test ID
 5. **Receive your certificate** → issued automatically to @${profile.login} once all requirements are met
 
 ## 📌 Links
 
 - 🏆 [Leaderboard](../../blob/main/LEADERBOARD.md)
-- 📖 [Course file](../../blob/main/engine/courses/${course.meta.slug}/course.md)
+- 📖 [Course file](../../blob/main/engine/courses/${courseId}/course.yaml)
 - 💬 [Get help](../../issues/new?template=help.yml)
 
 ---
@@ -173,7 +206,7 @@ async function main() {
   const existing = await findEnrollmentIssue(octokit, owner, repo, issueAuthor, courseSlug);
   if (existing) {
     await postComment(octokit, owner, repo, issueNumber,
-      `@${issueAuthor} — You are already enrolled in **${course.meta.title}**.\n\nYour progress is tracked in issue #${existing.number}. Closing this duplicate.`);
+      `@${issueAuthor} — You are already enrolled in **${course.identity.title}**.\n\nYour progress is tracked in issue #${existing.number}. Closing this duplicate.`);
     await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
     process.exit(0);
   }
@@ -183,7 +216,7 @@ async function main() {
   const metaComment = `\n\n<!-- name: ${profile.name} -->\n<!-- email: ${certEmail || ''} -->`;
   await octokit.issues.update({
     owner, repo, issue_number: issueNumber,
-    title: `[Enrolled] @${issueAuthor} — ${course.meta.title}`,
+    title: `[Enrolled] @${issueAuthor} — ${course.identity.title}`,
     body:  (issue.body ?? '') + metaComment,
   });
 
@@ -206,7 +239,7 @@ async function main() {
 
   setOutput('course', courseSlug);
   setOutput('enrolled', true);
-  console.log(`✓ Enrolled @${issueAuthor} (${profile.name}) in ${course.meta.title}`);
+  console.log(`✓ Enrolled @${issueAuthor} (${profile.name}) in ${course.identity.title}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

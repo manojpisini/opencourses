@@ -1,73 +1,106 @@
 /**
  * scoring.ts — Pure algorithmic graders for all question types.
  * Zero AI / Zero external API calls.
+ *
+ * In the course.yaml schema v3.0, correct answers are NOT stored in
+ * course.yaml — they live in the private solutions.yaml.  Grader functions
+ * therefore accept the expected answer as a separate parameter so the
+ * caller (quiz-engine.ts) can supply it after loading solutions.yaml.
+ *
+ * Exception: 'short' questions store keywords in course.yaml (not answers),
+ * and code questions are graded by the Docker sandbox (not this file).
  */
 
-import type {
-  Question, MCQQuestion, MultiQuestion, TrueFalseQuestion,
-  ShortQuestion, CodeQuestion, QuestionResult, GradeReport,
-} from '../types/course.ts';
+import type { CourseQuestion, QuestionResult, GradeReport } from '../types/course.ts';
 
 // ─── Individual graders ───────────────────────────────────────────────────────
 
-export function gradeMCQ(q: MCQQuestion, raw: string): QuestionResult {
-  const answer  = raw.trim().toUpperCase().replace(/[^A-Z]/, '');
-  const correct = answer === q.answer.trim().toUpperCase();
+/**
+ * MCQ: one correct letter (A/B/C/D).
+ * @param solution  The expected letter from solutions.yaml, e.g. "B"
+ */
+export function gradeMCQ(
+  q: CourseQuestion,
+  raw: string,
+  solution: string,
+): QuestionResult {
+  const answer  = raw.trim().toUpperCase().replace(/[^A-Z]/g, '');
+  const correct = answer === solution.trim().toUpperCase();
   return {
     questionId: q.id,
     earned:     correct ? q.points : 0,
     max:        q.points,
     correct,
-    feedback:   correct ? undefined : `Correct answer: ${q.answer}. ${q.explanation ?? ''}`.trim(),
+    feedback:   correct ? undefined : `Correct answer: ${solution}`,
   };
 }
 
-export function gradeMulti(q: MultiQuestion, raw: string): QuestionResult {
-  // Accept "A, C" or "A C" or ["A","C"] etc.
-  const chosen  = raw.toUpperCase().match(/[A-Z]/g) ?? [];
-  const expected = q.answer.map((a) => a.toUpperCase()).sort().join(',');
+/**
+ * Multi-select: one or more correct letters.
+ * @param solution  Expected letters from solutions.yaml, e.g. ["A","C"]
+ */
+export function gradeMulti(
+  q: CourseQuestion,
+  raw: string,
+  solution: string[],
+): QuestionResult {
+  const chosen   = raw.toUpperCase().match(/[A-Z]/g) ?? [];
+  const expected = solution.map((a) => a.toUpperCase()).sort().join(',');
   const actual   = [...new Set(chosen)].sort().join(',');
   const correct  = actual === expected;
-  const partial  = chosen.filter((c) => q.answer.map((a) => a.toUpperCase()).includes(c)).length;
+  const partial  = chosen.filter((c) => solution.map((a) => a.toUpperCase()).includes(c)).length;
   const earned   = correct
     ? q.points
-    : Math.floor(q.points * (partial / q.answer.length) * 0.5); // 50% credit for partial
+    : Math.floor(q.points * (partial / Math.max(1, solution.length)) * 0.5);
   return {
     questionId: q.id,
     earned,
-    max:       q.points,
+    max:        q.points,
     correct,
-    feedback:  correct ? undefined : `Correct answers: ${q.answer.join(', ')}. ${q.explanation ?? ''}`.trim(),
+    feedback:   correct ? undefined : `Correct answers: ${solution.join(', ')}`,
   };
 }
 
-export function gradeTrueFalse(q: TrueFalseQuestion, raw: string): QuestionResult {
-  const lower = raw.trim().toLowerCase();
+/**
+ * True/False.
+ * @param solution  Expected boolean from solutions.yaml
+ */
+export function gradeTrueFalse(
+  q: CourseQuestion,
+  raw: string,
+  solution: boolean,
+): QuestionResult {
+  const lower     = raw.trim().toLowerCase();
   const userTrue  = lower === 'true'  || lower === 't' || lower === 'yes' || lower === '1';
   const userFalse = lower === 'false' || lower === 'f' || lower === 'no'  || lower === '0';
   if (!userTrue && !userFalse) {
     return { questionId: q.id, earned: 0, max: q.points, correct: false,
              feedback: 'Answer must be "true" or "false".' };
   }
-  const correct = (userTrue && q.answer) || (userFalse && !q.answer);
+  const correct = (userTrue && solution) || (userFalse && !solution);
   return {
     questionId: q.id,
-    earned:    correct ? q.points : 0,
-    max:       q.points,
+    earned:     correct ? q.points : 0,
+    max:        q.points,
     correct,
-    feedback:  correct ? undefined : `Correct answer: ${q.answer}. ${q.explanation ?? ''}`.trim(),
+    feedback:   correct ? undefined : `Correct answer: ${solution}`,
   };
 }
 
-export function gradeShort(q: ShortQuestion, raw: string): QuestionResult {
-  const lower   = raw.toLowerCase();
-  const matched = q.keywords.filter((kw) => lower.includes(kw.toLowerCase()));
-  const needed  = q.min_keywords ?? q.keywords.length;
-  const correct = matched.length >= needed;
-  // Proportional partial credit (capped at full if all matched)
-  const ratio   = Math.min(1, matched.length / Math.max(1, needed));
-  const earned  = Math.round(q.points * ratio);
-  const missing = q.keywords.filter((kw) => !lower.includes(kw.toLowerCase()));
+/**
+ * Short answer: keyword matching.
+ * Keywords are stored in course.yaml (q.keywords), so no separate solution needed.
+ * Also used for code_output / code_reading questions (text-based answers).
+ */
+export function gradeShort(q: CourseQuestion, raw: string): QuestionResult {
+  const keywords   = q.keywords ?? [];
+  const lower      = raw.toLowerCase();
+  const matched    = keywords.filter((kw) => lower.includes(kw.toLowerCase()));
+  const needed     = Math.ceil(keywords.length * 0.7); // require 70% of keywords by default
+  const correct    = keywords.length === 0 || matched.length >= needed;
+  const ratio      = keywords.length === 0 ? 1 : Math.min(1, matched.length / Math.max(1, needed));
+  const earned     = Math.round(q.points * ratio);
+  const missing    = keywords.filter((kw) => !lower.includes(kw.toLowerCase()));
   return {
     questionId: q.id,
     earned,
@@ -75,24 +108,19 @@ export function gradeShort(q: ShortQuestion, raw: string): QuestionResult {
     correct,
     feedback:   correct
       ? undefined
-      : `Your answer should mention: ${missing.join(', ')}.`,
+      : missing.length > 0
+        ? `Your answer should mention: ${missing.join(', ')}.`
+        : undefined,
   };
 }
 
 /**
- * Code grading — runs test-case matching against submitted code output.
- * In the GitHub Actions context the code is executed inside the Docker
- * sandbox and results are written to a JSON file.  Here we compare
- * expected vs actual outputs reported by the sandbox.
- */
-/**
- * Grade a code question from sandbox output.
- * Works for both static test_cases and dynamic test_generator results —
- * the caller passes the sandbox output directly; this function just maps
- * it to a QuestionResult with proportional partial credit.
+ * Code grading — maps Docker sandbox test results to a QuestionResult.
+ * Works for both static and dynamic (seed-based) test generation.
+ * The caller runs the sandbox; this function just aggregates results.
  */
 export function gradeCode(
-  q: CodeQuestion,
+  q: CourseQuestion,
   sandboxResults: Array<{ passed: boolean; hidden?: boolean }>,
 ): QuestionResult {
   const total   = sandboxResults.length;
@@ -100,8 +128,6 @@ export function gradeCode(
   const ratio   = total > 0 ? passed / total : 0;
   const earned  = Math.round(q.points * ratio);
   const correct = ratio === 1;
-  const mode    = q.test_generator ? `dynamic (seed-based)` : `static`;
-
   return {
     questionId: q.id,
     earned,
@@ -109,47 +135,56 @@ export function gradeCode(
     correct,
     feedback:   correct
       ? undefined
-      : `${passed}/${total} test cases passed (${mode}).`,
+      : `${passed}/${total} test cases passed.`,
   };
 }
 
-// ─── Dispatcher ───────────────────────────────────────────────────────────────
-
-export type CodeTestMap = Map<string, Array<{ input: string; actual: string; passed: boolean }>>;
-
-export function gradeQuestion(
-  q: Question,
-  rawAnswer: string,
-  codeTests?: CodeTestMap,
-): QuestionResult {
-  switch (q.type) {
-    case 'mcq':       return gradeMCQ(q, rawAnswer);
-    case 'multi':     return gradeMulti(q, rawAnswer);
-    case 'true-false':return gradeTrueFalse(q, rawAnswer);
-    case 'short':     return gradeShort(q, rawAnswer);
-    case 'code': {
-      const tests = codeTests?.get(q.id) ?? [];
-      return gradeCode(q, tests);
-    }
-  }
-}
-
-// ─── Full test/quiz grader ────────────────────────────────────────────────────
+// ─── Full test grader ─────────────────────────────────────────────────────────
 
 export interface AnswerMap { [questionId: string]: string }
 
+/**
+ * SolutionMap: expected answers per question ID, loaded from solutions.yaml.
+ * Values are typed loosely; the individual graders cast to the right type.
+ */
+export interface SolutionMap {
+  [questionId: string]: string | string[] | boolean | undefined;
+}
+
 export function gradeTest(opts: {
   testId: string;
-  courseSlug: string;
+  courseId: string;
   student: string;
-  questions: Question[];
+  questions: CourseQuestion[];
   answers: AnswerMap;
+  solutions: SolutionMap;
   passScore: number;           // percentage 0-100
-  codeTests?: CodeTestMap;
+  sandboxResults?: Map<string, Array<{ passed: boolean; hidden?: boolean }>>;
 }): GradeReport {
-  const results: QuestionResult[] = opts.questions.map((q) =>
-    gradeQuestion(q, opts.answers[q.id] ?? '', opts.codeTests),
-  );
+  const results: QuestionResult[] = opts.questions.map((q) => {
+    const raw      = opts.answers[q.id] ?? '';
+    const solution = opts.solutions[q.id];
+    switch (q.type) {
+      case 'mcq':
+        return gradeMCQ(q, raw, (solution as string) ?? '');
+      case 'multi':
+        return gradeMulti(q, raw, (solution as string[]) ?? []);
+      case 'truefalse':
+        return gradeTrueFalse(q, raw, (solution as boolean) ?? false);
+      case 'short':
+      case 'code_output':
+      case 'code_reading':
+        return gradeShort(q, raw);
+      case 'code_fix':
+      case 'code_write': {
+        const tests = opts.sandboxResults?.get(q.id) ?? [];
+        return gradeCode(q, tests);
+      }
+      default:
+        return { questionId: q.id, earned: 0, max: q.points, correct: false,
+                 feedback: `Unknown question type: ${q.type}` };
+    }
+  });
 
   const totalEarned = results.reduce((s, r) => s + r.earned, 0);
   const totalMax    = results.reduce((s, r) => s + r.max, 0);
@@ -157,7 +192,7 @@ export function gradeTest(opts: {
 
   return {
     testId:       opts.testId,
-    courseSlug:   opts.courseSlug,
+    courseId:     opts.courseId,
     student:      opts.student,
     totalEarned,
     totalMax,
@@ -168,7 +203,7 @@ export function gradeTest(opts: {
   };
 }
 
-// ─── Progress bar helper ─────────────────────────────────────────────────────
+// ─── Progress bar helper ──────────────────────────────────────────────────────
 
 export function progressBar(pct: number, width = 20): string {
   const filled = Math.round((pct / 100) * width);
@@ -177,10 +212,10 @@ export function progressBar(pct: number, width = 20): string {
   return `${color.repeat(filled)}${'⬜'.repeat(empty)} ${pct.toFixed(1)}%`;
 }
 
-// ─── Answer parser (from GitHub Issue body) ──────────────────────────────────
+// ─── Answer parser (from GitHub Issue body) ───────────────────────────────────
 
 /**
- * Parse answers from a GitHub Issue body that uses the quiz-submit template.
+ * Parse answers from a GitHub Issue body using the quiz-submit template format.
  * Expected format:
  *   ### Answer: q1
  *   A
@@ -190,7 +225,6 @@ export function progressBar(pct: number, width = 20): string {
  */
 export function parseAnswersFromIssueBody(body: string): AnswerMap {
   const map: AnswerMap = {};
-  // Match "### Answer: <id>\n<content until next ###>"
   const blocks = body.split(/###\s+Answer:\s*/i);
   for (let i = 1; i < blocks.length; i++) {
     const block = blocks[i]!;

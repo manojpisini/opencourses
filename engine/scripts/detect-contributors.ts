@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * detect-contributors.ts — Merge git-log contributors with course.md credits.
+ * detect-contributors.ts — Merge git-log contributors with course.yaml people section.
  *
  * Triggered by: .github/workflows/course-publish.yml
  * Env vars: GITHUB_TOKEN, REPO, COURSE_SLUG, COURSE_PATH
@@ -17,7 +17,7 @@ import { parseCourseFile } from '../lib/course-parser.ts';
 import { setOutput } from '../lib/github.ts';
 
 const courseSlug = process.env['COURSE_SLUG'] ?? '';
-const coursePath = process.env['COURSE_PATH'] ?? `engine/courses/${courseSlug}/course.md`;
+const coursePath = process.env['COURSE_PATH'] ?? `engine/courses/${courseSlug}/course.yaml`;
 
 interface GitContributor {
   name: string;
@@ -32,7 +32,7 @@ interface MergedContributor {
   email?: string;
   role: string;
   commits: number;
-  source: 'git' | 'course.md' | 'both';
+  source: 'git' | 'course.yaml' | 'both';
 }
 
 function getGitContributors(filePath: string): GitContributor[] {
@@ -91,7 +91,7 @@ function mergeContributors(
     });
   }
 
-  // Merge with course.md contributors
+  // Merge with course.yaml people.contributors
   for (const cc of courseContributors) {
     const key = cc.github.toLowerCase();
     const existing = merged.get(key);
@@ -111,7 +111,7 @@ function mergeContributors(
         email:   cc.email,
         role:    cc.role,
         commits: 0,
-        source:  'course.md',
+        source:  'course.yaml',
       });
     }
   }
@@ -128,11 +128,12 @@ async function main() {
   console.log(`Detecting contributors for course: ${courseSlug}`);
   console.log(`Course file: ${coursePath}`);
 
-  const { course } = parseCourseFile(coursePath);
+  const course       = parseCourseFile(coursePath);
   const gitContribs  = getGitContributors(coursePath);
-  const merged       = mergeContributors(gitContribs, course.contributors);
+  const yamlContribs = course.people.contributors ?? [];
+  const merged       = mergeContributors(gitContribs, yamlContribs);
 
-  console.log(`Found ${gitContribs.length} git contributors, ${course.contributors.length} in course.md`);
+  console.log(`Found ${gitContribs.length} git contributors, ${yamlContribs.length} in course.yaml`);
   console.log(`Merged: ${merged.length} unique contributors`);
   merged.forEach((c) =>
     console.log(`  ${c.source === 'both' ? '⚡' : c.source === 'git' ? '📝' : '📋'} ${c.name} (@${c.github ?? c.email}) — ${c.commits} commits · ${c.role}`),

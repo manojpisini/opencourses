@@ -3,7 +3,7 @@
  * validate.ts — Course validation + PR integrity checks
  *
  * Modes:
- *   --mode schema   Parse and validate all courses/**/course.md files
+ *   --mode schema   Parse and validate all courses/{slug}/course.yaml files
  *   --mode pr       Validate a PR (tamper detection on protected paths)
  *
  * Env vars: GITHUB_TOKEN, REPO, PR_NUMBER (pr mode only)
@@ -16,7 +16,7 @@ import { parseCourseFile } from '../lib/course-parser.ts';
 
 const mode = process.argv.includes('--mode') ? process.argv[process.argv.indexOf('--mode') + 1] : 'schema';
 const octokit = new Octokit({ auth: process.env['GITHUB_TOKEN'] });
-const [owner, repo] = (process.env['REPO'] ?? '').split('/');
+const [owner = '', repo = ''] = (process.env['REPO'] ?? '').split('/');
 const prNumber = parseInt(process.env['PR_NUMBER'] ?? '0', 10);
 
 // ─── Course Validation ──────────────────────────────────────────────────────
