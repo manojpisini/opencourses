@@ -1,4 +1,4 @@
-name: Grade Project
+name: Grade Assignment / Project
 
 on:
   issues:
@@ -14,6 +14,109 @@ permissions:
   contents: write
 
 jobs:
+  # ── Chapter assignment submission via GitHub Issue ───────────────────────────
+  grade-chapter-assignment:
+    name: Grade chapter assignment (issue)
+    if: >
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'assignment-submit')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: ${{ github.workspace }}
+
+      - name: Parse submission details
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body       = context.payload.issue.body ?? '';
+            const course     = (body.match(/###\s+Course\s*(?:Slug)?\s*\n+([^\n]+)/i)?.[1] ?? '').trim().toLowerCase().replace(/\s+/g, '-');
+            const chapterId  = (body.match(/###\s+Chapter\s*(?:ID)?\s*\n+([^\n]+)/i)?.[1] ?? '').trim();
+            const assignId   = (body.match(/###\s+Assignment\s*(?:ID)?\s*\n+([^\n]+)/i)?.[1] ?? '').trim();
+            const repoLink   = (body.match(/###\s+Repository.*?\n+([^\n]+)/i)?.[1] ?? '').trim();
+            core.setOutput('course', course);
+            core.setOutput('chapter_id', chapterId);
+            core.setOutput('assignment_id', assignId);
+            core.setOutput('repo_link', repoLink);
+
+      - name: Build sandbox image
+        run: docker build -t opencourse-sandbox -f sandbox/Dockerfile .
+
+      - name: Clone student repo and run assignment tests in sandbox
+        run: |
+          WORK_DIR=$(mktemp -d)
+          git clone --depth 1 "${{ steps.parse.outputs.repo_link }}" "$WORK_DIR/student" 2>/dev/null || true
+          docker run \
+            --network none \
+            --memory 256m \
+            --cpus 1 \
+            --read-only \
+            --tmpfs /tmp:size=100m \
+            --user 1001:1001 \
+            --security-opt no-new-privileges \
+            -e COURSE_SLUG=${{ steps.parse.outputs.course }} \
+            -e CHAPTER_ID=${{ steps.parse.outputs.chapter_id }} \
+            -e ASSIGNMENT_ID=${{ steps.parse.outputs.assignment_id }} \
+            -e TEST_OUTPUT_FILE=/tmp/test-results.json \
+            -v $(pwd)/engine/courses:/courses:ro \
+            -v "$WORK_DIR/student":/student:ro \
+            -v /tmp:/tmp \
+            opencourse-sandbox
+          cp /tmp/test-results.json . 2>/dev/null || echo '{"passed":false,"score":0,"maxScore":1,"tests":[]}' > test-results.json
+
+      - name: Post grading report
+        id: grade
+        run: bun run scripts/grade.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          STUDENT: ${{ github.event.issue.user.login }}
+          COURSE_SLUG: ${{ steps.parse.outputs.course }}
+          CHAPTER_ID: ${{ steps.parse.outputs.chapter_id }}
+          ASSIGNMENT_ID: ${{ steps.parse.outputs.assignment_id }}
+          TEST_OUTPUT_FILE: test-results.json
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Close issue on pass
+        if: steps.grade.outputs.passed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.update({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: 'closed', state_reason: 'completed',
+            });
+
+      - name: Trigger leaderboard rebuild on pass
+        if: steps.grade.outputs.passed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner, repo: context.repo.repo,
+              workflow_id: 'course-leaderboard.yml', ref: 'main',
+            });
+
   # ── Project submission via GitHub Issue ─────────────────────────────────────
   grade-issue:
     name: Grade project submission (issue)

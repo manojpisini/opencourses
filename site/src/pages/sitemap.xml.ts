@@ -4,7 +4,20 @@ import OC from '../data/oc';
 export const GET: APIRoute = ({ site }) => {
   const base = (site?.toString() ?? 'https://manojpisini.github.io').replace(/\/$/, '');
 
-  const staticPages = ['', '/courses', '/tracks', '/contributors', '/changelog', '/about'];
+  const staticPages = [
+    '',
+    '/courses',
+    '/tracks',
+    '/contributors',
+    '/changelog',
+    '/leaderboard',
+    '/about',
+    '/docs',
+    '/docs/students',
+    '/docs/creators',
+    '/docs/contributors',
+    '/docs/architecture',
+  ];
   const coursePages = OC.COURSES.map(c => `/courses/${c.slug}`);
   const contributorPages = OC.CONTRIBUTORS.map(c => `/contributors/${c.login}`);
 
