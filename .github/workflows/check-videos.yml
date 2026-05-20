@@ -49,7 +49,7 @@ jobs:
               owner: context.repo.owner, repo: context.repo.repo,
               labels: 'dead-video', state: 'open'
             });
-            const body = `## 📺 Dead Videos Detected — ${today}\n\n${deadCount} video${deadCount !== '1' ? 's are' : ' is'} no longer accessible.\n\n${report}\n\n### Action Required\nFind replacement videos and open PRs updating the meta.yaml files.\nUse the [Suggest Video](../../issues/new?template=suggest-video.yml) issue template.`;
+            const body = `## 📺 Dead Videos Detected — ${today}\n\n${deadCount} video${deadCount !== '1' ? 's are' : ' is'} no longer accessible.\n\n${report}\n\n### Action Required\nFind replacement videos and open PRs updating the course.yaml files.\nUse the [Suggest Video](../../issues/new?template=suggest-video.yml) issue template.`;
             if (issues.data.length > 0) {
               await github.rest.issues.update({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issues.data[0].number, body });
             } else {
