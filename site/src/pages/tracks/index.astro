@@ -58,7 +58,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         <p class="section-head__sub">{OC.TRACKS.length} tracks · {OC.COURSES.length} courses total</p>
       </div>
 
-      <div class="tracks-page" id="tracks-list">
+      <div class="track-grid" id="tracks-list">
         {OC.TRACKS.map(track => {
           const trackCourses = OC.COURSES.filter(c => c.track === track.slug);
           const color = OC.TRACK_COLORS[track.slug] ?? '#4f9eff';
@@ -69,31 +69,28 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
               class="track-card"
               style={`--track-color:${color}`}
             >
-              <div class="track-card__stripe"></div>
-              <div class="track-card__body">
-                <div class="track-card__head">
-                  <span class="track-card__icon">{track.icon}</span>
-                  <div>
-                    <h3 class="track-card__name">{track.name}</h3>
-                    <span class="track-card__count">{trackCourses.length} course{trackCourses.length !== 1 ? 's' : ''}</span>
-                  </div>
+              <div class="track-card__head">
+                <span class="track-card__icon">{track.icon}</span>
+                <div>
+                  <h3 class="track-card__name">{track.name}</h3>
+                  <span class="track-card__count">{trackCourses.length} course{trackCourses.length !== 1 ? 's' : ''}</span>
                 </div>
-                <p class="track-card__desc">{track.description}</p>
-                {trackCourses.length > 0 ? (
-                  <div class="track-card__samples">
-                    {trackCourses.slice(0, 3).map(c => (
-                      <span class="track-card__sample">{c.title}</span>
-                    ))}
-                    {trackCourses.length > 3 && (
-                      <span class="track-card__sample track-card__sample--more">+{trackCourses.length - 3} more</span>
-                    )}
-                  </div>
-                ) : (
-                  <div class="track-card__samples">
-                    <span class="track-card__sample" style="opacity:0.4;font-style:italic">No courses yet</span>
-                  </div>
-                )}
               </div>
+              <p class="track-card__desc">{track.description}</p>
+              {trackCourses.length > 0 ? (
+                <div class="track-card__samples">
+                  {trackCourses.slice(0, 3).map(c => (
+                    <span class="track-card__sample">{c.title}</span>
+                  ))}
+                  {trackCourses.length > 3 && (
+                    <span class="track-card__sample track-card__sample--more">+{trackCourses.length - 3} more</span>
+                  )}
+                </div>
+              ) : (
+                <div class="track-card__samples">
+                  <span class="track-card__sample" style="opacity:0.4;font-style:italic">No courses yet</span>
+                </div>
+              )}
             </a>
           );
         })}
