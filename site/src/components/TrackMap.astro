@@ -61,7 +61,7 @@ interface Station {
 const stations: Station[] = [];
 
 TRACKS.forEach(track => {
-  const color   = TRACK_COLORS[track.slug] ?? '#4f9eff';
+  const color   = TRACK_COLORS[track.slug] ?? '#38BDF8';
   const courses = COURSES.filter(c => c.track === track.slug);
 
   // Group by tier
@@ -140,7 +140,7 @@ const isEmpty = COURSES.length === 0;
       <defs>
         <!-- Gradient for rail lines -->
         {TRACKS.map(t => {
-          const color = TRACK_COLORS[t.slug] ?? '#4f9eff';
+          const color = TRACK_COLORS[t.slug] ?? '#38BDF8';
           return (
             <linearGradient id={`rail-${t.slug}`} x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse"
               gradientTransform={`translate(0,${HEADER}) scale(1,${svgH - HEADER - FOOTER})`}>
@@ -188,7 +188,7 @@ const isEmpty = COURSES.length === 0;
       <!-- ── Track rail lines ───────────────────────────────────────── -->
       {TRACKS.map(t => {
         const x     = trackX[t.slug]!;
-        const color = TRACK_COLORS[t.slug] ?? '#4f9eff';
+        const color = TRACK_COLORS[t.slug] ?? '#38BDF8';
         const hasC  = COURSES.some(c => c.track === t.slug);
         return (
           <g class="track-rail" data-track={t.slug}>

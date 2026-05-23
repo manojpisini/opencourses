@@ -20,7 +20,7 @@ const CHAPTERS = [
     num: '01',
     label: 'For Students',
     icon: '📚',
-    color: '#4f9eff',
+    color: '#38BDF8',
     desc: 'Enroll, test, earn certificates',
   },
   {
@@ -336,7 +336,7 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 .docs-toc-link:hover { color: var(--text-secondary); background: var(--bg-raised); }
 .docs-toc-link.active {
   color: var(--text-primary);
-  border-left-color: var(--accent-blue, #4f9eff);
+  border-left-color: var(--accent-blue, #38BDF8);
   background: var(--bg-raised);
 }
 
@@ -363,7 +363,7 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
   transition: border-color 0.15s, background 0.15s;
   min-width: 160px;
 }
-.docs-ch-footer__link:hover { border-color: var(--accent-blue, #4f9eff); }
+.docs-ch-footer__link:hover { border-color: var(--accent-blue, #38BDF8); }
 .docs-ch-footer__link--next { align-items: flex-end; }
 .docs-ch-footer__dir {
   font-size: 0.7rem;
@@ -418,7 +418,7 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
   padding: 1px 5px;
   color: var(--text-primary);
 }
-.docs-section a { color: var(--accent-blue, #4f9eff); text-decoration: none; }
+.docs-section a { color: var(--accent-blue, #38BDF8); text-decoration: none; }
 .docs-section a:hover { text-decoration: underline; }
 .docs-section strong { color: var(--text-primary); }
 
@@ -477,8 +477,8 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 .docs-callout__icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
 .docs-callout__body { color: var(--text-secondary); }
 .docs-callout--info {
-  background: color-mix(in srgb, #4f9eff 8%, var(--bg-surface));
-  border: 1px solid color-mix(in srgb, #4f9eff 25%, transparent);
+  background: color-mix(in srgb, #38BDF8 8%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, #38BDF8 25%, transparent);
 }
 .docs-callout--warn {
   background: color-mix(in srgb, #fbbf24 8%, var(--bg-surface));
@@ -562,15 +562,15 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 .docs-step__num {
   width: 32px; height: 32px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--ch-color, #4f9eff) 15%, var(--bg-raised));
-  border: 2px solid color-mix(in srgb, var(--ch-color, #4f9eff) 40%, transparent);
+  background: color-mix(in srgb, var(--ch-color, #38BDF8) 15%, var(--bg-raised));
+  border: 2px solid color-mix(in srgb, var(--ch-color, #38BDF8) 40%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--ch-color, #4f9eff);
+  color: var(--ch-color, #38BDF8);
   flex-shrink: 0;
   z-index: 1;
 }

@@ -1,7 +1,17 @@
-<svg viewBox="0 0 120 32" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="6" fill="#0d0f12"/>
-  <text x="3" y="23" font-family="monospace" font-size="18" font-weight="700" fill="#4f9eff">&lt;</text>
-  <text x="17" y="23" font-family="monospace" font-size="18" font-weight="700" fill="#eef0f4">&gt;</text>
-  <text x="40" y="21" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="-0.5" fill="#4f9eff">OPEN</text>
-  <text x="72" y="21" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="-0.5" fill="#eef0f4">COURSES</text>
+<svg viewBox="0 0 168 56" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="OpenCourses">
+  <rect width="56" height="56" rx="12" fill="#38BDF8"/>
+  <rect x="8" y="8" width="40" height="40" rx="7" fill="#0a1e1e"/>
+  <rect x="14" y="16" width="28" height="3.5" rx="1.75" fill="#38BDF8"/>
+  <rect x="14" y="23" width="19" height="3.5" rx="1.75" fill="#2DD4BF"/>
+  <rect x="14" y="30" width="23" height="3.5" rx="1.75" fill="#38BDF8" opacity="0.6"/>
+  <rect x="14" y="37" width="12" height="3.5" rx="1.75" fill="#2DD4BF" opacity="0.5"/>
+  <rect x="33" y="32" width="12" height="12" rx="3.5" fill="#38BDF8"/>
+  <path d="M36 35 L38.5 37.5 M38.5 35 L36 37.5"
+        fill="none" stroke="#0a1e1e" stroke-width="1.6" stroke-linecap="round"/>
+  <text x="68" y="27"
+        font-family="sans-serif" font-size="22" font-weight="700"
+        fill="#38BDF8" letter-spacing="0">Open</text>
+  <text x="68" y="51"
+        font-family="sans-serif" font-size="22" font-weight="400"
+        fill="#ffffff" letter-spacing="0">Courses</text>
 </svg>

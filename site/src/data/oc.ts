@@ -251,7 +251,7 @@ export const STATS = {
 export const TRACK_COLORS: Record<string, string> = {
   foundations:  "#60a5fa",
   languages:    "#a78bfa",
-  web:          "#4f9eff",
+  web:          "#38BDF8",
   backend:      "#38bdf8",
   systems:      "#34d399",
   networks:     "#facc15",

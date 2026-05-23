@@ -9,7 +9,7 @@ const maintainers = OC.CONTRIBUTORS.filter(c => c.role.startsWith('Maintainer') 
 const showLeadCard = !maintainers.find(m => m.login === 'manojpisini');
 
 const stats = [
-  { label: 'Courses',      value: OC.STATS.courses || '0',      icon: '🎓', color: '#4f9eff' },
+  { label: 'Courses',      value: OC.STATS.courses || '0',      icon: '🎓', color: '#38BDF8' },
   { label: 'Tracks',       value: OC.STATS.tracks,              icon: '🗺️', color: '#a78bfa' },
   { label: 'Contributors', value: OC.STATS.contributors || '0', icon: '👥', color: '#34d399' },
   { label: 'Workflows',    value: 11,                            icon: '⚙️', color: '#fb923c' },
@@ -20,7 +20,7 @@ const principles = [
     icon: '🔓',
     title: 'Radically Open',
     desc: 'Every line of content and code is public, version-controlled, and forkable. No walled gardens, no paywalls, no proprietary formats.',
-    color: '#4f9eff',
+    color: '#38BDF8',
   },
   {
     icon: '🤖',
@@ -67,7 +67,7 @@ const stack = [
   { name: 'Custom CSS',     role: 'Design token system — no utility framework',             color: '#818cf8' },
   { name: 'Bun',            role: 'Runtime & package manager for all engine scripts',       color: '#f59e0b' },
   { name: 'GitHub Actions', role: '11 workflows — enroll, grade, certify, deploy, sync',    color: '#34d399' },
-  { name: 'GitHub Pages',   role: 'Hosting — free, native, no build servers needed',        color: '#4f9eff' },
+  { name: 'GitHub Pages',   role: 'Hosting — free, native, no build servers needed',        color: '#38BDF8' },
   { name: 'GitHub API',     role: 'Live data — stars, forks, contributors, activity',       color: '#a78bfa' },
   { name: 'Docker',         role: 'Isolated sandbox (256 MB, no network) for code grading', color: '#38bdf8' },
   { name: 'Vanilla JS',     role: 'Command palette, TrackMap, theme toggle — ~4 files',     color: '#fb923c' },
@@ -193,7 +193,7 @@ const stack = [
         ))}
       </div>
       <p style="font-size:0.82rem;color:var(--text-muted);margin-top:1rem">
-        Want to contribute? See the <a href={`${base}/docs/contributors`} style="color:var(--accent-blue,#4f9eff)">contributor guide →</a>
+        Want to contribute? See the <a href={`${base}/docs/contributors`} style="color:var(--accent-blue,#38BDF8)">contributor guide →</a>
       </p>
     </section>
 
@@ -264,7 +264,7 @@ const stack = [
   font-weight: 600; text-decoration: none; transition: all 0.15s;
 }
 .about-btn--primary {
-  background: var(--accent-blue, #4f9eff);
+  background: var(--accent-blue, #38BDF8);
   color: #fff;
 }
 .about-btn--primary:hover { filter: brightness(1.1); }
@@ -273,7 +273,7 @@ const stack = [
   border: 1px solid var(--border-default);
   color: var(--text-secondary);
 }
-.about-btn--ghost:hover { border-color: var(--accent-blue, #4f9eff); color: var(--accent-blue, #4f9eff); }
+.about-btn--ghost:hover { border-color: var(--accent-blue, #38BDF8); color: var(--accent-blue, #38BDF8); }
 
 /* ── Stats bar ─────────────────────────────────────────────────────────── */
 .about-stats {
@@ -333,7 +333,7 @@ const stack = [
   padding: 1.5rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-left: 3px solid var(--accent-blue, #4f9eff);
+  border-left: 3px solid var(--accent-blue, #38BDF8);
   border-radius: 8px;
   margin: 0;
 }
@@ -421,8 +421,8 @@ const stack = [
   min-width: 220px;
 }
 .about-maintainer-card:hover {
-  border-color: var(--accent-blue, #4f9eff);
-  box-shadow: 0 0 0 1px var(--accent-blue, #4f9eff);
+  border-color: var(--accent-blue, #38BDF8);
+  box-shadow: 0 0 0 1px var(--accent-blue, #38BDF8);
 }
 .about-maintainer-card__crown {
   position: absolute; top: -8px; right: 10px; font-size: 1rem;
@@ -431,9 +431,9 @@ const stack = [
 .about-maintainer-card__name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
 .about-maintainer-card__handle { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
 .about-maintainer-card__role {
-  font-size: 0.72rem; color: var(--accent-blue, #4f9eff);
-  background: color-mix(in srgb, #4f9eff 12%, transparent);
-  border: 1px solid color-mix(in srgb, #4f9eff 25%, transparent);
+  font-size: 0.72rem; color: var(--accent-blue, #38BDF8);
+  background: color-mix(in srgb, #38BDF8 12%, transparent);
+  border: 1px solid color-mix(in srgb, #38BDF8 25%, transparent);
   border-radius: 4px; padding: 1px 7px;
   font-family: var(--font-mono); font-weight: 600; width: fit-content; margin-top: 2px;
 }
@@ -481,7 +481,7 @@ const stack = [
 .about-license-card__title { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
 .about-license-card__desc { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.55; }
 .about-license-card__link {
-  font-size: 0.8rem; color: var(--accent-blue, #4f9eff);
+  font-size: 0.8rem; color: var(--accent-blue, #38BDF8);
   text-decoration: none; font-weight: 500; margin-top: 4px;
 }
 .about-license-card__link:hover { text-decoration: underline; }

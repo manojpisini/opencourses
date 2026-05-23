@@ -15,7 +15,7 @@
   --border-subtle: #1e232d;
   --border-default: #252a34;
   --border-strong: #2e3540;
-  --border-accent: #4f9eff40;
+  --border-accent: #38BDF840;
 
   /* Text */
   --text-primary: #eef0f4;
@@ -23,11 +23,11 @@
   --text-muted: #4a5266;
   --text-inverse: #0d0f12;
 
-  /* Accent — overridden by tweak */
-  --accent-blue: #4f9eff;
-  --accent-blue-dim: #4f9eff18;
-  --accent-blue-hover: #6aaeff;
-  --accent-blue-rgb: 79, 158, 255;
+  /* Accent — brand primary from logo suite v4 */
+  --accent-blue: #38BDF8;
+  --accent-blue-dim: #38BDF818;
+  --accent-blue-hover: #5bc8f9;
+  --accent-blue-rgb: 56, 189, 248;
 
   /* Difficulty */
   --color-beginner: #3dd68c;
@@ -268,26 +268,29 @@ select {
   align-items: center;
   gap: var(--space-2);
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 400;
   font-size: 1rem;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   color: var(--text-primary);
 }
-.wordmark__icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  display: grid;
-  place-items: center;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--accent-blue);
+.wordmark__icon-svg {
+  display: block;
+  flex-shrink: 0;
+}
+.wordmark__text {
+  display: inline-flex;
+  align-items: baseline;
 }
 .wordmark__open {
-  color: var(--accent-blue);
+  color: #38BDF8;
+  font-weight: 700;
+}
+.wordmark__courses {
+  color: #ffffff;
+  font-weight: 400;
+}
+[data-theme="light"] .wordmark__courses {
+  color: var(--text-primary);
 }
 .nav-links {
   display: flex;
@@ -579,7 +582,7 @@ body[data-nav="side"] .app-main {
   --track-color: #f74c00;
 }
 [data-track="web"] {
-  --track-color: #4f9eff;
+  --track-color: #38BDF8;
 }
 [data-track="systems"] {
   --track-color: #a78bfa;

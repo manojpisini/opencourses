@@ -161,7 +161,7 @@
     // Nodes + labels
     nodeGroup.innerHTML = ''; labelGroup.innerHTML = '';
     sim.forEach(n => {
-      const color = TRACK_COLORS[n.track] || '#4f9eff';
+      const color = TRACK_COLORS[n.track] || '#38BDF8';
       const isSel = selectedId === n.id;
       const g = svgEl('g');
       g.setAttribute('transform', `translate(${n.x},${n.y})`);

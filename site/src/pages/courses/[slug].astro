@@ -103,7 +103,7 @@ if (detail) {
 
 const title  = detail?.title  ?? summaryFallback?.title  ?? slugFallback;
 const tagline = detail?.tagline ?? summaryFallback?.description ?? '';
-const color  = detail?.cover.color_primary ?? summaryFallback?.tags?.[0] ? '#4f9eff' : '#4f9eff';
+const color  = detail?.cover.color_primary ?? summaryFallback?.tags?.[0] ? '#38BDF8' : '#38BDF8';
 const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.duration ?? '—');
 ---
 
@@ -546,7 +546,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
               <ul class="cp-skills">
                 {detail.outcomes.by_completion.map(o => (
                   <li class="cp-skill">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4f9eff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                     {o}
                   </li>
                 ))}
@@ -631,7 +631,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
         <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">Course content is being published. Full player coming soon.</div>
         <a
           href={`https://github.com/manojpisini/opencourses/issues/new?template=enroll.yml&title=[Enrolled]+@YOUR_USERNAME+—+${slugFallback}&labels=enrollment-request`}
-          style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent-blue,#4f9eff);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem"
+          style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent-blue,#38BDF8);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.875rem"
           target="_blank" rel="noopener"
         >
           Enroll via GitHub Issues
@@ -1052,8 +1052,8 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 }
 .cp-lesson-btn:hover { background: var(--bg-surface); }
 .cp-lesson-btn.active {
-  background: color-mix(in srgb, #4f9eff 8%, var(--bg-surface));
-  border-left-color: #4f9eff;
+  background: color-mix(in srgb, #38BDF8 8%, var(--bg-surface));
+  border-left-color: #38BDF8;
 }
 .cp-lesson-btn__icon {
   font-size: 0.75rem;
@@ -1070,7 +1070,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  .cp-lesson-btn.active & { color: #4f9eff; font-weight: 600; }
+  .cp-lesson-btn.active & { color: #38BDF8; font-weight: 600; }
 }
 .cp-lesson-btn__dur {
   font-family: var(--font-mono);
@@ -1120,7 +1120,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   gap: 8px;
   margin: 1rem;
   padding: 10px 14px;
-  background: #4f9eff;
+  background: #38BDF8;
   color: #fff;
   border-radius: 8px;
   text-decoration: none;
@@ -1237,7 +1237,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #4f9eff;
+  color: #38BDF8;
   text-decoration: none;
 }
 .cp-video-meta__link:hover { text-decoration: underline; }
@@ -1265,7 +1265,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 .cp-timestamp__time {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #4f9eff;
+  color: #38BDF8;
   min-width: 48px;
 }
 .cp-timestamp__label { font-size: 0.82rem; color: var(--text-secondary); }
@@ -1288,7 +1288,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #4f9eff;
+  color: #38BDF8;
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
@@ -1455,7 +1455,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   color: var(--text-primary);
   transition: border-color 0.15s;
 }
-.cp-exercise__repo:hover { border-color: #4f9eff; }
+.cp-exercise__repo:hover { border-color: #38BDF8; }
 .cp-exercise__cmd { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
 .cp-exercise__cmd code {
   font-family: var(--font-mono);
@@ -1568,7 +1568,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cp-pane__nav-btn:hover { border-color: #4f9eff; color: #4f9eff; }
+.cp-pane__nav-btn:hover { border-color: #38BDF8; color: #38BDF8; }
 .cp-pane__nav-btn--next { margin-left: auto; }
 
 /* ── Right info panel ────────────────────────────────────────────────────── */
@@ -1626,7 +1626,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 .cp-prereq-course {
   display: block;
   font-size: 0.8rem;
-  color: #4f9eff;
+  color: #38BDF8;
   text-decoration: none;
   padding: 4px 0;
 }
