@@ -12,6 +12,7 @@ export const GET: APIRoute = ({ site }) => {
     '/changelog',
     '/leaderboard',
     '/about',
+    '/support',
     '/docs',
     '/docs/students',
     '/docs/creators',

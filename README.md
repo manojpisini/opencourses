@@ -392,7 +392,22 @@ Trigger manually: **Actions → Deploy Site to GitHub Pages → Run workflow**
 | 🌐 [Website](https://manojpisini.github.io/opencourses) | 📚 [Courses](https://manojpisini.github.io/opencourses/courses) | 🗺️ [Knowledge Graph](https://manojpisini.github.io/opencourses/tracks) |
 |:---:|:---:|:---:|
 | **👥 [Contributors](https://manojpisini.github.io/opencourses/contributors)** | **📖 [Documentation](https://manojpisini.github.io/opencourses/docs)** | **🏆 [Leaderboard](https://manojpisini.github.io/opencourses/leaderboard)** |
-| **📅 [Changelog](https://manojpisini.github.io/opencourses/changelog)** | **🐛 [Report a Bug](../../issues/new?template=report-bug.yml)** | **📋 [CONTRIBUTING.md](CONTRIBUTING.md)** |
+| **☕ [Support](https://manojpisini.github.io/opencourses/support)** | **🐛 [Report a Bug](../../issues/new?template=report-bug.yml)** | **📋 [CONTRIBUTING.md](CONTRIBUTING.md)** |
+| **📅 [Changelog](https://manojpisini.github.io/opencourses/changelog)** | **🤝 [Help Requests](../../issues?q=is%3Aissue+label%3Ahelp-wanted)** | **💻 [Source](https://github.com/manojpisini/opencourses)** |
+
+<br/>
+
+---
+
+## ✦ Support OpenCourses
+
+OpenCourses is free, public, and maintained by **Manoj Pisini** as the main maintainer and developer.
+
+| Donate | Buy me a coffee | Help | Contribute |
+|:---:|:---:|:---:|:---:|
+| Link coming soon | Link coming soon | [Answer help requests](../../issues?q=is%3Aissue+label%3Ahelp-wanted) | [Open a PR](CONTRIBUTING.md) |
+
+Maintainer socials: **GitHub:** [@manojpisini](https://github.com/manojpisini) · **Website:** coming soon · **LinkedIn:** coming soon · **X:** coming soon
 
 <br/>
 

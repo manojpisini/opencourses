@@ -49,6 +49,12 @@ const allSorted  = [
           {lead && lead.commits > 0 && (
             <div class="lead-card__stats">{lead.commits} commits · {lead.courses} courses</div>
           )}
+          <div class="lead-card__socials" aria-label="Main maintainer social links">
+            <span>GitHub: @manojpisini</span>
+            <span>Website: coming soon</span>
+            <span>LinkedIn: coming soon</span>
+            <span>X: coming soon</span>
+          </div>
         </div>
       </a>
     </div>
@@ -188,6 +194,24 @@ const allSorted  = [
     font-size: 0.75rem;
     color: var(--text-muted);
     margin-top: 6px;
+  }
+  .lead-card__socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .lead-card__socials span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    background: var(--bg-base);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
   }
 
   /* Lead contributor card highlight in grid */
