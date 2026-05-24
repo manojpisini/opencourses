@@ -104,8 +104,8 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
 
 ```
   1. ENROLL ──────────────────────────────────────────────────────────────────
-     Open an Issue using the "Enroll in a Course" template.
-     Fill in your GitHub username and course slug.
+     Open a course page and choose Enroll.
+     Use the web form, copy the gh command, or copy the generated body.
      The bot processes it instantly. Your student journey begins.
 
   2. LEARN ───────────────────────────────────────────────────────────────────
@@ -118,7 +118,8 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
      Score + line-by-line feedback posted as a PR comment in ~45 seconds.
 
   4. QUIZ ────────────────────────────────────────────────────────────────────
-     For chapter tests: open a "Submit Chapter Test" issue.
+     For chapter and final tests: use the course page submission action.
+     Prefer the web form, gh command, or copied body path you like.
      The grader checks your answers against the course answer key automatically.
      Feedback posted within minutes. No manual review for standard tests.
 

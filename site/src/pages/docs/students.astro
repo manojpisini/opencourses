@@ -5,7 +5,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <DocsLayout
   title="For Students"
-  description="Enroll in courses, submit chapter tests, track your progress, and earn GPG-signed certificates — all through GitHub Issues."
+  description="Enroll in courses, submit chapter tests, track your progress, and earn GPG-signed certificates through course pages, GitHub forms, or gh commands."
   chapterId="students"
 >
   <!-- Right sidebar TOC -->
@@ -32,9 +32,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <span class="docs-callout__icon">ℹ️</span>
       <div class="docs-callout__body">Browse available courses at <a href={`${base}/courses`}>/courses</a>. Each course page shows difficulty, estimated hours, prerequisites, and which track it belongs to.</div>
     </div>
-    <p>The entire learning flow runs on GitHub Issues and Actions:</p>
+    <p>The learning flow is started from the website, then tracked by GitHub Actions:</p>
     <div class="docs-flow">
-      <div class="docs-flow__step"><span class="docs-flow__num">1</span><span>Enroll via Issue</span></div>
+      <div class="docs-flow__step"><span class="docs-flow__num">1</span><span>Enroll from course page</span></div>
       <div class="docs-flow__arrow">→</div>
       <div class="docs-flow__step"><span class="docs-flow__num">2</span><span>Study chapters</span></div>
       <div class="docs-flow__arrow">→</div>
@@ -50,8 +50,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <div class="docs-step">
         <div class="docs-step__line"><div class="docs-step__num">1</div><div class="docs-step__connector"></div></div>
         <div class="docs-step__body">
-          <p class="docs-step__title">Open the enrollment issue</p>
-          <p class="docs-step__desc">On any course page, click <strong>Enroll</strong>. This opens a pre-filled GitHub issue using the <code>enroll.yml</code> template. Enter your course slug and optionally your email for certificate delivery.</p>
+          <p class="docs-step__title">Open enrollment options</p>
+          <p class="docs-step__desc">On any course page, click <strong>Enroll</strong>. You can open the pre-filled GitHub form, copy the <code>gh issue create</code> command, or copy the generated submission body.</p>
         </div>
       </div>
       <div class="docs-step">
@@ -64,14 +64,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <div class="docs-step">
         <div class="docs-step__line"><div class="docs-step__num">3</div><div class="docs-step__connector"></div></div>
         <div class="docs-step__body">
-          <p class="docs-step__title">Your enrollment issue is your progress tracker</p>
-          <p class="docs-step__desc">Keep it open for the entire course. Chapter passes, final grade, and your certificate are all recorded here as labels and comments. One enrollment issue per course — a second attempt for the same course is automatically rejected.</p>
+          <p class="docs-step__title">Your enrollment thread is your progress tracker</p>
+          <p class="docs-step__desc">Keep it open for the entire course. Chapter passes, final grade, and your certificate are all recorded there as labels and comments. One enrollment thread per course — a second attempt for the same course is automatically rejected.</p>
         </div>
       </div>
     </div>
     <div class="docs-callout docs-callout--warn">
       <span class="docs-callout__icon">⚠️</span>
-      <div class="docs-callout__body">The GitHub username that opens the enrollment issue is your permanent identity for that course. Make sure you're logged in as the correct account.</div>
+      <div class="docs-callout__body">The GitHub username that opens the enrollment request is your permanent identity for that course. Make sure you're logged in as the correct account.</div>
     </div>
   </section>
 
@@ -100,7 +100,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <section id="submitting-tests" class="docs-section">
     <h2 class="docs-section-title">Submitting Tests</h2>
-    <p>To take a chapter test, open a new GitHub issue using the <strong>quiz-submit</strong> template. Format your answers using <code>### Answer: &lt;id&gt;</code> headers:</p>
+    <p>To take a chapter or final test, use the action button on the course page. It gives you three paths: open the matching form, copy a <code>gh</code> command, or copy the exact body for manual submission. Format answers using <code>### Answer: &lt;id&gt;</code> headers:</p>
     <div class="docs-pre">
       <div class="docs-pre__bar">
         <span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span>
@@ -145,7 +145,7 @@ def two_sum(nums, target):
 
   <section id="grading" class="docs-section">
     <h2 class="docs-section-title">Grading & Scoring</h2>
-    <p>The grader runs in seconds and posts a result comment on your quiz issue. Here's how each type is scored:</p>
+    <p>The grader runs in seconds and posts a result comment on your submission thread. Here's how each type is scored:</p>
     <div class="docs-table-wrap">
       <table class="docs-table">
         <thead><tr><th>Type</th><th>Scoring Method</th><th>Partial Credit</th></tr></thead>
@@ -158,7 +158,7 @@ def two_sum(nums, target):
         </tbody>
       </table>
     </div>
-    <p>The grader posts a comment like: <code>**Score:** 42/50 (84.0%) ✅ PASSED</code> or <code>❌ FAILED</code>. If you fail, open a new quiz-submit issue for the same chapter (up to <code>max_attempts</code> total).</p>
+    <p>The grader posts a comment like: <code>**Score:** 42/50 (84.0%) ✅ PASSED</code> or <code>❌ FAILED</code>. If you fail, submit the same chapter test again (up to <code>max_attempts</code> total).</p>
     <div class="docs-callout docs-callout--warn">
       <span class="docs-callout__icon">⚠️</span>
       <div class="docs-callout__body">Code questions use a new random seed on each attempt — dynamic generators produce different inputs every run. You cannot memorize expected outputs between attempts.</div>
