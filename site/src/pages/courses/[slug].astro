@@ -87,6 +87,13 @@ function ghWebCommand(template: string, title: string, label: string): string {
   return `gh issue create --repo ${githubRepo} --template ${template} --title "${title}" --label "${label}" --web`;
 }
 
+function courseAssetUrl(courseId: string, file: string): string {
+  if (/^https?:\/\//.test(file)) return file;
+  if (file.startsWith('/')) return `${base}${file}`;
+  const encodedPath = file.split('/').map(encodeURIComponent).join('/');
+  return `https://raw.githubusercontent.com/${githubRepo}/main/engine/courses/${courseId}/${encodedPath}`;
+}
+
 function enrollmentBody(courseId: string): string {
   return `### Your GitHub Username
 @YOUR_USERNAME
@@ -372,6 +379,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
           {flatLessons.map(({ lesson, chIdx, lIdx }, globalIdx) => {
             const ch = detail.chapters[chIdx]!;
             const isFirst = globalIdx === 0;
+            const imageFiles = (lesson.files ?? []).filter(file => file.type === 'image');
             return (
               <article
                 class="cp-pane"
@@ -474,6 +482,23 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                       Curator Notes
                     </div>
                     <div class="cp-notes__body prose">{lesson.text_md}</div>
+                  </div>
+                )}
+
+                <!-- ── LESSON FIGURES ─────────────────────────────────────── -->
+                {imageFiles.length > 0 && (
+                  <div class="cp-figures" aria-label="Lesson diagrams">
+                    {imageFiles.map(file => (
+                      <figure class="cp-figure">
+                        <img
+                          src={courseAssetUrl(detail.id, file.file)}
+                          alt={file.label}
+                          loading="lazy"
+                          class="cp-figure__img"
+                        />
+                        <figcaption class="cp-figure__caption">{file.label}</figcaption>
+                      </figure>
+                    ))}
                   </div>
                 )}
 
@@ -1834,6 +1859,35 @@ body.cp-action-modal-open { overflow: hidden; }
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Lesson figures */
+.cp-figures {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+}
+.cp-figure {
+  margin: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.cp-figure__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  background: #050b0c;
+}
+.cp-figure__caption {
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 /* Code blocks */

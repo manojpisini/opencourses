@@ -1,0 +1,26 @@
+[
+  {
+    "id": "task-001",
+    "task_type": "calculator",
+    "question": "Use the calculator tool to compute sqrt(193).",
+    "gold_answer_pattern": "13.8-13.9",
+    "required_tools": ["calculator"],
+    "max_steps": 4
+  },
+  {
+    "id": "task-002",
+    "task_type": "word_count",
+    "question": "Count the words in: retrieval improves grounded generation.",
+    "gold_answer": "4",
+    "required_tools": ["get_word_count"],
+    "max_steps": 3
+  },
+  {
+    "id": "task-003",
+    "task_type": "search_then_answer",
+    "question": "Find the vLLM project homepage and state its core serving feature.",
+    "gold_answer_terms": ["vLLM", "PagedAttention", "continuous batching"],
+    "required_tools": ["search"],
+    "max_steps": 5
+  }
+]

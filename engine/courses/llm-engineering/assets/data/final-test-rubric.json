@@ -1,0 +1,23 @@
+{
+  "final_test": {
+    "passing_score": 75,
+    "grading_policy": "Deterministic quiz answers and explicit keyword/rubric checks only. No AI or paid model API is used for OpenCourses grading.",
+    "sections": [
+      {
+        "id": "ft-s-01",
+        "weight": 40,
+        "focus": "architecture and theory"
+      },
+      {
+        "id": "ft-s-02",
+        "weight": 35,
+        "focus": "systems and deployment"
+      },
+      {
+        "id": "ft-s-03",
+        "weight": 25,
+        "focus": "production design"
+      }
+    ]
+  }
+}

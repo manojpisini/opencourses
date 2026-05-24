@@ -1,0 +1,138 @@
+{
+  "id": "llm-engineering",
+  "title": "LLM Engineering & Generative AI Systems",
+  "tagline": "Build, fine-tune, evaluate, and ship production LLM systems — from transformer internals to agentic pipelines at scale.",
+  "description": "A ground-up, systems-level course on Large Language Models — from the mathematics of the transformer to building production RAG pipelines, fine-tuning open-source models, and deploying high-throughput inference systems. Every concept is anchored in open-source code you can run, study, and contribute to.",
+  "track": "data",
+  "level": "advanced",
+  "tags": [
+    "llm",
+    "generative-ai",
+    "transformers",
+    "rag",
+    "fine-tuning",
+    "ai-agents",
+    "inference-optimization",
+    "open-source-ai"
+  ],
+  "topics": [
+    "transformer-architecture",
+    "attention-mechanisms",
+    "pre-training",
+    "rlhf",
+    "dpo",
+    "prompt-engineering",
+    "retrieval-augmented-generation",
+    "vector-databases",
+    "lora-qlora",
+    "llm-inference",
+    "speculative-decoding",
+    "continuous-batching",
+    "llm-evaluation",
+    "ai-agents",
+    "multi-agent-systems",
+    "llm-security",
+    "ai-observability"
+  ],
+  "prerequisites": [
+    "python-engineering",
+    "data-structures-algorithms"
+  ],
+  "total_hours": 88,
+  "thumbnail": "https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/thumbnail.png",
+  "banner": "https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/banner.png",
+  "color_primary": "#7C3AED",
+  "status": "review",
+  "version": "1.0.0",
+  "curator": "manojpisini",
+  "chapters": [
+    {
+      "id": "ch-01",
+      "title": "Transformer Architecture: From Tokens to Attention",
+      "description": "Dissect the transformer from scratch — tokenization, embeddings, scaled dot-product attention, multi-head attention, positional encoding, and the full encoder/decoder stack — by reading original papers and live open-source code.\n",
+      "lessonCount": 9,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-02",
+      "title": "Pre-training: How LLMs Learn from Raw Text",
+      "description": "Understand the pre-training objective, data pipeline, scaling laws, and training dynamics of modern LLMs by tracing nanoGPT and LitGPT source code.\n",
+      "lessonCount": 5,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-03",
+      "title": "Alignment: Making LLMs Follow Instructions",
+      "description": "Understand how raw pre-trained models are aligned into instruction-following assistants through SFT, RLHF, and DPO — with hands-on labs using HuggingFace TRL.\n",
+      "lessonCount": 5,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-04",
+      "title": "Fine-Tuning: LoRA, QLoRA, and Domain Adaptation",
+      "description": "Learn parameter-efficient fine-tuning — the mathematical intuition behind LoRA, quantisation with bitsandbytes, full fine-tuning trade-offs, dataset design, and the complete cycle of fine-tune → evaluate → push to Hub.\n",
+      "lessonCount": 2,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-05",
+      "title": "RAG: Retrieval-Augmented Generation",
+      "description": "Design, build, and evaluate a production-grade RAG pipeline — from document ingestion and chunking through embedding, indexing, retrieval, reranking, and grounded generation. Measure every component with RAGAS.\n",
+      "lessonCount": 3,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-06",
+      "title": "LLM Inference: Speed, Scale, and Efficiency",
+      "description": "From the naive forward pass to production-grade serving — continuous batching, PagedAttention, speculative decoding, quantisation, FlashAttention, and structured output generation.\n",
+      "lessonCount": 3,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-07",
+      "title": "AI Agents: From ReAct to Multi-Agent Orchestration",
+      "description": "Build, evaluate, and reason about LLM-powered agents — the ReAct pattern, tool use, memory systems, LangGraph state machines, and multi-agent collaboration architectures.\n",
+      "lessonCount": 2,
+      "hasAssignment": true
+    },
+    {
+      "id": "ch-08",
+      "title": "Observability, Security, and Production Hardening",
+      "description": "Instrument LLM applications with OpenTelemetry, build evaluation pipelines for continuous monitoring, and mitigate the unique security risks of production LLM systems — prompt injection, jailbreaks, and data exfiltration.\n",
+      "lessonCount": 2,
+      "hasAssignment": true
+    }
+  ],
+  "totalLessons": 31,
+  "totalChapterTests": 8,
+  "hasFinaTest": true,
+  "hasFinalAssignment": true,
+  "certificate": {
+    "enabled": true,
+    "requirements": [
+      {
+        "type": "final_test",
+        "id": "final-test",
+        "min_score": 75
+      },
+      {
+        "type": "final_assignment",
+        "id": "final-assignment",
+        "min_score": 70
+      }
+    ]
+  },
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-05-23",
+      "author": "manojpisini",
+      "changes": [
+        "Initial release — 8 chapters, 8 chapter tests, 8 chapter assignments, final test, capstone",
+        "Covers transformer architecture through production deployment",
+        "All resources are open-source (Apache 2.0, MIT, CC BY, arXiv)"
+      ]
+    }
+  ],
+  "generatedAt": "2026-05-24T13:15:23.701Z"
+}

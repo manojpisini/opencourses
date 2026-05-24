@@ -1,4 +1,23 @@
 {
-  "nodes": [],
-  "links": []
+  "nodes": [
+    {
+      "id": "llm-engineering",
+      "title": "LLM Engineering & Generative AI Systems",
+      "track": "data",
+      "difficulty": "advanced",
+      "popularity": 0
+    }
+  ],
+  "links": [
+    {
+      "source": "python-engineering",
+      "target": "llm-engineering",
+      "type": "prerequisite"
+    },
+    {
+      "source": "data-structures-algorithms",
+      "target": "llm-engineering",
+      "type": "prerequisite"
+    }
+  ]
 }

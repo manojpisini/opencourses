@@ -1,0 +1,772 @@
+
+<h2 class="sr-only">LLM Engineering course — complete FOSS resource library mapped to chapters</h2>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0;font-family:var(--font-sans)}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;align-items:center}
+.search{font-size:13px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans);min-width:180px;flex:1}
+.search:focus{outline:none;border-color:var(--color-border-primary)}
+.filter-row{display:flex;flex-wrap:wrap;gap:5px}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
+.pill:hover{background:var(--color-background-secondary)}
+.pill.on{color:#fff;border-color:transparent}
+.stats{font-size:12px;color:var(--color-text-tertiary);margin-bottom:1rem}
+.chapter-block{margin-bottom:1.75rem}
+.ch-header{display:flex;align-items:center;gap:8px;margin-bottom:.6rem;cursor:pointer;user-select:none}
+.ch-num{font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;color:#fff;flex-shrink:0}
+.ch-title{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1}
+.ch-count{font-size:11px;color:var(--color-text-tertiary)}
+.ch-chevron{font-size:13px;color:var(--color-text-tertiary);transition:transform .2s}
+.ch-chevron.open{transform:rotate(180deg)}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:11px 13px;transition:border-color .15s;text-decoration:none;display:block;cursor:pointer}
+.card:hover{border-color:var(--color-border-secondary)}
+.card-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.type-icon{font-size:15px;margin-top:1px;flex-shrink:0}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);line-height:1.35;flex:1}
+.card-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.badge{font-size:10px;padding:2px 6px;border-radius:999px;font-weight:500;white-space:nowrap}
+.card-desc{font-size:11.5px;color:var(--color-text-secondary);line-height:1.5}
+.card-usage{font-size:11px;color:var(--color-text-tertiary);margin-top:5px;line-height:1.4}
+.usage-label{font-weight:500;color:var(--color-text-secondary)}
+.empty{font-size:13px;color:var(--color-text-tertiary);text-align:center;padding:2rem 0}
+.cross-section{margin-top:1.5rem;padding-top:1.5rem;border-top:0.5px solid var(--color-border-tertiary)}
+</style>
+
+<div class="wrap">
+<div class="toolbar">
+  <input class="search" type="search" id="q" placeholder="Search resources, authors, topics…" oninput="render()">
+</div>
+<div class="filter-row" id="typeRow" style="margin-bottom:6px"></div>
+<div class="filter-row" id="chRow" style="margin-bottom:10px"></div>
+<div class="stats" id="stats"></div>
+<div id="out"></div>
+</div>
+
+<script>
+const CH_COLORS = ['#7F77DD','#1D9E75','#D85A30','#D4537E','#888780','#378ADD','#BA7517','#E24B4A'];
+const CH_LABELS = ['Ch-01','Ch-02','Ch-03','Ch-04','Ch-05','Ch-06','Ch-07','Ch-08'];
+const CH_TITLES = [
+  'Transformer Architecture',
+  'Pre-training',
+  'Alignment (RLHF/DPO)',
+  'Fine-Tuning (LoRA/QLoRA)',
+  'RAG',
+  'LLM Inference',
+  'AI Agents',
+  'Observability & Security'
+];
+
+const TYPE_META = {
+  repo:  {icon:'🐙', label:'Repository', bg:'#E6F1FB', col:'#0C447C'},
+  paper: {icon:'📄', label:'Paper',      bg:'#FAECE7', col:'#712B13'},
+  book:  {icon:'📖', label:'Book',       bg:'#EAF3DE', col:'#27500A'},
+  video: {icon:'🎬', label:'Video',      bg:'#FAEEDA', col:'#633806'},
+  course:{icon:'🎓', label:'Course',     bg:'#EEEDFE', col:'#3C3489'},
+  docs:  {icon:'📚', label:'Docs',       bg:'#F1EFE8', col:'#444441'},
+  dataset:{icon:'🗄️',label:'Dataset',   bg:'#FBEAF0', col:'#72243E'},
+  tool:  {icon:'🔧', label:'Tool',       bg:'#E1F5EE', col:'#085041'},
+};
+
+const LIC_COLORS = {
+  'MIT':{'bg':'#E1F5EE','col':'#085041'},
+  'Apache 2.0':{'bg':'#E6F1FB','col':'#0C447C'},
+  'CC BY 4.0':{'bg':'#EEEDFE','col':'#3C3489'},
+  'CC BY-SA 4.0':{'bg':'#EEEDFE','col':'#26215C'},
+  'arXiv':{'bg':'#FAECE7','col':'#993C1D'},
+  'BSD-3':{'bg':'#EAF3DE','col':'#3B6D11'},
+  'Apache 2.0 / Llama':{'bg':'#FAEEDA','col':'#854F0B'},
+  'LGPL-2.1':{'bg':'#F1EFE8','col':'#5F5E5A'},
+  'Free':{'bg':'#F1EFE8','col':'#5F5E5A'},
+};
+
+const RESOURCES = [
+
+// ── REPOS ────────────────────────────────────────────────────────────────────
+
+{id:'r01',type:'repo',title:'HuggingFace Transformers',author:'HuggingFace',license:'Apache 2.0',
+ url:'https://github.com/huggingface/transformers',stars:'131k',
+ chapters:[0,1,2,3,4,5,6,7],
+ howUsed:'Primary library across all chapters — model loading, tokenization, training, inference. Read AutoTokenizer, AutoModelForCausalLM, and Trainer source.',
+ readThis:'src/transformers/models/llama/modeling_llama.py (attention + RoPE), src/transformers/tokenization_utils_base.py',
+ desc:'The reference implementation for 400+ open-source LLMs. Used by every serious LLM practitioner.'},
+
+{id:'r02',type:'repo',title:'nanoGPT',author:'Andrej Karpathy',license:'MIT',
+ url:'https://github.com/karpathy/nanoGPT',stars:'38k',
+ chapters:[0,1],
+ howUsed:'Ch-01: study Block, CausalSelfAttention, MLP. Ch-02: run train.py experiments. The cleanest GPT implementation in existence.',
+ readThis:'model.py (all of it — 300 lines), train.py (training loop)',
+ desc:'Minimal, readable GPT-2 implementation. Best codebase for learning transformer internals from scratch.'},
+
+{id:'r03',type:'repo',title:'minbpe',author:'Andrej Karpathy',license:'MIT',
+ url:'https://github.com/karpathy/minbpe',stars:'9k',
+ chapters:[0],
+ howUsed:'Ch-01: reference implementation for the BPE exercise. Read BasicTokenizer and RegexTokenizer.',
+ readThis:'minbpe/basic.py, minbpe/regex.py',
+ desc:'Minimal BPE tokenizer implementation — ~200 lines total. Perfect companion to the Ch-01 exercise.'},
+
+{id:'r04',type:'repo',title:'LitGPT',author:'Lightning AI',license:'Apache 2.0',
+ url:'https://github.com/Lightning-AI/litgpt',stars:'11k',
+ chapters:[1,3],
+ howUsed:'Ch-02: pre-training walkthrough (cleaner than nanoGPT for multi-GPU). Ch-04: fine-tuning scripts for LoRA, QLoRA, full fine-tune.',
+ readThis:'litgpt/model.py, litgpt/lora.py, pretrain/openwebtext.py',
+ desc:'Production-quality GPT training and fine-tuning. 20+ LLM architectures, clean Lightning Fabric integration.'},
+
+{id:'r05',type:'repo',title:'TRL — Transformer Reinforcement Learning',author:'HuggingFace',license:'Apache 2.0',
+ url:'https://github.com/huggingface/trl',stars:'11k',
+ chapters:[2,3],
+ howUsed:'Ch-03: SFTTrainer for supervised fine-tuning; DPOTrainer for preference alignment. Ch-04: RewardTrainer for reward model training.',
+ readThis:'trl/trainer/sft_trainer.py, trl/trainer/dpo_trainer.py',
+ desc:'The standard library for RLHF, SFT, DPO, ORPO, and reward model training on top of HuggingFace.'},
+
+{id:'r06',type:'repo',title:'PEFT — Parameter-Efficient Fine-Tuning',author:'HuggingFace',license:'Apache 2.0',
+ url:'https://github.com/huggingface/peft',stars:'17k',
+ chapters:[2,3],
+ howUsed:'Ch-03 & Ch-04: LoraConfig, get_peft_model, PeftModel. Read the LoRA implementation to verify the math matches the paper.',
+ readThis:'src/peft/tuners/lora/layer.py (the actual LoRA weight decomposition)',
+ desc:'LoRA, QLoRA, Prefix Tuning, IA³, and more. Used in virtually every fine-tuning pipeline.'},
+
+{id:'r07',type:'repo',title:'Meta Llama 3',author:'Meta AI',license:'Apache 2.0 / Llama',
+ url:'https://github.com/meta-llama/llama3',stars:'27k',
+ chapters:[0,2,3,4,5,6],
+ howUsed:'Open weights used for fine-tuning labs (Ch-04), RAG generation (Ch-05), inference benchmarking (Ch-06). Read the model card for architecture details.',
+ readThis:'llama/model.py — RoPE implementation, GQA attention, SwiGLU MLP',
+ desc:'Meta\'s open-weight frontier models. Llama-3 8B/70B are the default models for all exercises requiring real weights.'},
+
+{id:'r08',type:'repo',title:'Mistral Transformers',author:'Mistral AI',license:'Apache 2.0',
+ url:'https://github.com/mistralai/mistral-src',stars:'10k',
+ chapters:[0,3,6],
+ howUsed:'Ch-01: Sliding Window Attention reference. Ch-06: efficient inference comparison to Llama. Alternative base model for fine-tuning.',
+ readThis:'src/mistral/model.py — sliding window attention, GQA, RoPE',
+ desc:'Mistral 7B reference implementation. Introduces sliding window attention for efficient long-context inference.'},
+
+{id:'r09',type:'repo',title:'vLLM',author:'UC Berkeley / vLLM team',license:'Apache 2.0',
+ url:'https://github.com/vllm-project/vllm',stars:'36k',
+ chapters:[5],
+ howUsed:'Ch-06: deploy inference server, benchmark continuous batching vs static batching, understand PagedAttention memory management.',
+ readThis:'vllm/core/block_manager.py (PagedAttention), vllm/engine/llm_engine.py (continuous batching)',
+ desc:'State-of-the-art LLM serving engine. PagedAttention + continuous batching = 2–4× better throughput than naive serving.'},
+
+{id:'r10',type:'repo',title:'LangChain',author:'LangChain AI',license:'MIT',
+ url:'https://github.com/langchain-ai/langchain',stars:'93k',
+ chapters:[4,6],
+ howUsed:'Ch-05: document loaders, text splitters, retrieval chains. Ch-07: tool definitions, ReAct agent framework.',
+ readThis:'langchain/text_splitter.py, langchain/retrievers/, langchain_community/tools/',
+ desc:'The most widely used LLM application framework. Used for RAG pipelines and agent tool orchestration.'},
+
+{id:'r11',type:'repo',title:'LlamaIndex',author:'LlamaIndex',license:'MIT',
+ url:'https://github.com/run-llama/llama_index',stars:'37k',
+ chapters:[4],
+ howUsed:'Ch-05: VectorStoreIndex, SentenceSplitter, QueryEngine. Alternative to LangChain with better document ingestion primitives.',
+ readThis:'llama_index/core/ingestion/, llama_index/core/node_parser/, llama_index/core/query_engine/',
+ desc:'Document-centric RAG framework. Better than LangChain for complex indexing — hierarchical nodes, metadata filtering, multi-index queries.'},
+
+{id:'r12',type:'repo',title:'LangGraph',author:'LangChain AI',license:'MIT',
+ url:'https://github.com/langchain-ai/langgraph',stars:'11k',
+ chapters:[6],
+ howUsed:'Ch-07: StateGraph for building ReAct agents. Core to the multi-agent orchestration lab.',
+ readThis:'langgraph/graph/state.py, langgraph/prebuilt/tool_node.py',
+ desc:'Graph-based agent framework built on LangChain. Treats agents as state machines — essential for reliable multi-step agents.'},
+
+{id:'r13',type:'repo',title:'ChromaDB',author:'Chroma',license:'Apache 2.0',
+ url:'https://github.com/chroma-core/chroma',stars:'16k',
+ chapters:[4],
+ howUsed:'Ch-05 exercises: embedded vector store (no server needed). Stores and retrieves chunked documents.',
+ readThis:'chromadb/api/client.py, chromadb/segment/impl/vector/',
+ desc:'The easiest vector database to get started with. Runs embedded (in-process) or as a server. Perfect for learning RAG.'},
+
+{id:'r14',type:'repo',title:'Weaviate',author:'Weaviate',license:'BSD-3',
+ url:'https://github.com/weaviate/weaviate',stars:'12k',
+ chapters:[4],
+ howUsed:'Ch-05 advanced: production vector database with multi-tenancy, hybrid search (BM25 + dense), and schema-based filtering.',
+ readThis:'entities/schema/, usecases/traverser/ (hybrid search pipeline)',
+ desc:'Production vector database. Go-based, horizontally scalable. Best for RAG systems needing hybrid search and multi-tenancy.'},
+
+{id:'r15',type:'repo',title:'sentence-transformers',author:'UKPLab',license:'Apache 2.0',
+ url:'https://github.com/UKPLab/sentence-transformers',stars:'16k',
+ chapters:[4],
+ howUsed:'Ch-05: SentenceTransformer for embedding documents and queries. CrossEncoder for reranking. Hosts BAAI/bge-* and cross-encoder/ms-marco-* models.',
+ readThis:'sentence_transformers/SentenceTransformer.py, sentence_transformers/cross_encoder/CrossEncoder.py',
+ desc:'The standard library for dense embeddings and cross-encoder reranking. Critical for RAG retrieval quality.'},
+
+{id:'r16',type:'repo',title:'RAGAS',author:'Explodinggradients',license:'Apache 2.0',
+ url:'https://github.com/explodinggradients/ragas',stars:'7k',
+ chapters:[4],
+ howUsed:'Ch-05: evaluate RAG pipelines on faithfulness, answer_relevancy, context_recall, answer_correctness.',
+ readThis:'ragas/metrics/faithfulness.py, ragas/metrics/answer_relevancy.py',
+ desc:'RAG evaluation framework. Provides automated metrics that correlate well with human judgments of RAG quality.'},
+
+{id:'r17',type:'repo',title:'LM Evaluation Harness',author:'EleutherAI',license:'MIT',
+ url:'https://github.com/EleutherAI/lm-evaluation-harness',stars:'7k',
+ chapters:[2,3],
+ howUsed:'Ch-03 & Ch-04: benchmark models before/after alignment and fine-tuning. Powers the Open LLM Leaderboard on HuggingFace.',
+ readThis:'lm_eval/tasks/, lm_eval/models/huggingface.py',
+ desc:'The open standard for LLM benchmarking — MMLU, HellaSwag, WinoGrande, ARC, TruthfulQA, and 60+ more tasks.'},
+
+{id:'r18',type:'repo',title:'FlashAttention-2',author:'Tri Dao / Stanford',license:'BSD-3',
+ url:'https://github.com/Dao-AILab/flash-attention',stars:'14k',
+ chapters:[5],
+ howUsed:'Ch-06: understanding memory-efficient attention. Enabled via attn_implementation="flash_attention_2" in HF Transformers.',
+ readThis:'flash_attn/flash_attn_interface.py, csrc/flash_attn/flash_api.cpp',
+ desc:'Rewrites attention to be memory-I/O optimal: fuses operations, tiles to SRAM. 2–3× faster than standard attention, exact (not approximate).'},
+
+{id:'r19',type:'repo',title:'bitsandbytes',author:'Tim Dettmers / HuggingFace',license:'MIT',
+ url:'https://github.com/bitsandbytes-foundation/bitsandbytes',stars:'6k',
+ chapters:[3],
+ howUsed:'Ch-04: BitsAndBytesConfig for NF4 4-bit quantisation (QLoRA). The library that makes fine-tuning 70B models on consumer GPUs possible.',
+ readThis:'bitsandbytes/nn/modules.py (Linear4bit), bitsandbytes/functional.py',
+ desc:'8-bit and 4-bit quantisation for PyTorch. The backbone of QLoRA — enables training Llama-3 70B on a 24GB GPU.'},
+
+{id:'r20',type:'repo',title:'Outlines',author:'dottxt-ai',license:'Apache 2.0',
+ url:'https://github.com/dottxt-ai/outlines',stars:'10k',
+ chapters:[5],
+ howUsed:'Ch-06: structured output generation — constrain LLM output to valid JSON schemas using finite-state machine decoding.',
+ readThis:'outlines/fsm/json_schema.py, outlines/generate/api.py',
+ desc:'Structured text generation via constrained decoding. Guarantees valid JSON, regex patterns, or grammar-constrained output.'},
+
+{id:'r21',type:'repo',title:'AutoGen',author:'Microsoft Research',license:'MIT',
+ url:'https://github.com/microsoft/autogen',stars:'34k',
+ chapters:[6],
+ howUsed:'Ch-07: multi-agent patterns — ConversableAgent, GroupChat, nested chat. Reference for orchestrator/worker patterns.',
+ readThis:'autogen/agentchat/conversable_agent.py, autogen/agentchat/groupchat.py',
+ desc:'Microsoft\'s multi-agent framework. Enables complex agent topologies — debate, critique, delegation, and round-robin collaboration.'},
+
+{id:'r22',type:'repo',title:'OpenTelemetry Python',author:'OpenTelemetry Authors / CNCF',license:'Apache 2.0',
+ url:'https://github.com/open-telemetry/opentelemetry-python',stars:'2k',
+ chapters:[7],
+ howUsed:'Ch-08: instrument LLM applications with traces, spans, and gen_ai.* semantic convention attributes.',
+ readThis:'opentelemetry/sdk/trace/span.py, opentelemetry/semconv/',
+ desc:'CNCF-standard observability SDK. The gen_ai.* semantic conventions (LLM-specific attributes) are now part of the spec.'},
+
+{id:'r23',type:'repo',title:'NeMo Guardrails',author:'NVIDIA',license:'Apache 2.0',
+ url:'https://github.com/NVIDIA/NeMo-Guardrails',stars:'4k',
+ chapters:[7],
+ howUsed:'Ch-08: implementing input/output safety rails using Colang policy language.',
+ readThis:'nemoguardrails/colang/v1_0/runtime/runtime.py, examples/',
+ desc:'NVIDIA\'s programmable guardrails framework. Colang DSL lets you define conversation policies declaratively.'},
+
+{id:'r24',type:'repo',title:'Llama Guard 3',author:'Meta AI',license:'Apache 2.0 / Llama',
+ url:'https://huggingface.co/meta-llama/Llama-Guard-3-8B',stars:null,
+ chapters:[7],
+ howUsed:'Ch-08: classify user inputs and model outputs as safe/unsafe before serving to the user.',
+ readThis:'Model card, safety categories definition',
+ desc:'Open-source LLM-based safety classifier. Classifies content across 14 harm categories. Drop-in safety layer for production LLM apps.'},
+
+{id:'r25',type:'repo',title:'DeepSpeed',author:'Microsoft',license:'Apache 2.0',
+ url:'https://github.com/microsoft/DeepSpeed',stars:'36k',
+ chapters:[5],
+ howUsed:'Ch-06 supplemental: ZeRO optimizer stages for distributed fine-tuning. Reference for Stage 2/3 when PEFT alone is not enough.',
+ readThis:'deepspeed/runtime/zero/stage_1_and_2.py, docs/code-docs/optimizer.rst',
+ desc:'Distributed training and inference optimisation. ZeRO-3 enables fine-tuning 175B+ models across multiple GPUs.'},
+
+{id:'r26',type:'repo',title:'Axolotl',author:'OpenAccess AI Collective',license:'Apache 2.0',
+ url:'https://github.com/axolotl-org/axolotl',stars:'8k',
+ chapters:[3],
+ howUsed:'Ch-04 supplemental: YAML-driven fine-tuning — good for running ablations without writing Python.',
+ readThis:'src/axolotl/train.py, examples/llama-3/*.yml',
+ desc:'Config-driven LLM fine-tuning. Wraps TRL/PEFT with a YAML interface — enables rapid experimentation.'},
+
+{id:'r27',type:'repo',title:'FAISS',author:'Facebook AI Research',license:'MIT',
+ url:'https://github.com/facebookresearch/faiss',stars:'31k',
+ chapters:[4],
+ howUsed:'Ch-05 supplemental: understand ANN (Approximate Nearest Neighbour) indexing under the hood. ChromaDB and Weaviate both use FAISS internally.',
+ readThis:'faiss/index_factory.py, tutorial/python/1-Flat.py',
+ desc:'The most widely used ANN library. IndexFlatL2, IVFFlat, HNSW, PQ — understanding these helps you choose the right vector DB index.'},
+
+{id:'r28',type:'repo',title:'Haystack',author:'deepset',license:'Apache 2.0',
+ url:'https://github.com/deepset-ai/haystack',stars:'18k',
+ chapters:[4],
+ howUsed:'Ch-05 supplemental: production RAG pipeline alternative with BM25 + dense hybrid search built in.',
+ readThis:'haystack/components/retrievers/, haystack/document_stores/',
+ desc:'Production-grade RAG and NLP framework. Built-in BM25 (Elasticsearch/OpenSearch) + dense hybrid retrieval.'},
+
+{id:'r29',type:'repo',title:'Prometheus-2',author:'Kaist AI',license:'Apache 2.0',
+ url:'https://github.com/prometheus-eval/prometheus-eval',stars:'800',
+ chapters:[2],
+ howUsed:'Ch-03 supplemental: open-source reward-model signal for evaluating alignment quality during study, not for hidden course grading.',
+ readThis:'eval/prometheus.py, model card',
+ desc:'Open-source reward model. Useful for comparing outputs on explicit rubrics while keeping course grading deterministic.'},
+
+{id:'r30',type:'repo',title:'SmolLM2',author:'HuggingFace',license:'Apache 2.0',
+ url:'https://github.com/huggingface/smollm',stars:'2k',
+ chapters:[0,1,2,3,4,5],
+ howUsed:'All early exercises: 135M / 360M / 1.7B models run on CPU or free Colab T4 — perfect for rapid iteration without GPU costs.',
+ readThis:'SmolLM2-360M-Instruct model card on HuggingFace Hub',
+ desc:'Tiny but capable open-source models. SmolLM2-360M runs SFT and DPO experiments on a free Colab T4 in under 10 minutes.'},
+
+// ── PAPERS ───────────────────────────────────────────────────────────────────
+
+{id:'p01',type:'paper',title:'Attention Is All You Need',author:'Vaswani et al., Google Brain',license:'arXiv',year:2017,
+ url:'https://arxiv.org/abs/1706.03762',
+ chapters:[0],
+ howUsed:'Ch-01 core reading. Derive attention from Section 3.2. Study Figure 2 (transformer architecture). The paper that started everything.',
+ readThis:'Section 3 (Model Architecture), Section 3.2 (Attention), Figure 2',
+ desc:'The original transformer paper. 90k citations. Introduced multi-head attention, positional encoding, and the encoder-decoder architecture.'},
+
+{id:'p02',type:'paper',title:'GPT-3: Language Models are Few-Shot Learners',author:'Brown et al., OpenAI',license:'arXiv',year:2020,
+ url:'https://arxiv.org/abs/2005.14165',
+ chapters:[1,2],
+ howUsed:'Ch-02: scaling laws intuition. Ch-03: in-context learning and few-shot prompting. Read Section 1 and Section 3.',
+ readThis:'Section 1 (Introduction), Section 2.1 (Model architecture), Appendix E (task descriptions)',
+ desc:'Demonstrated that scaling language models enables zero/few-shot learning without fine-tuning. Introduced the modern LLM paradigm.'},
+
+{id:'p03',type:'paper',title:'Chinchilla: Training Compute-Optimal LLMs',author:'Hoffmann et al., DeepMind',license:'arXiv',year:2022,
+ url:'https://arxiv.org/abs/2203.15556',
+ chapters:[1],
+ howUsed:'Ch-02 core reading. Section 3 derives the 20 tokens/parameter rule. Table 1 shows GPT-3 was undertrained.',
+ readThis:'Section 1, Section 3 (compute-optimal training), Table 1, Figure 1',
+ desc:'Showed that GPT-3 was undertrained. Established the 20-tokens-per-parameter rule for compute-optimal training.'},
+
+{id:'p04',type:'paper',title:'Scaling Laws for Neural Language Models',author:'Kaplan et al., OpenAI',license:'arXiv',year:2020,
+ url:'https://arxiv.org/abs/2001.08361',
+ chapters:[1],
+ howUsed:'Ch-02: foundational scaling law paper predating Chinchilla. Read alongside Chinchilla to understand the correction.',
+ readThis:'Section 1, Section 3 (power laws), Figure 1',
+ desc:'First systematic characterisation of how LLM loss scales with parameters, data, and compute. Power-law relationships.'},
+
+{id:'p05',type:'paper',title:'InstructGPT: Training LMs to Follow Instructions with RLHF',author:'Ouyang et al., OpenAI',license:'arXiv',year:2022,
+ url:'https://arxiv.org/abs/2203.02155',
+ chapters:[2],
+ howUsed:'Ch-03 core reading. The three-phase alignment pipeline (SFT → RM → PPO) comes from this paper.',
+ readThis:'Section 3 (Methods) — all three phases. Section 4.1 (results). Figure 2 (pipeline diagram).',
+ desc:'The paper that defined modern LLM alignment. Introduced the SFT → reward model → PPO pipeline used in ChatGPT.'},
+
+{id:'p06',type:'paper',title:'DPO: Direct Preference Optimization',author:'Rafailov et al., Stanford',license:'arXiv',year:2023,
+ url:'https://arxiv.org/abs/2305.18290',
+ chapters:[2],
+ howUsed:'Ch-03 core reading. Section 4 derives the DPO objective — work through the math. Table 1 benchmarks DPO vs PPO.',
+ readThis:'Section 1, Section 4 (the full derivation), Section 5 (experiments)',
+ desc:'Showed that RLHF\'s reward model can be eliminated. DPO trains directly on preference pairs with a closed-form objective.'},
+
+{id:'p07',type:'paper',title:'LoRA: Low-Rank Adaptation of Large Language Models',author:'Hu et al., Microsoft',license:'arXiv',year:2021,
+ url:'https://arxiv.org/abs/2106.09685',
+ chapters:[3],
+ howUsed:'Ch-04 core reading. Section 4 explains the rank decomposition mathematically. Section 7.2 shows which matrices to adapt.',
+ readThis:'Section 4 (Method), Section 7 (experiments), Table 1 (parameter efficiency)',
+ desc:'Introduced low-rank weight adaptation. 0.3% of parameters achieves 97% of full fine-tuning quality on many tasks.'},
+
+{id:'p08',type:'paper',title:'QLoRA: Efficient Fine-tuning of Quantized LLMs',author:'Dettmers et al., University of Washington',license:'arXiv',year:2023,
+ url:'https://arxiv.org/abs/2305.14314',
+ chapters:[3],
+ howUsed:'Ch-04 core reading. Section 2 explains NF4 quantisation. Section 4 shows the memory math. Read this before the QLoRA exercise.',
+ readThis:'Section 2 (background: quantisation), Section 3 (QLoRA method), Section 4 (memory analysis)',
+ desc:'Fine-tune 65B parameter models on a 48GB GPU using 4-bit NF4 quantisation + LoRA. Democratised LLM fine-tuning.'},
+
+{id:'p09',type:'paper',title:'RAG: Retrieval-Augmented Generation',author:'Lewis et al., Facebook AI Research',license:'arXiv',year:2020,
+ url:'https://arxiv.org/abs/2005.11401',
+ chapters:[4],
+ howUsed:'Ch-05 foundational paper. Section 2 defines RAG-Token and RAG-Sequence. Motivates why retrieval improves factual accuracy.',
+ readThis:'Section 1 (Introduction), Section 2 (Methods), Section 4 (experiments on NaturalQuestions)',
+ desc:'Original RAG paper. Combined dense retrieval (DPR) with seq2seq generation for knowledge-intensive NLP tasks.'},
+
+{id:'p10',type:'paper',title:'FlashAttention-2',author:'Tri Dao, Princeton',license:'arXiv',year:2023,
+ url:'https://arxiv.org/abs/2307.08691',
+ chapters:[5],
+ howUsed:'Ch-06 core reading. Section 2 explains SRAM tiling. Section 3 shows the speedup over FlashAttention-1. Essential for understanding GPU memory hierarchy.',
+ readThis:'Section 1 (Introduction), Section 2 (background: GPU memory hierarchy), Section 3 (algorithm)',
+ desc:'Rewrites attention for GPU memory hierarchy. Exact (not approximate). 2–3× faster and uses O(N) memory instead of O(N²).'},
+
+{id:'p11',type:'paper',title:'Speculative Decoding',author:'Leviathan et al., Google',license:'arXiv',year:2022,
+ url:'https://arxiv.org/abs/2211.17192',
+ chapters:[5],
+ howUsed:'Ch-06: understanding latency optimisation. Section 2 explains the draft-then-verify algorithm. Section 4 shows 2–3× speedup.',
+ readThis:'Section 2 (Algorithm), Section 3 (theoretical analysis), Section 4 (experiments)',
+ desc:'Generates multiple tokens per decoding step using a small draft model verified by the target model. 2–3× TTFT reduction.'},
+
+{id:'p12',type:'paper',title:'ReAct: Synergizing Reasoning and Acting in LLMs',author:'Yao et al., Princeton / Google',license:'arXiv',year:2022,
+ url:'https://arxiv.org/abs/2210.03629',
+ chapters:[6],
+ howUsed:'Ch-07 core reading. Section 2 defines the Thought-Action-Observation loop. Section 3 shows improvement over chain-of-thought alone.',
+ readThis:'Section 2 (ReAct method), Section 3 (knowledge-intensive tasks), Section 4 (interactive tasks)',
+ desc:'Interleaving chain-of-thought reasoning with tool actions. The foundation for all modern LLM agents.'},
+
+{id:'p13',type:'paper',title:'RoFormer: Enhanced Transformer with RoPE',author:'Su et al.',license:'arXiv',year:2021,
+ url:'https://arxiv.org/abs/2104.09864',
+ chapters:[0],
+ howUsed:'Ch-01 supplemental: understand rotary position embeddings used in Llama, Mistral, Qwen, and all modern LLMs.',
+ readThis:'Section 3 (Rotary Position Embedding), Figure 1 (rotation illustration)',
+ desc:'Introduced Rotary Position Embeddings (RoPE) — now the standard positional encoding for all major open-source LLMs.'},
+
+{id:'p14',type:'paper',title:'BERT: Pre-training Deep Bidirectional Transformers',author:'Devlin et al., Google',license:'arXiv',year:2018,
+ url:'https://arxiv.org/abs/1810.04805',
+ chapters:[1],
+ howUsed:'Ch-02 supplemental: contrast masked language modelling (BERT) vs causal language modelling (GPT) to understand the encoder/decoder distinction.',
+ readThis:'Section 3.1 (Pre-training tasks), Section 4 (experiments)',
+ desc:'Introduced masked language modelling and encoder-only architecture. Foundational for understanding why GPT uses causal (not masked) LM.'},
+
+{id:'p15',type:'paper',title:'Judging LLM-as-a-Judge with MT-Bench',author:'Zheng et al., UC Berkeley',license:'arXiv',year:2023,
+ url:'https://arxiv.org/abs/2306.05685',
+ chapters:[2],
+ howUsed:'Ch-03: model-assisted evaluation methodology. Section 4 discusses positional bias, verbosity bias, and self-enhancement bias.',
+ readThis:'Section 4 (bias and limitations), Section 5 (agreement with human judgments)',
+ desc:'Systematic study of model-assisted evaluation reliability. Identifies positional bias, verbosity bias, and self-enhancement. Essential for evaluation design.'},
+
+{id:'p16',type:'paper',title:'RLHF: Learning to Summarize from Human Feedback',author:'Stiennon et al., OpenAI',license:'arXiv',year:2020,
+ url:'https://arxiv.org/abs/2009.01325',
+ chapters:[2],
+ howUsed:'Ch-03 supplemental: early concrete RLHF application before InstructGPT. Shows reward model training and PPO in detail.',
+ readThis:'Section 4 (training procedure), Section 5 (analysis of learned reward models)',
+ desc:'First large-scale application of RLHF to language. Summarisation task makes the reward model signal concrete and interpretable.'},
+
+{id:'p17',type:'paper',title:'Chain-of-Thought Prompting Elicits Reasoning in LLMs',author:'Wei et al., Google',license:'arXiv',year:2022,
+ url:'https://arxiv.org/abs/2201.11903',
+ chapters:[2],
+ howUsed:'Ch-03: prompt engineering section — CoT as a prompting technique. Foundation for understanding why agents use Thought steps.',
+ readThis:'Section 2 (Method), Section 3 (Arithmetic reasoning experiments)',
+ desc:'Showed that asking models to "think step by step" dramatically improves reasoning. Foundation of all modern prompting strategies.'},
+
+{id:'p18',type:'paper',title:'Self-RAG: Learning to Retrieve, Generate and Critique',author:'Asai et al., University of Washington',license:'arXiv',year:2023,
+ url:'https://arxiv.org/abs/2310.11511',
+ chapters:[4],
+ howUsed:'Ch-05 advanced: RAG with retrieval-on-demand and self-critique — adaptive retrieval rather than always-retrieve.',
+ readThis:'Section 3 (Self-RAG framework), Figure 2 (inference procedure)',
+ desc:'Trains the LLM to decide when to retrieve and to critique its own outputs. More efficient than naive always-retrieve RAG.'},
+
+{id:'p19',type:'paper',title:'ORPO: Monolithic Preference Optimization without Reference Model',author:'Hong et al.',license:'arXiv',year:2024,
+ url:'https://arxiv.org/abs/2403.07691',
+ chapters:[2],
+ howUsed:'Ch-03 supplemental: ORPO as a modern DPO alternative — combines SFT and preference optimisation in one step, no reference model.',
+ readThis:'Section 2 (ORPO objective), Section 4 (experiments)',
+ desc:'Single-stage alignment: SFT + preference optimisation in one objective, without a reference model. More memory-efficient than DPO.'},
+
+{id:'p20',type:'paper',title:'Mixtral of Experts',author:'Mistral AI',license:'arXiv',year:2024,
+ url:'https://arxiv.org/abs/2401.04088',
+ chapters:[5],
+ howUsed:'Ch-06 supplemental: Mixture of Experts inference — understand sparse activation and its effect on serving systems.',
+ readThis:'Section 2 (Sparse MoE), Section 4 (results)',
+ desc:'Introduced sparse MoE to open-source LLMs. 8×7B parameters but only 2 experts active per token — 13B inference cost.'},
+
+// ── BOOKS ────────────────────────────────────────────────────────────────────
+
+{id:'b01',type:'book',title:'Dive into Deep Learning (d2l.ai)',author:'Zhang, Lipton, Li, Smola',license:'CC BY-SA 4.0',
+ url:'https://d2l.ai',
+ chapters:[0,1],
+ howUsed:'Ch-01: Chapter 11 (Attention). Ch-02: Chapter 9 (Recurrent NNs for context). Free, interactive, runs in Colab.',
+ readThis:'Section 11.3 (Attention Scoring Functions), 11.5 (Multi-Head Attention), 11.7 (Transformer)',
+ desc:'Free, interactive deep learning textbook. 300+ Jupyter notebooks. The best free resource for transformer mathematics.'},
+
+{id:'b02',type:'book',title:'Build an LLM from Scratch',author:'Sebastian Raschka',license:'MIT (code)',
+ url:'https://github.com/rasbt/LLMs-from-scratch',
+ chapters:[0,1,2,3],
+ howUsed:'Ch-01 & Ch-02: chapters 2–5 build a complete GPT from tokenization to pre-training. Most pedagogically clear implementation available.',
+ readThis:'Chapter 2 (BPE), Chapter 3 (Attention), Chapter 4 (GPT architecture), Chapter 5 (pre-training)',
+ desc:'Step-by-step GPT from scratch in ~1000 lines. The companion code is MIT-licensed and used throughout Ch-01 and Ch-02.'},
+
+{id:'b03',type:'book',title:'Designing Machine Learning Systems',author:'Chip Huyen',license:'Commercial (O\'Reilly)',
+ url:'https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/',
+ chapters:[5,7],
+ howUsed:'Ch-06: Chapter 7 (model deployment). Ch-08: Chapter 8 (data distribution shifts as model regression analogy).',
+ readThis:'Chapter 7 (Model Deployment and Prediction Service), Chapter 9 (Continual Learning)',
+ desc:'The definitive guide to production ML systems. Covers feature stores, monitoring, drift detection, and continual learning.'},
+
+{id:'b04',type:'book',title:'Natural Language Processing with Transformers',author:'Lewis Tunstall, Leandro von Werra, Thomas Wolf (HuggingFace)',license:'Commercial (O\'Reilly)',
+ url:'https://www.oreilly.com/library/view/natural-language-processing/9781098136789/',
+ chapters:[0,1,2,3],
+ howUsed:'Ch-01–Ch-04: complementary textbook for HuggingFace ecosystem — tokenizers, Trainer, fine-tuning patterns.',
+ readThis:'Chapter 2 (Text Classification), Chapter 3 (Named Entity Recognition), Chapter 9 (Dealing with Few Labels)',
+ desc:'The official HuggingFace textbook. Covers the full HF ecosystem — Datasets, Tokenizers, Transformers, Accelerate.'},
+
+{id:'b05',type:'book',title:'Reinforcement Learning: An Introduction',author:'Sutton & Barto',license:'Free PDF',
+ url:'http://incompleteideas.net/book/the-book-2nd.html',
+ chapters:[2],
+ howUsed:'Ch-03 supplemental: Chapters 1–3 build the RL foundations needed to understand PPO in RLHF — MDPs, value functions, policy gradients.',
+ readThis:'Chapter 1 (Introduction), Chapter 3 (MDPs), Chapter 13 (Policy Gradient Methods)',
+ desc:'The definitive RL textbook. Free PDF available legally. Chapters 1–3 and 13 are essential for understanding PPO in RLHF.'},
+
+{id:'b06',type:'book',title:'The Little Book of Deep Learning',author:'François Fleuret, EPFL',license:'CC BY-NC-SA 4.0',
+ url:'https://fleuret.org/public/lbdl.pdf',
+ chapters:[0],
+ howUsed:'Ch-01 supplemental: ultra-concise, mathematically precise treatment of attention and transformers in ~50 pages.',
+ readThis:'Section 5.3 (Attention), Section 5.4 (Transformer)',
+ desc:'Concise, rigorous deep learning book from EPFL. Best for readers who want mathematical precision without a 500-page textbook.'},
+
+// ── VIDEOS / COURSES ─────────────────────────────────────────────────────────
+
+{id:'v01',type:'video',title:'Let\'s build GPT: from scratch, in code',author:'Andrej Karpathy',license:'Free (YouTube)',
+ url:'https://www.youtube.com/watch?v=kCc8FmEb1nY',duration:'2h',
+ chapters:[0,1],
+ howUsed:'Ch-01 required viewing (first 65 min — attention mechanism). Ch-02: watch full video, then run train.py yourself.',
+ readThis:'0:00–1:05 (attention from scratch), 1:05–2:00 (full GPT training)',
+ desc:'The single best LLM resource for beginners. Builds GPT-2 from scratch in 2 hours with live coding. Watch before reading nanoGPT.'},
+
+{id:'v02',type:'video',title:'Let\'s build the GPT Tokenizer',author:'Andrej Karpathy',license:'Free (YouTube)',
+ url:'https://www.youtube.com/watch?v=zduSFxRajkE',duration:'2h 13m',
+ chapters:[0],
+ howUsed:'Ch-01 required viewing. Watch the first 70 minutes (BPE algorithm from scratch) before attempting the BPE exercise.',
+ readThis:'0:00–0:30 (motivation), 0:30–1:10 (BPE from scratch), 1:10–end (tiktoken internals)',
+ desc:'2+ hours on tokenization. The only video resource that explains BPE from byte-level encoding to the full tiktoken implementation.'},
+
+{id:'v03',type:'course',title:'Stanford CS224N: NLP with Deep Learning',author:'Stanford NLP Group',license:'CC BY (slides)',
+ url:'https://web.stanford.edu/class/cs224n/',
+ chapters:[0,2],
+ howUsed:'Ch-01: Lectures 9–11 (transformers). Ch-03: Lecture 11 (instruction tuning and RLHF).',
+ readThis:'Lecture 9 (Self-Attention), Lecture 10 (Transformers + Pretraining), Lecture 11 (Prompting, RLHF, Agents)',
+ desc:'Stanford\'s graduate NLP course, freely available. Best structured academic treatment of transformers and modern LLMs.'},
+
+{id:'v04',type:'video',title:'A Hackers\' Guide to Language Models',author:'Jeremy Howard (fast.ai)',license:'Free (YouTube)',
+ url:'https://www.youtube.com/watch?v=jkrNMKz9pWU',duration:'1h 30m',
+ chapters:[0,1,2,3,4],
+ howUsed:'Ch-01–Ch-05: great intuition-first overview of the full stack — tokenization through fine-tuning and RAG.',
+ readThis:'Full video — covers tokenization, pre-training, instruction tuning, and RLHF in 90 minutes',
+ desc:'Fast.ai-style intuition-first walkthrough of LLMs from Jeremy Howard. Best single video for the big picture before diving into details.'},
+
+{id:'v05',type:'video',title:'Efficient LLM Training (DeepSpeed team)',author:'DeepSpeed / Microsoft',license:'Free (YouTube)',
+ url:'https://www.youtube.com/watch?v=wbG2ZEDPIyw',duration:'45m',
+ chapters:[5],
+ howUsed:'Ch-06 supplemental: ZeRO optimizer stages, gradient checkpointing, and mixed precision explained visually.',
+ readThis:'Full video',
+ desc:'Visual explanation of distributed training techniques — ZeRO Stages 1/2/3, pipeline parallelism, tensor parallelism.'},
+
+{id:'v06',type:'video',title:'LLM Agents (CS294-196 Berkeley)',author:'UC Berkeley',license:'Free (YouTube)',
+ url:'https://rdi.berkeley.edu/llm-agents/f24',
+ chapters:[6],
+ howUsed:'Ch-07: Lectures 1–4 cover agent foundations, tool use, memory, and multi-agent systems at a graduate level.',
+ readThis:'Lecture 1 (Agent overview), Lecture 3 (Memory and retrieval), Lecture 4 (Multi-agent)',
+ desc:'Berkeley\'s graduate course on LLM agents. Free lecture videos and slides. Most rigorous academic treatment of agent architectures.'},
+
+// ── DOCS & TOOLS ─────────────────────────────────────────────────────────────
+
+{id:'d01',type:'docs',title:'HuggingFace Documentation',author:'HuggingFace',license:'Apache 2.0',
+ url:'https://huggingface.co/docs',
+ chapters:[0,1,2,3,4,5,6,7],
+ howUsed:'Primary API reference throughout. Key pages: Trainer, SFTTrainer, DPOTrainer, LoraConfig, BitsAndBytesConfig.',
+ readThis:'docs/transformers/training, docs/peft/tutorial/peft_model_config, docs/trl/sft_trainer',
+ desc:'Comprehensive documentation for the HuggingFace ecosystem. The most frequently referenced resource in the course.'},
+
+{id:'d02',type:'docs',title:'vLLM Documentation',author:'vLLM project',license:'Apache 2.0',
+ url:'https://docs.vllm.ai',
+ chapters:[5],
+ howUsed:'Ch-06: PagedAttention concepts, API server setup, quantisation options, tensor parallelism configuration.',
+ readThis:'concepts/paged_attn.html, serving/openai_compatible_server.html',
+ desc:'Full documentation for vLLM serving. Explains PagedAttention, continuous batching, and all serving configurations.'},
+
+{id:'d03',type:'docs',title:'OWASP LLM Top 10 (2025)',author:'OWASP Foundation',license:'CC BY-SA 4.0',
+ url:'https://owasp.org/www-project-top-10-for-large-language-model-applications/',
+ chapters:[7],
+ howUsed:'Ch-08 required reading: LLM01 (Prompt Injection) through LLM10 (Unbounded Consumption). Security audit design.',
+ readThis:'LLM01: Prompt Injection, LLM02: Sensitive Information Disclosure, LLM06: Excessive Agency',
+ desc:'The authoritative security reference for LLM applications. 10 critical risks with attack examples and mitigations.'},
+
+{id:'d04',type:'docs',title:'OpenTelemetry GenAI Semantic Conventions',author:'OpenTelemetry Authors / CNCF',license:'Apache 2.0',
+ url:'https://opentelemetry.io/docs/specs/semconv/gen-ai/',
+ chapters:[7],
+ howUsed:'Ch-08: attribute naming for LLM spans — gen_ai.system, gen_ai.request.model, gen_ai.usage.prompt_tokens, etc.',
+ readThis:'gen-ai/llm-spans.md (all gen_ai.* attributes)',
+ desc:'Standardised attribute names for LLM observability. Ensures traces are interoperable across tools (Jaeger, Grafana, Tempo).'},
+
+{id:'d05',type:'docs',title:'RAGAS Documentation',author:'Explodinggradients',license:'Apache 2.0',
+ url:'https://docs.ragas.io',
+ chapters:[4],
+ howUsed:'Ch-05: evaluation metric definitions, Dataset format, evaluate() API. Read before the RAG exercise.',
+ readThis:'metrics/faithfulness.md, metrics/answer_relevancy.md, get_started/evaluation.md',
+ desc:'Documentation for the RAGAS evaluation framework. Explains each metric mathematically and shows how to use the API.'},
+
+// ── DATASETS ─────────────────────────────────────────────────────────────────
+
+{id:'ds01',type:'dataset',title:'FineWeb (15T tokens)',author:'HuggingFace',license:'ODC-By',
+ url:'https://huggingface.co/datasets/HuggingFaceFW/fineweb',
+ chapters:[1],
+ howUsed:'Ch-02: study the data pipeline — how 15T tokens of web text was deduplicated and quality-filtered. Read the blog post.',
+ readThis:'FineWeb blog post (HF), datacard — dedup strategy and quality filter details',
+ desc:'HuggingFace\'s 15T-token pre-training corpus. Publicly available, CC-licensed subsets. Best resource for understanding production data pipelines.'},
+
+{id:'ds02',type:'dataset',title:'UltraChat 200k',author:'HuggingFace H4',license:'MIT',
+ url:'https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k',
+ chapters:[2,3],
+ howUsed:'Ch-03: SFT training dataset. 200k high-quality multi-turn instruction conversations.',
+ readThis:'Dataset card — understand the filtering criteria used to select 200k from 1.4M conversations',
+ desc:'200k high-quality multi-turn instruction conversations. The standard open SFT dataset for English instruction tuning.'},
+
+{id:'ds03',type:'dataset',title:'UltraFeedback Binarized',author:'TRL team / HuggingFace',license:'MIT',
+ url:'https://huggingface.co/datasets/trl-lib/ultrafeedback_binarized',
+ chapters:[2,3],
+ howUsed:'Ch-03: DPO training dataset. 60k preference pairs (prompt, chosen, rejected) for alignment experiments.',
+ readThis:'Dataset card — understand how chosen/rejected pairs were selected from UltraFeedback ratings',
+ desc:'60k preference pairs derived from UltraFeedback. The standard open DPO training dataset.'},
+
+{id:'ds04',type:'dataset',title:'The Stack v2',author:'BigCode',license:'Various (per-language)',
+ url:'https://huggingface.co/datasets/bigcode/the-stack-v2',
+ chapters:[1],
+ howUsed:'Ch-02: understand code data in pre-training. Study license filtering and deduplication methodology.',
+ readThis:'Dataset card — license filtering policy, dedup strategy, per-language breakdown',
+ desc:'67B+ files of code across 600+ programming languages. Used in pre-training StarCoder2 and many open code LLMs.'},
+
+{id:'ds05',type:'dataset',title:'OpenAssistant Conversations',author:'LAION / OpenAssistant',license:'Apache 2.0',
+ url:'https://huggingface.co/datasets/OpenAssistant/oasst1',
+ chapters:[2],
+ howUsed:'Ch-03 supplemental: open assistant conversation data for SFT and alignment experiments.',
+ readThis:'Dataset card — collection methodology, message tree structure, quality labels',
+ desc:'Open assistant conversation corpus with multi-turn examples and human annotations. Useful for studying alignment data quality.'},
+
+{id:'ds06',type:'dataset',title:'CodeAlpaca 20k',author:'sahil2801',license:'Apache 2.0',
+ url:'https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k',
+ chapters:[3],
+ howUsed:'Ch-04: fine-tuning exercise dataset. 20k code generation instruction-response pairs.',
+ readThis:'Dataset card, sample 20 examples to understand quality',
+ desc:'20k code generation instruction-response pairs. Used for the Ch-04 QLoRA fine-tuning exercise on Llama-3 8B.'},
+
+{id:'ds07',type:'dataset',title:'Dolma (3T token open corpus)',author:'AllenAI',license:'ODC-By',
+ url:'https://github.com/allenai/dolma',
+ chapters:[1],
+ howUsed:'Ch-02: study the deduplication and quality filtering pipeline — production-grade open data infrastructure.',
+ readThis:'docs/tokenization.md, docs/deduplication.md',
+ desc:'AllenAI\'s 3T token open pre-training corpus with a fully open data pipeline. Reference for production data engineering.'},
+
+// ── TOOLS ─────────────────────────────────────────────────────────────────────
+
+{id:'t01',type:'tool',title:'Weights & Biases (wandb)',author:'Weights & Biases',license:'Free tier',
+ url:'https://wandb.ai',
+ chapters:[1,2,3,4],
+ howUsed:'Ch-02–Ch-04: log training curves, compare runs, share experiment results. Free tier sufficient for all exercises.',
+ readThis:'docs.wandb.ai/guides/integrations/huggingface',
+ desc:'Experiment tracking, visualisation, and model registry. Free tier for open-source projects. Used in all training exercises.'},
+
+{id:'t02',type:'tool',title:'Google Colab',author:'Google',license:'Free tier',
+ url:'https://colab.research.google.com',
+ chapters:[0,1,2,3,4,5],
+ howUsed:'All chapters: free T4 GPU for exercises. Runtime → Change runtime type → T4 GPU (free, 12h sessions).',
+ readThis:'colab.research.google.com/notebooks/intro.ipynb',
+ desc:'Free cloud Jupyter environment with T4 GPU. Sufficient for Ch-01–Ch-03 exercises. Ch-04 QLoRA requires Kaggle P100 or paid Colab.'},
+
+{id:'t03',type:'tool',title:'Ollama',author:'Ollama',license:'MIT',
+ url:'https://github.com/ollama/ollama',stars:'103k',
+ chapters:[4,6],
+ howUsed:'Ch-05 & Ch-07: run local LLM inference without vLLM setup. Pull and serve Llama-3, Mistral, Qwen locally.',
+ readThis:'github.com/ollama/ollama/blob/main/docs/api.md',
+ desc:'Run open-source LLMs locally with a single command. OpenAI-compatible API. Great for agent development without cloud costs.'},
+
+{id:'t04',type:'tool',title:'Hugging Face Hub',author:'HuggingFace',license:'Apache 2.0',
+ url:'https://huggingface.co/models',
+ chapters:[2,3,4],
+ howUsed:'Ch-04: push fine-tuned LoRA adapters and model cards. Ch-03: download base models and datasets.',
+ readThis:'huggingface.co/docs/hub/model-cards',
+ desc:'The central registry for open-source models, datasets, and spaces. Your fine-tuned adapters go here.'},
+];
+
+const ALL_TYPES = [...new Set(RESOURCES.map(r=>r.type))];
+const ALL_CHS   = [0,1,2,3,4,5,6,7];
+
+let typeFilter = new Set();
+let chFilter   = new Set();
+let searchQ    = '';
+
+function matchResource(r) {
+  if(typeFilter.size && !typeFilter.has(r.type)) return false;
+  if(chFilter.size  && !r.chapters.some(c=>chFilter.has(c))) return false;
+  if(searchQ) {
+    const q = searchQ.toLowerCase();
+    return (r.title+' '+r.author+' '+(r.desc||'')+' '+(r.howUsed||'')).toLowerCase().includes(q);
+  }
+  return true;
+}
+
+function renderFilterRow(containerId, items, activeSet, getLabel, getColor, toggleFn) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'pill' + (activeSet.has(item) ? ' on' : '');
+    btn.textContent = getLabel(item);
+    if(activeSet.has(item)) btn.style.background = getColor(item);
+    btn.onclick = () => toggleFn(item);
+    el.appendChild(btn);
+  });
+}
+
+function render() {
+  searchQ = document.getElementById('q').value;
+
+  renderFilterRow('typeRow', ALL_TYPES, typeFilter,
+    t => TYPE_META[t].icon + ' ' + TYPE_META[t].label,
+    t => '#444',
+    t => { typeFilter.has(t) ? typeFilter.delete(t) : typeFilter.add(t); render(); }
+  );
+
+  renderFilterRow('chRow', ALL_CHS, chFilter,
+    c => CH_LABELS[c],
+    c => CH_COLORS[c],
+    c => { chFilter.has(c) ? chFilter.delete(c) : chFilter.add(c); render(); }
+  );
+
+  const filtered = RESOURCES.filter(matchResource);
+  document.getElementById('stats').textContent =
+    `${filtered.length} resource${filtered.length!==1?'s':''} across ${[...new Set(filtered.map(r=>r.type))].length} types`;
+
+  const out = document.getElementById('out');
+  out.innerHTML = '';
+
+  if(!filtered.length) {
+    out.innerHTML = '<div class="empty">No resources match your search.</div>';
+    return;
+  }
+
+  if(chFilter.size || typeFilter.size || searchQ) {
+    const grid = document.createElement('div');
+    grid.className = 'res-grid';
+    filtered.forEach(r => grid.appendChild(makeCard(r)));
+    out.appendChild(grid);
+  } else {
+    ALL_CHS.forEach(ch => {
+      const chRes = filtered.filter(r => r.chapters.includes(ch));
+      if(!chRes.length) return;
+      const block = document.createElement('div');
+      block.className = 'chapter-block';
+      const header = document.createElement('div');
+      header.className = 'ch-header';
+      header.innerHTML = `
+        <span class="ch-num" style="background:${CH_COLORS[ch]}">${CH_LABELS[ch]}</span>
+        <span class="ch-title">${CH_TITLES[ch]}</span>
+        <span class="ch-count">${chRes.length} resources</span>
+        <span class="ch-chevron open" id="chev${ch}">▾</span>`;
+      const grid = document.createElement('div');
+      grid.className = 'res-grid';
+      grid.id = 'chgrid'+ch;
+      chRes.forEach(r => grid.appendChild(makeCard(r)));
+      header.onclick = () => {
+        const g = document.getElementById('chgrid'+ch);
+        const cv = document.getElementById('chev'+ch);
+        const hidden = g.style.display==='none';
+        g.style.display = hidden ? 'grid' : 'none';
+        cv.classList.toggle('open', hidden);
+      };
+      block.appendChild(header);
+      block.appendChild(grid);
+      out.appendChild(block);
+    });
+  }
+}
+
+function makeCard(r) {
+  const tm  = TYPE_META[r.type];
+  const lc  = LIC_COLORS[r.license] || {bg:'#F1EFE8',col:'#5F5E5A'};
+  const div = document.createElement('a');
+  div.className = 'card';
+  div.href = r.url;
+  div.target = '_blank';
+
+  const chBadges = r.chapters.map(c =>
+    `<span class="badge" style="background:${CH_COLORS[c]}22;color:${CH_COLORS[c]}">${CH_LABELS[c]}</span>`
+  ).join('');
+
+  const licBadge = `<span class="badge" style="background:${lc.bg};color:${lc.col}">${r.license}</span>`;
+  const typeBadge= `<span class="badge" style="background:${tm.bg};color:${tm.col}">${tm.label}</span>`;
+  const yearBadge= r.year ? `<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-tertiary)">${r.year}</span>` : '';
+  const starBadge= r.stars ? `<span class="badge" style="background:var(--color-background-secondary);color:var(--color-text-tertiary)">★ ${r.stars}</span>` : '';
+
+  div.innerHTML = `
+    <div class="card-top">
+      <span class="type-icon" aria-hidden="true">${tm.icon}</span>
+      <span class="card-title">${r.title}</span>
+    </div>
+    <div class="card-meta">${typeBadge}${licBadge}${yearBadge}${starBadge}${chBadges}</div>
+    <div class="card-desc">${r.desc}</div>
+    <div class="card-usage">
+      <span class="usage-label">Use in course: </span>${r.howUsed}
+    </div>
+    ${r.readThis ? `<div class="card-usage"><span class="usage-label">Read: </span>${r.readThis}</div>` : ''}`;
+  return div;
+}
+
+render();
+</script>

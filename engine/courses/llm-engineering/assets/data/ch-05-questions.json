@@ -1,0 +1,20 @@
+[
+  {
+    "id": "q-001",
+    "question": "What problem does retrieval-augmented generation solve?",
+    "ground_truth": "It grounds generation in retrieved external context so knowledge can be updated without retraining.",
+    "source": "course.md#chapter-5"
+  },
+  {
+    "id": "q-002",
+    "question": "Why compare chunking strategies in a RAG system?",
+    "ground_truth": "Chunk size and boundaries affect retrieval precision, context recall, and faithfulness.",
+    "source": "course.md#chapter-5"
+  },
+  {
+    "id": "q-003",
+    "question": "What is the purpose of reranking?",
+    "ground_truth": "Reranking reorders first-stage retrieval candidates with a more precise model before generation.",
+    "source": "course.md#chapter-5"
+  }
+]

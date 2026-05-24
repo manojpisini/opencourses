@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "month": "2025-05",
+    "entries": [
+      {
+        "course": "LLM Engineering & Generative AI Systems",
+        "slug": "llm-engineering",
+        "version": "1.0.0",
+        "date": "2025-05-23",
+        "changes": [
+          {
+            "type": "modified",
+            "text": "Initial release — 8 chapters, 8 chapter tests, 8 chapter assignments, final test, capstone"
+          },
+          {
+            "type": "modified",
+            "text": "Covers transformer architecture through production deployment"
+          },
+          {
+            "type": "modified",
+            "text": "All resources are open-source (Apache 2.0, MIT, CC BY, arXiv)"
+          }
+        ]
+      }
+    ]
+  }
+]
