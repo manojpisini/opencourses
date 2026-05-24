@@ -14,4 +14,4 @@
 
 ## Acceptance criteria
 
-Your submission passes when all test cases in `course.md → ch-01-project.test_cases` pass.
+Your submission passes when all public and hidden tests referenced by `course.yaml` and `solutions.yaml` pass.

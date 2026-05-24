@@ -252,7 +252,7 @@ cp -r engine/courses/template engine/courses/your-course-slug
 
 ### 2 — Edit `course.yaml`
 
-Open `engine/courses/your-course-slug/course.yaml` — a pure YAML file with 18 sections:
+Open `engine/courses/your-course-slug/course.yaml` — a pure YAML file with 18 engine sections plus a `content_blueprint` section for rich open-source-first course design:
 
 ```yaml
 metadata:
@@ -280,9 +280,26 @@ people:
     github: manojpisini
     role: Curator & Maintainer
 
+content_blueprint:
+  principles:
+    - Uses open-source tooling whenever possible
+    - References open-source implementations
+    - Teaches through real repositories
+  flow:
+    - foundations
+    - environment-setup
+    - guided-fundamentals
+    - incremental-challenges
+    - production-engineering
+    - open-source-exploration
+    - capstone-project
+    - contribution-path
+
 # ... chapters, chapter_tests, assignments, certificate, changelog ...
 # See engine/courses/template/course.yaml for the full annotated template.
 ```
+
+Read the full [OpenCourses content blueprint](docs/course-blueprint.md) before writing a course. It is a content-quality guide: open-source resources, chapter depth, testing philosophy, capstone expectations, and contribution path all go into `course.yaml`.
 
 ### 3 — Open a PR
 

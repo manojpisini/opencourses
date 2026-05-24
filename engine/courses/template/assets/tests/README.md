@@ -2,8 +2,8 @@
 
 ## Why dynamic test cases?
 
-Static test cases (`test_cases:` in `course.md`) have a weakness: a student could
-read `course.md`, see the exact inputs, and hardcode outputs without understanding
+Static test cases (`test_cases:` in `solutions.yaml`) have a weakness: a student could
+see fixed public inputs and hardcode outputs without understanding
 the algorithm.
 
 Dynamic test generators solve this by producing **random inputs with algorithmically
@@ -13,8 +13,8 @@ test cases (different seed). Students cannot memorise answers they have never se
 ## How it works
 
 ```
-course.md                                      Sandbox
-─────────                                      ───────
+course.yaml + solutions.yaml                   Sandbox
+────────────────────────────                   ───────
 code question q5:          ──triggers──►  1. python3 gen.py --seed 839271 --count 10
   test_generator:                         2. Produces 10 random test cases as JSON
     "./assets/tests/q5-gen.py"            3. Runs student's code on each input
@@ -53,7 +53,7 @@ The sandbox compares `actual_stdout.strip()` == `expected_output.strip()`.
 | `q3`        | `assets/tests/q3-gen.js`    |
 | `ch-02-q1`  | `assets/tests/ch-02-q1-gen.py` |
 
-Reference from `course.md`:
+Reference from `course.yaml` / `solutions.yaml`:
 ```yaml
 - id: q5
   type: code

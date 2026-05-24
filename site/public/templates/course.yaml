@@ -81,6 +81,11 @@
 # ║                                                                              ║
 # ║  SHOW ANSWERS LABELS  (show_answers_after)                                   ║
 # ║    passed  attempted  never                                                  ║
+# ║                                                                              ║
+# ║  CONTENT BLUEPRINT FLOW STAGES  (content_blueprint.flow)                     ║
+# ║    foundations  environment-setup  guided-fundamentals                       ║
+# ║    incremental-challenges  production-engineering                            ║
+# ║    open-source-exploration  capstone-project  contribution-path              ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 
@@ -280,6 +285,98 @@ outcomes:
     <ch-id>:
       - <Chapter-level outcome 1>
       - <Chapter-level outcome 2>
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# OPEN SOURCE CONTENT BLUEPRINT ALIGNMENT
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# This optional but strongly recommended section improves course CONTENT.
+# It does not replace the course.yaml structure. Use it to prove that the
+# lessons, tests, resources, projects, and contribution path follow the
+# OpenCourses open-source-first course blueprint.
+
+content_blueprint:
+  philosophy: >                              # [RECOMMENDED]
+    Using open-source knowledge, tooling, infrastructure, and communities to
+    create world-class education for everyone.
+
+  principles:                                # [RECOMMENDED] choose the concrete principles this course proves
+    - Uses open-source tooling whenever possible
+    - References open-source implementations
+    - Teaches through real repositories
+    - Includes production-grade engineering practices
+    - Is reproducible locally
+    - Encourages reading source code
+    - Uses transparent evaluation systems
+
+  flow:                                      # [RECOMMENDED] keep all stages unless the course has a documented reason
+    - foundations
+    - environment-setup
+    - guided-fundamentals
+    - incremental-challenges
+    - production-engineering
+    - open-source-exploration
+    - capstone-project
+    - contribution-path
+
+  chapter_structure:                         # [RECOMMENDED] checklist for every chapter
+    - Learning Objectives
+    - Concepts
+    - Mental Models
+    - Examples
+    - Walkthroughs
+    - Common Mistakes
+    - Performance Notes
+    - Security Notes
+    - Debugging Tips
+    - Production Insights
+    - Exercises
+    - Mini Project
+    - Quiz
+    - References
+    - Further Reading
+
+  resource_strategy:
+    repositories:
+      - <https://github.com/org/repo>
+    open_books:
+      - <Book title or URL>
+    papers:
+      - <Paper title or URL>
+    rfcs_and_specs:
+      - <RFC/spec title or URL>
+
+  testing:
+    philosophy:
+      - Validate correctness
+      - Cover edge cases
+      - Include performance and security checks where relevant
+    types:
+      - deterministic
+      - randomized
+      - fuzz
+      - property-based
+      - benchmark
+    generators:
+      - assets/tests/<generator-file>
+
+  capstone:
+    level: <beginner | intermediate | advanced | expert | elite | frontier>
+    type: <mini application | production feature | scalable service | distributed platform | research-grade system | experimental prototype>
+    requirements:
+      - Production-ready
+      - Deployable
+      - Documented
+      - Tested
+      - Secure
+      - Open-source licensed
+
+  contribution_path:
+    - Open issues
+    - Submit pull requests
+    - Improve documentation
+    - Fix bugs
+    - Extend the ecosystem
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

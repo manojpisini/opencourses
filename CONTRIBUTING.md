@@ -58,6 +58,7 @@ Read [CURATION.md](CURATION.md) fully before proposing. A course must:
 - Cover a topic not already addressed at sufficient depth
 - Source from freely available, reputable material
 - Have at least one complete chapter (lessons or chapter test)
+- Follow the [OpenCourses content blueprint](docs/course-blueprint.md) for open-source-first course design
 
 ### 3b. Copy the course template
 
@@ -71,6 +72,8 @@ cp -r engine/courses/template engine/courses/your-course-slug
 Open `engine/courses/your-course-slug/course.yaml` — this is the **single source of truth**.
 It is a pure YAML file (no Markdown frontmatter). All site data is auto-generated from it.
 **Do not edit `site/src/data/*.json` directly — they are machine-generated.**
+The blueprint is a content-quality guide, not a separate structure. Put blueprint alignment in
+the `content_blueprint` section of `course.yaml`.
 
 Minimum required fields (see `engine/courses/template/course.yaml` for the full 18-section template):
 
@@ -108,6 +111,31 @@ people:
     github: manojpisini
     role: Curator & Maintainer
 
+content_blueprint:
+  principles:
+    - Uses open-source tooling whenever possible
+    - References open-source implementations
+    - Teaches through real repositories
+    - Uses transparent evaluation systems
+  flow:
+    - foundations
+    - environment-setup
+    - guided-fundamentals
+    - incremental-challenges
+    - production-engineering
+    - open-source-exploration
+    - capstone-project
+    - contribution-path
+  resource_strategy:
+    repositories:
+      - https://github.com/org/repo
+  testing:
+    types: [deterministic, randomized, fuzz, property-based, benchmark]
+  capstone:
+    level: advanced
+    type: scalable service
+    requirements: [Production-ready, Deployable, Documented, Tested, Secure]
+
 # ... curriculum, chapter_tests, chapter_assignments, final_test,
 #     final_assignment, certificate, changelog ...
 # See engine/courses/template/course.yaml for every section and every field.
@@ -143,7 +171,7 @@ For typos, broken links, or outdated information:
 
 For structural corrections (wrong difficulty, wrong track, stale status):
 - Open an issue first if the change is significant
-- PRs that change `meta.status: "active"` → `"archived"` need a brief explanation
+- PRs that change `metadata.status: "published"` → `"archived"` need a brief explanation
 
 ---
 
@@ -194,9 +222,10 @@ writes to `site/src/data/*.json`. If adding a new data field to courses, update 
 
 - [ ] `bun run build` passes with no errors (run from `site/`)
 - [ ] No TypeScript errors (`cd engine && bun run tsc --noEmit`)
-- [ ] Course `meta.slug` is unique and matches the directory name
-- [ ] Course `meta.track` is one of the 12 valid slugs
+- [ ] Course `metadata.id` is unique and matches the directory name
+- [ ] Course `classification.category` is one of the 12 valid slugs
 - [ ] `course.yaml` is complete, valid YAML, and validated locally
+- [ ] `content_blueprint` is complete enough to explain the course flow, open-source resources, testing strategy, capstone, and contribution path
 - [ ] No hardcoded URLs — use `${base}/` for internal site links
 - [ ] PR description explains _why_, not just _what_
 

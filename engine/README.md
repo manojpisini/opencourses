@@ -8,17 +8,18 @@ GitHub, no external platform, no AI.
 
 | File | Purpose |
 |------|---------|
-| `courses/<slug>/course.md` | Single source of truth for every course — YAML frontmatter + markdown body |
-| `lib/course-parser.ts` | Parses and validates `course.md` YAML frontmatter |
+| `courses/<slug>/course.yaml` | Single source of truth for every course — schema v3.0 pure YAML |
+| `docs/course-blueprint.md` | Content design standard for advanced, open-source-first courses |
+| `lib/course-parser.ts` | Parses and validates `course.yaml`, including optional `content_blueprint` |
 | `lib/github.ts` | GitHub API helpers — profile lookup, enrollment issue search |
 | `scripts/enroll.ts` | Processes enrollment issues, posts welcome comment |
 | `scripts/quiz-engine.ts` | Grades chapter tests and final exam, triggers certificates |
 | `scripts/grade.ts` | Grades project submissions via Docker sandbox |
 | `scripts/leaderboard.ts` | Rebuilds `LEADERBOARD.md` from enrollment issue comments |
 | `scripts/certify.ts` | Generates and signs SVG certificates |
-| `scripts/detect-contributors.ts` | Merges git-log authors with `course.md` contributors |
-| `scripts/parse-course.ts` | CLI: validates `course.md` and emits `course.json` for the site |
-| `scripts/validate.ts` | Validates all `course.md` files; PR tamper detection |
+| `scripts/detect-contributors.ts` | Merges git-log authors with `course.yaml` people data |
+| `scripts/parse-course.ts` | CLI: validates `course.yaml` and emits `course.json` / `course-detail.json` for the site |
+| `scripts/validate.ts` | Validates all `course.yaml` files; PR tamper detection |
 | `scripts/check-links.ts` | Scans all markdown for dead HTTP links |
 | `scripts/validate-videos.ts` | Checks YouTube URLs in course content via oEmbed |
 | `sandbox/` | Docker-based multi-language code grader |
@@ -28,7 +29,8 @@ GitHub, no external platform, no AI.
 
 ```
 engine/courses/<slug>/
-├── course.md                ← YAML frontmatter + markdown overview
+├── course.yaml              ← machine-readable course manifest + content_blueprint
+├── solutions.yaml           ← private answers and grading config; never commit to main
 ├── assets/
 │   ├── images/              ← banner.png, diagrams, screenshots
 │   ├── starter/             ← starter code per chapter
@@ -48,10 +50,10 @@ engine/courses/<slug>/
 
 ## Grading
 
-- **MCQ / true-false / multi**: exact answer match from `course.md`
+- **MCQ / true-false / multi**: exact answer match from private `solutions.yaml`
 - **Short answer**: keyword matching — no AI involved
 - **Code**: Docker sandbox runs student code, compares stdout
-  - Static: `test_cases:` list in `course.md`
+  - Static: `test_cases:` list in `solutions.yaml`
   - Dynamic: `test_generator:` path to script called with `--seed <int> --count <int>`
 
 ## Scripts
@@ -59,8 +61,8 @@ engine/courses/<slug>/
 ```sh
 bun run parse-course          # validate + emit course.json for one course
 bun run parse-all             # validate + emit course.json for all courses
-bun run detect-contributors   # merge git authors with course.md contributors
-bun run validate              # validate all course.md files
+bun run detect-contributors   # merge git authors with course.yaml people data
+bun run validate              # validate all course.yaml files
 bun run leaderboard           # rebuild LEADERBOARD.md
 bun run certify               # generate certificate for a student
 bun run check-links           # scan for dead links

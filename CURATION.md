@@ -46,6 +46,7 @@ Resources that are **not acceptable:**
 - A course must have a clear progression — learners know what they're building toward
 - At minimum: a learning objective, prerequisites, and a chapter-based curriculum outline in `course.yaml`
 - Courses with graded stages must have at least one completable chapter with a defined `pass_score`
+- New courses should complete `content_blueprint` in `course.yaml`: open-source-first principles, flow, repository/book/paper/spec resources, deterministic testing strategy, capstone expectations, and contribution path
 
 ### 5. Licensing Compatibility
 - All linked resources must be freely accessible (no login required to view core content)
@@ -68,7 +69,7 @@ Chapter tests and code assignments defined in `course.yaml` must:
 
 ## Valid Track Slugs
 
-Every course must set `meta.track` to exactly one of the 12 valid slugs:
+Every course must set `classification.category` to exactly one of the 12 valid slugs:
 
 | Slug | Track Name | Covers |
 |---|---|---|

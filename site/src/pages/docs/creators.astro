@@ -5,7 +5,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <DocsLayout
   title="Course Creators"
-  description="Build and publish courses using the course.yaml manifest — 18 structured sections covering identity, curriculum, tests, certificates, and automation."
+  description="Build advanced, content-rich open-source courses using course.yaml plus the OpenCourses content blueprint."
   chapterId="creators"
 >
   <nav slot="toc">
@@ -20,6 +20,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <a href="#s6-credits"     class="docs-toc-link">§6 Credits</a>
     <a href="#s7-prereqs"     class="docs-toc-link">§7 Prerequisites</a>
     <a href="#s8-outcomes"    class="docs-toc-link">§8 Outcomes</a>
+    <a href="#content-blueprint" class="docs-toc-link">Content Blueprint</a>
     <a href="#s9-curriculum"  class="docs-toc-link">§9 Curriculum</a>
     <a href="#lesson-types"   class="docs-toc-link">Lesson Types</a>
     <a href="#s10-tests"      class="docs-toc-link">§10 Chapter Tests</a>
@@ -44,14 +45,26 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       Download Templates
       <span class="docs-section-badge" style="background:color-mix(in srgb,#a78bfa 12%,transparent);color:#a78bfa;border:1px solid color-mix(in srgb,#a78bfa 30%,transparent)">Start here</span>
     </h2>
-    <p>Two files power every course. Download both before you write a single line:</p>
+    <p>Three files guide every course. Download the blueprint first, then fill the YAML files:</p>
     <div class="dl-grid">
+      <a href={`${base}/templates/course-blueprint.md`} download="course-blueprint.md" class="dl-card">
+        <div class="dl-card__icon">🧭</div>
+        <div class="dl-card__body">
+          <div class="dl-card__title">course-blueprint.md</div>
+          <div class="dl-card__sub">Content design standard · Open-source-first</div>
+          <div class="dl-card__desc">Mission, course flow, chapter quality bar, testing philosophy, open-source resource strategy, capstone expectations, and contribution path.</div>
+        </div>
+        <div class="dl-card__btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Download
+        </div>
+      </a>
       <a href={`${base}/templates/course.yaml`} download="course.yaml" class="dl-card">
         <div class="dl-card__icon">📄</div>
         <div class="dl-card__body">
           <div class="dl-card__title">course.yaml</div>
           <div class="dl-card__sub">Schema v3.0 · 1644-line annotated template</div>
-          <div class="dl-card__desc">Single source of truth. Contains all 18 sections — identity, curriculum, tests, assignments, certificate, triggers, and changelog.</div>
+          <div class="dl-card__desc">Single source of truth. Contains the 18 engine sections plus <code>content_blueprint</code> for advanced open-source course quality.</div>
         </div>
         <div class="dl-card__btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -110,6 +123,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     │   ├── ch-01-notes.pdf
     │   └── reference-card.pdf
     ├── data/                datasets for exercises
+    ├── starter/             scaffolded projects, TODOs, local setup
+    ├── tests/               generators, fuzz/property tests, benchmarks
     └── slides/              slide presentations</code>
     </div>
   </section>
@@ -117,8 +132,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <!-- ═══════════════════════════════════════════════════════════ OVERVIEW ══ -->
   <section id="overview" class="docs-section">
-    <h2 class="docs-section-title">Schema Overview — 18 Sections</h2>
-    <p><code>course.yaml</code> follows a strict schema (v3.0). It has exactly 18 top-level sections. The parser reads them in order and rejects any unknown keys. Here is the complete map:</p>
+    <h2 class="docs-section-title">Schema Overview — 18 Engine Sections + Content Blueprint</h2>
+    <p><code>course.yaml</code> follows schema v3.0. The 18 engine sections drive automation; <code>content_blueprint</code> strengthens course content quality and is parsed for authoring warnings.</p>
     <div class="docs-table-wrap">
       <table class="docs-table">
         <thead><tr><th>#</th><th>Section</th><th>Purpose</th><th>Required</th></tr></thead>
@@ -131,6 +146,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <tr><td><code>06</code></td><td><code>credits</code></td><td>Attribution for every external resource used</td><td>Yes if using external content</td></tr>
           <tr><td><code>07</code></td><td><code>prerequisites</code></td><td>Knowledge, other courses, tools, accounts</td><td>No</td></tr>
           <tr><td><code>08</code></td><td><code>outcomes</code></td><td>What students learn (by completion, by chapter)</td><td>Yes</td></tr>
+          <tr><td><code>--</code></td><td><code>content_blueprint</code></td><td>Open-source-first content quality plan: flow, resource strategy, testing, capstone, contribution path</td><td>Recommended</td></tr>
           <tr><td><code>09</code></td><td><code>curriculum</code></td><td>All chapters → sections → subsections → lessons</td><td>Yes</td></tr>
           <tr><td><code>10</code></td><td><code>chapter_tests</code></td><td>Graded assessments gating chapter progression</td><td>Yes (one per chapter)</td></tr>
           <tr><td><code>11</code></td><td><code>chapter_assignments</code></td><td>Hands-on chapter projects submitted via GitHub</td><td>No</td></tr>
@@ -147,6 +163,58 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="docs-callout docs-callout--info">
       <span class="docs-callout__icon">ℹ️</span>
       <div class="docs-callout__body">Fields marked <code>[REQUIRED]</code> inside the template must be filled before setting <code>metadata.status: review</code>. Fields marked <code>[OPTIONAL]</code> may be removed entirely if not needed. The YAML parser validates this at PR time.</div>
+    </div>
+  </section>
+
+
+  <section id="content-blueprint" class="docs-section">
+    <h2 class="docs-section-title">
+      Content Blueprint
+      <span class="docs-section-badge" style="background:color-mix(in srgb,#2DD4BF 12%,transparent);color:#2DD4BF;border:1px solid color-mix(in srgb,#2DD4BF 30%,transparent)">Recommended</span>
+    </h2>
+    <p>The OpenCourses blueprint is for course content quality, not a replacement folder structure. Keep using <code>course.yaml</code>; fill <code>content_blueprint</code> to show how the course becomes advanced, content-rich, reproducible, and open-source-first.</p>
+    <div class="docs-pre">
+      <div class="docs-pre__bar"><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__dot"></span><span class="docs-pre__lang">yaml</span></div>
+      <code>content_blueprint:
+  principles:
+    - Uses open-source tooling whenever possible
+    - References open-source implementations
+    - Teaches through real repositories
+    - Uses transparent evaluation systems
+  flow:
+    - foundations
+    - environment-setup
+    - guided-fundamentals
+    - incremental-challenges
+    - production-engineering
+    - open-source-exploration
+    - capstone-project
+    - contribution-path
+  resource_strategy:
+    repositories:
+      - https://github.com/org/repo
+    open_books:
+      - Book title or URL
+    papers:
+      - Paper title or URL
+    rfcs_and_specs:
+      - RFC/spec title or URL
+  testing:
+    types: [deterministic, randomized, fuzz, property-based, benchmark]
+    generators:
+      - assets/tests/fuzz-gen.py
+  capstone:
+    level: advanced
+    type: scalable service
+    requirements: [Production-ready, Deployable, Documented, Tested, Secure]
+  contribution_path:
+    - Open issues
+    - Submit PRs
+    - Improve documentation</code>
+    </div>
+    <div class="docs-callout docs-callout--info">
+      <span class="docs-callout__icon">ℹ️</span>
+      <div class="docs-callout__body">The parser accepts <code>content_blueprint</code> and <code>parse-course.ts</code> warns when important content-design pieces are missing. This keeps the YAML structure stable while raising the quality bar for new courses.</div>
     </div>
   </section>
 
@@ -1146,7 +1214,7 @@ assignment_review_guides:
           <p class="docs-step__title">Copy the template and write your course</p>
           <p class="docs-step__desc">
             <code>cp -r engine/courses/template engine/courses/your-slug</code><br>
-            Fill in <code>course.yaml</code> (all REQUIRED fields). Write your <code>solutions.yaml</code> on a <strong>separate private branch</strong>. Set <code>metadata.status: review</code> when ready.
+            Fill in <code>course.yaml</code> (all REQUIRED fields) and complete <code>content_blueprint</code> for the course-quality plan. Write your <code>solutions.yaml</code> on a <strong>separate private branch</strong>. Set <code>metadata.status: review</code> when ready.
           </p>
         </div>
       </div>
@@ -1190,6 +1258,7 @@ assignment_review_guides:
       <li><code>metadata.id</code> is kebab-case, globally unique, matches your directory name</li>
       <li><code>metadata.status</code> is set to <code>review</code> or <code>published</code> (not <code>draft</code>)</li>
       <li><code>schema_version</code> is <code>"3.0"</code> — not changed</li>
+      <li><code>content_blueprint</code> explains the open-source-first content flow, resources, tests, capstone, and contribution path</li>
       <li>Every chapter has a matching <code>chapter_test_id</code> in <code>chapter_tests[]</code></li>
       <li>Every <code>chapter_tests[]</code> section has at least one question</li>
       <li>Every question <code>id</code> is globally unique within the course</li>

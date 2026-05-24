@@ -21,6 +21,9 @@ import type {
   CourseCredit,
   CoursePrerequisites,
   CourseOutcomes,
+  CourseContentBlueprint,
+  CourseContentBlueprintCapstone,
+  ContentBlueprintFlowStage,
   Curriculum,
   Chapter,
   Section,
@@ -238,6 +241,45 @@ function parseOutcomes(raw: Record<string, unknown>): CourseOutcomes | undefined
   return {
     by_completion: optArr<string>(ro, 'by_completion') ?? [],
     by_chapter:    ro['by_chapter'] as Record<string, string[]> | undefined,
+  };
+}
+
+function parseContentBlueprint(raw: Record<string, unknown>): CourseContentBlueprint | undefined {
+  const ro = (raw['content_blueprint'] ?? raw['blueprint']) as Record<string, unknown> | undefined;
+  if (!ro) return undefined;
+  const ctx = raw['content_blueprint'] ? 'content_blueprint' : 'blueprint';
+  const resource = ro['resource_strategy']
+    ? asObj(ro['resource_strategy'], `${ctx}.resource_strategy`)
+    : undefined;
+  const testing = ro['testing']
+    ? asObj(ro['testing'], `${ctx}.testing`)
+    : undefined;
+  const capstone = ro['capstone']
+    ? asObj(ro['capstone'], `${ctx}.capstone`)
+    : undefined;
+
+  return {
+    philosophy: optStr(ro, 'philosophy'),
+    principles: optArr<string>(ro, 'principles') ?? [],
+    flow: optArr<ContentBlueprintFlowStage>(ro, 'flow') ?? [],
+    chapter_structure: optArr<string>(ro, 'chapter_structure') ?? [],
+    resource_strategy: resource ? {
+      repositories: optArr<string>(resource, 'repositories') ?? [],
+      open_books: optArr<string>(resource, 'open_books') ?? [],
+      papers: optArr<string>(resource, 'papers') ?? [],
+      rfcs_and_specs: optArr<string>(resource, 'rfcs_and_specs') ?? [],
+    } : undefined,
+    testing: testing ? {
+      philosophy: optArr<string>(testing, 'philosophy') ?? [],
+      types: optArr<string>(testing, 'types') ?? [],
+      generators: optArr<string>(testing, 'generators') ?? [],
+    } : undefined,
+    capstone: capstone ? {
+      level: optStr(capstone, 'level') as CourseContentBlueprintCapstone['level'],
+      type: optStr(capstone, 'type'),
+      requirements: optArr<string>(capstone, 'requirements') ?? [],
+    } : undefined,
+    contribution_path: optArr<string>(ro, 'contribution_path') ?? [],
   };
 }
 
@@ -497,6 +539,7 @@ export function parseCourseFile(filePath: string): Course {
     credits:               parseCredits(doc),
     prerequisites:         parsePrerequisites(doc),
     outcomes:              parseOutcomes(doc),
+    content_blueprint:     parseContentBlueprint(doc),
     curriculum:            parseCurriculum(doc),
     chapter_tests:         parseChapterTests(doc),
     chapter_assignments:   parseChapterAssignments(doc),

@@ -22,7 +22,7 @@ assets/
     └── sample.csv
 ```
 
-## Referencing assets in `course.md`
+## Referencing assets in `course.yaml`
 
 ### Images
 ```yaml

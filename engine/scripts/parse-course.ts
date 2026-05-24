@@ -16,7 +16,7 @@ import { parseCourseFile, findCourseYamlFiles, countLessons, countQuestions } fr
 import { setOutput } from '../lib/github.ts';
 import type {
   Course, CourseJson, CourseDetailJson,
-  PlayerChapter, PlayerLesson, Lesson,
+  PlayerChapter, PlayerLesson, Lesson, ContentBlueprintFlowStage,
 } from '../types/course.ts';
 
 const args      = process.argv.slice(2);
@@ -58,6 +58,38 @@ function validateCourse(course: Course): string[] {
 
   if (!course.certificate.enabled && !course.final_test)
     warnings.push('Certificate is disabled and no final test is defined — students have no completion target');
+
+  const REQUIRED_BLUEPRINT_FLOW: ContentBlueprintFlowStage[] = [
+    'foundations',
+    'environment-setup',
+    'guided-fundamentals',
+    'incremental-challenges',
+    'production-engineering',
+    'open-source-exploration',
+    'capstone-project',
+    'contribution-path',
+  ];
+  if (!course.content_blueprint) {
+    warnings.push('content_blueprint section is missing — new courses should follow the OpenCourses content blueprint');
+  } else {
+    const flow = course.content_blueprint.flow ?? [];
+    const missingFlow = REQUIRED_BLUEPRINT_FLOW.filter((stage) => !flow.includes(stage));
+    const invalidFlow = flow.filter((stage) => !REQUIRED_BLUEPRINT_FLOW.includes(stage));
+    if (missingFlow.length > 0)
+      warnings.push(`content_blueprint.flow is missing recommended content stages: ${missingFlow.join(', ')}`);
+    if (invalidFlow.length > 0)
+      warnings.push(`content_blueprint.flow has unknown stages: ${invalidFlow.join(', ')}`);
+    if ((course.content_blueprint.principles ?? []).length < 4)
+      warnings.push('content_blueprint.principles should list at least four open-source-first content principles');
+    if ((course.content_blueprint.resource_strategy?.repositories ?? []).length === 0)
+      warnings.push('content_blueprint.resource_strategy.repositories should include at least one open-source repository');
+    if ((course.content_blueprint.testing?.types ?? []).length === 0)
+      warnings.push('content_blueprint.testing.types should list deterministic, edge-case, fuzz, property, benchmark, or stress testing plans');
+    if (!course.content_blueprint.capstone)
+      warnings.push('content_blueprint.capstone should describe the production-ready final project');
+    if ((course.content_blueprint.contribution_path ?? []).length === 0)
+      warnings.push('content_blueprint.contribution_path should explain how learners become contributors');
+  }
 
   const VALID_LEVELS = ['beginner', 'intermediate', 'advanced', 'mixed'];
   if (!VALID_LEVELS.includes(course.classification.level))

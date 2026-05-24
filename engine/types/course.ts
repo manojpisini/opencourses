@@ -21,7 +21,7 @@ export type SubmissionType   = 'github_url' | 'file_upload' | 'inline';
 // ─── Section 1: Metadata ─────────────────────────────────────────────────────
 
 export interface CourseMetadata {
-  id: string;               // kebab-case, globally unique (was meta.slug)
+  id: string;               // kebab-case, globally unique course slug
   version: string;          // semver
   schema_version: string;   // course.yaml schema version, e.g. "3.0"
   status: CourseStatus;
@@ -158,6 +158,48 @@ export interface CoursePrerequisites {
 export interface CourseOutcomes {
   by_completion: string[];
   by_chapter?: Record<string, string[]>;  // chapter id → outcomes
+}
+
+// ─── Content blueprint: Open Source Course Blueprint ─────────────────────────
+
+export type ContentBlueprintFlowStage =
+  | 'foundations'
+  | 'environment-setup'
+  | 'guided-fundamentals'
+  | 'incremental-challenges'
+  | 'production-engineering'
+  | 'open-source-exploration'
+  | 'capstone-project'
+  | 'contribution-path';
+
+export interface CourseContentBlueprintResourceStrategy {
+  repositories?: string[];
+  open_books?: string[];
+  papers?: string[];
+  rfcs_and_specs?: string[];
+}
+
+export interface CourseContentBlueprintTesting {
+  philosophy?: string[];
+  types?: string[];
+  generators?: string[];
+}
+
+export interface CourseContentBlueprintCapstone {
+  level?: 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'elite' | 'frontier';
+  type?: string;
+  requirements?: string[];
+}
+
+export interface CourseContentBlueprint {
+  philosophy?: string;
+  principles?: string[];
+  flow?: ContentBlueprintFlowStage[];
+  chapter_structure?: string[];
+  resource_strategy?: CourseContentBlueprintResourceStrategy;
+  testing?: CourseContentBlueprintTesting;
+  capstone?: CourseContentBlueprintCapstone;
+  contribution_path?: string[];
 }
 
 
@@ -504,6 +546,7 @@ export interface Course {
   credits?: CourseCredit[];
   prerequisites?: CoursePrerequisites;
   outcomes?: CourseOutcomes;
+  content_blueprint?: CourseContentBlueprint;
   curriculum: Curriculum;
   chapter_tests: ChapterTest[];
   chapter_assignments?: ChapterAssignment[];
