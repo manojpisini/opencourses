@@ -1,40 +1,5 @@
 {
-  "course_id": "llm-engineering",
-  "version": "1.0.0",
-  "updated_at": "2026-05-24",
-
-  "maintainers": [
-    {
-      "github": "manojpisini",
-      "name": "Manoj Pisini",
-      "role": "Lead Maintainer & Course Curator",
-      "joined": "2025-05-23",
-      "contributions": ["course design", "content", "exercises", "tests", "solutions"]
-    }
-  ],
-
-  "contributors": [],
-
-  "reviewers": [],
-
-  "attribution_notice": "This course was curated for OpenCourses by Manoj Pisini. All open-source resources referenced are attributed to their respective authors and are used in accordance with their licenses. See credits section in course.yaml for full attribution.",
-
-  "license": {
-    "content": "CC BY 4.0",
-    "code": "MIT",
-    "url_content": "https://creativecommons.org/licenses/by/4.0/",
-    "url_code": "https://opensource.org/licenses/MIT"
-  },
-
-  "how_to_contribute": {
-    "process": "Fork the repository, create a feature branch, submit a pull request.",
-    "guidelines": "See CONTRIBUTING.md",
-    "good_first_issues": [
-      "Add an exercise for speculative decoding (Chapter 6)",
-      "Translate Chapter 1 to Spanish or Hindi",
-      "Add a chapter section on Mixture of Experts architecture",
-      "Create the RAGAS evaluation test for Chapter 5 exercise",
-      "Write the property-based test generator for BPE (assets/tests/fuzz-gen.py)"
-    ]
-  }
+  "courseSlug": "llm-engineering",
+  "generatedAt": "2026-05-24T13:17:30.916Z",
+  "contributors": []
 }
