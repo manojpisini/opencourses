@@ -46,7 +46,30 @@ jobs:
         with:
           script: |
             const body       = context.payload.issue.body ?? '';
+            const entered    = (body.match(/###\s+Your GitHub Username\s*\n+([^\n]+)/i)?.[1] ?? '').trim().replace(/^@+/, '').toLowerCase();
+            const issueUser  = (context.payload.issue.user?.login ?? '').toLowerCase();
+            if (!entered || entered !== issueUser) {
+              core.setFailed(`Your GitHub Username must match the issue author. Entered "${entered || '(missing)'}", issue author "${issueUser}".`);
+              return;
+            }
+            await github.rest.users.getByUsername({ username: entered });
             const course     = (body.match(/###\s+Course\s*(?:Slug)?\s*\n+([^\n]+)/i)?.[1] ?? '').trim().toLowerCase().replace(/\s+/g, '-');
+            if (!course) {
+              core.setFailed('Course Slug is required.');
+              return;
+            }
+            const enrollments = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: `enrolled,course:${course}`,
+              per_page: 100,
+            });
+            const enrolled = enrollments.data.some(issue => (issue.user?.login ?? '').toLowerCase() === entered);
+            if (!enrolled) {
+              core.setFailed(`@${entered} is not enrolled in ${course}. Enroll before submitting assignments.`);
+              return;
+            }
             const chapterId  = (body.match(/###\s+Chapter\s*(?:ID)?\s*\n+([^\n]+)/i)?.[1] ?? '').trim();
             const assignId   = (body.match(/###\s+Assignment\s*(?:ID)?\s*\n+([^\n]+)/i)?.[1] ?? '').trim();
             const repoLink   = (body.match(/###\s+Repository.*?\n+([^\n]+)/i)?.[1] ?? '').trim();
@@ -308,4 +331,3 @@ jobs:
           PROJECT_ID: ${{ steps.parse.outputs.project_id }}
           TEST_OUTPUT_FILE: test-results.json
           GITHUB_RUN_ID: ${{ github.run_id }}
-

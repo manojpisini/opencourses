@@ -180,6 +180,10 @@ async function fetchLastCommit(): Promise<string> {
 
 function computeStatus(course: ParsedCourse): 'added' | 'modified' | 'stable' | 'attention' {
   if (course.status === 'draft') return 'attention';
+  const tags = course.tags.map((tag) => tag.toLowerCase());
+  if (tags.some((tag) => ['needs-contributor', 'needs-contributer', 'help-wanted', 'needs-help'].includes(tag))) {
+    return 'attention';
+  }
   const cl = course.changelog?.[0];
   if (!cl) return 'stable';
   const diffDays = (Date.now() - new Date(cl.date).getTime()) / 86_400_000;

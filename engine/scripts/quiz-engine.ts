@@ -32,13 +32,15 @@ import { gradeMCQ, gradeMulti, gradeTrueFalse, gradeShort, gradeCode, parseAnswe
 import {
   makeOctokit, repoFromEnv, parseIssueField, postComment,
   addLabels, findEnrollmentIssue, setOutput,
+  fetchGitHubProfile, normalizeGitHubLogin,
 } from '../lib/github.ts';
 import type { CourseQuestion, ChapterTest, FinalTest, Course, QuestionResult, SandboxOutput } from '../types/course.ts';
 
 const octokit         = makeOctokit();
 const { owner, repo } = repoFromEnv();
 const issueNumber     = parseInt(process.env['ISSUE_NUMBER'] ?? '0', 10);
-const student         = process.env['STUDENT'] ?? '';
+const issueAuthor     = process.env['STUDENT'] ?? '';
+let student           = issueAuthor;
 const SANDBOX_IMAGE   = process.env['SANDBOX_IMAGE'] ?? 'opencourse-sandbox';
 const COURSE_BASE_DIR = process.env['COURSE_DIR'] ?? 'engine/courses';
 
@@ -268,6 +270,32 @@ async function main() {
 
   const { data: issue } = await octokit.issues.get({ owner, repo, issue_number: issueNumber });
   const body = issue.body ?? '';
+  const enteredLogin = normalizeGitHubLogin(parseIssueField(body, 'Your GitHub Username'));
+  const issueLogin   = normalizeGitHubLogin(issueAuthor);
+
+  if (!enteredLogin) {
+    await postComment(octokit, owner, repo, issueNumber,
+      `@${issueAuthor} — Could not find the **Your GitHub Username** field.\n\nUse the same GitHub username from your enrollment issue.`);
+    await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
+    process.exit(1);
+  }
+
+  try {
+    const profile = await fetchGitHubProfile(octokit, enteredLogin);
+    student = profile.login;
+  } catch {
+    await postComment(octokit, owner, repo, issueNumber,
+      `@${issueAuthor} — GitHub user **@${enteredLogin}** does not exist. Please submit again with a valid username.`);
+    await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
+    process.exit(1);
+  }
+
+  if (normalizeGitHubLogin(student) !== issueLogin) {
+    await postComment(octokit, owner, repo, issueNumber,
+      `@${issueAuthor} — The entered username **@${student}** does not match the GitHub account that opened this issue (**@${issueAuthor}**).\n\nEnrollment, chapter tests, final tests, and certificate generation must all use the same GitHub username.`);
+    await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
+    process.exit(1);
+  }
 
   // TEST_TYPE=final is set by run-quiz.yml when grading a final-test label issue.
   // Final test submissions use a different issue template that has no Test ID field —

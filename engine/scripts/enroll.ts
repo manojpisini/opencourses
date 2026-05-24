@@ -22,6 +22,7 @@ import { parseCourseFile } from '../lib/course-parser.ts';
 import {
   makeOctokit, repoFromEnv, fetchGitHubProfile,
   addLabels, postComment, parseIssueField, findEnrollmentIssue, setOutput,
+  normalizeGitHubLogin,
 } from '../lib/github.ts';
 import type { Course } from '../types/course.ts';
 
@@ -178,9 +179,24 @@ async function main() {
   const body = issue.body ?? '';
 
   // Parse form fields — only course slug and optional email
+  const enteredLogin = normalizeGitHubLogin(parseIssueField(body, 'Your GitHub Username'));
+  const issueLogin   = normalizeGitHubLogin(issueAuthor);
   const courseSlug = parseIssueField(body, 'Course Slug').toLowerCase().trim().replace(/\s+/g, '-');
   const certEmail  = parseIssueField(body, 'Email Address');
   const goal       = parseIssueField(body, 'Your Goal (optional)');
+
+  if (!enteredLogin) {
+    await postComment(octokit, owner, repo, issueNumber,
+      `@${issueAuthor} — Could not find the **Your GitHub Username** field.\n\nPlease use your own GitHub username, for example \`@${issueAuthor}\`.`);
+    process.exit(1);
+  }
+
+  if (enteredLogin !== issueLogin) {
+    await postComment(octokit, owner, repo, issueNumber,
+      `@${issueAuthor} — The entered username **@${enteredLogin}** does not match the GitHub account that opened this issue (**@${issueAuthor}**).\n\nFor enrollment, tests, final tests, and certificates, the same GitHub username must be used end to end.`);
+    await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
+    process.exit(1);
+  }
 
   if (!courseSlug) {
     await postComment(octokit, owner, repo, issueNumber,
@@ -189,7 +205,7 @@ async function main() {
   }
 
   // Fetch GitHub profile — name comes from here, not the form
-  const profile = await fetchGitHubProfile(octokit, issueAuthor);
+  const profile = await fetchGitHubProfile(octokit, enteredLogin);
   console.log(`Profile: ${profile.name} (@${profile.login})`);
 
   // Load course
@@ -213,7 +229,7 @@ async function main() {
 
   // Embed name and email in issue body as hidden metadata comments so we
   // can recover them later without a database (e.g. for cert generation).
-  const metaComment = `\n\n<!-- name: ${profile.name} -->\n<!-- email: ${certEmail || ''} -->`;
+  const metaComment = `\n\n<!-- github: ${profile.login} -->\n<!-- name: ${profile.name} -->\n<!-- email: ${certEmail || ''} -->`;
   await octokit.issues.update({
     owner, repo, issue_number: issueNumber,
     title: `[Enrolled] @${issueAuthor} — ${course.identity.title}`,

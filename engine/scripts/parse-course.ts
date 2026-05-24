@@ -17,6 +17,8 @@ import { setOutput } from '../lib/github.ts';
 import type {
   Course, CourseJson, CourseDetailJson,
   PlayerChapter, PlayerLesson, Lesson, ContentBlueprintFlowStage,
+  CourseQuestion, ChapterTest, FinalTest, ChapterAssignment, FinalAssignment,
+  PlayerQuestion, PlayerTest, PlayerAssignment,
 } from '../types/course.ts';
 
 const args      = process.argv.slice(2);
@@ -237,6 +239,7 @@ function toPlayerLesson(lesson: Lesson): PlayerLesson {
     pl.exercise = {
       starter_repo:    c.exercise.starter_repo,
       solution_repo:   c.exercise.solution_repo ?? undefined,
+      entry_file:      c.exercise.entry_file,
       test_command:    c.exercise.test_command,
       submission_type: c.exercise.submission_type,
     };
@@ -249,6 +252,58 @@ function toPlayerLesson(lesson: Lesson): PlayerLesson {
   if (c?.supplemental) pl.supplemental = c.supplemental;
 
   return pl;
+}
+
+function toPlayerQuestion(question: CourseQuestion): PlayerQuestion {
+  return {
+    id:         question.id,
+    type:       question.type,
+    points:     question.points,
+    difficulty: question.difficulty,
+    topic:      question.topic,
+    question:   question.question,
+    options:    question.options,
+    code:       question.code,
+    starter:    question.starter,
+    language:   question.language,
+  };
+}
+
+function toPlayerTest(test: ChapterTest | FinalTest): PlayerTest {
+  return {
+    id:                 test.id,
+    title:              test.title,
+    attached_to:        test.attached_to,
+    passing_score:      test.passing_score,
+    max_attempts:       test.max_attempts,
+    time_limit_minutes: test.time_limit_minutes,
+    question_count:     test.sections.flatMap((section) => section.questions).length,
+    sections:           test.sections.map((section) => ({
+      id:        section.id,
+      title:     section.title,
+      weight:    section.weight,
+      questions: section.questions.map(toPlayerQuestion),
+    })),
+    gates_next_chapter: 'gates_next_chapter' in test ? test.gates_next_chapter : undefined,
+    required_for_certificate: 'required_for_certificate' in test ? test.required_for_certificate : undefined,
+  };
+}
+
+function toPlayerAssignment(assignment: ChapterAssignment | FinalAssignment): PlayerAssignment {
+  return {
+    id:                       assignment.id,
+    title:                    assignment.title,
+    attached_to:              assignment.attached_to,
+    required_for_progress:    'required_for_progress' in assignment ? assignment.required_for_progress : undefined,
+    required_for_certificate: 'required_for_certificate' in assignment ? assignment.required_for_certificate : undefined,
+    submission_type:          assignment.submission_type,
+    content:                  assignment.content,
+    milestones:               'milestones' in assignment ? assignment.milestones : undefined,
+    rubric:                   assignment.rubric,
+    total_points:             assignment.total_points,
+    passing_score:            assignment.passing_score,
+    review:                   assignment.review,
+  };
 }
 
 // ─── Build full CourseDetailJson ──────────────────────────────────────────────
@@ -289,9 +344,8 @@ function buildCourseDetailJson(course: Course): CourseDetailJson {
   const totalLessons  = chapters.reduce((s, ch) => s + ch.lessonCount, 0);
   const totalDuration = chapters.reduce((s, ch) => s + ch.duration_minutes, 0);
 
-  const finalQCount = course.final_test
-    ? course.final_test.sections.flatMap((s) => s.questions).length
-    : 0;
+  const chapterTests = course.chapter_tests.map(toPlayerTest);
+  const chapterAssignments = (course.chapter_assignments ?? []).map(toPlayerAssignment);
 
   return {
     id:                  course.metadata.id,
@@ -347,21 +401,10 @@ function buildCourseDetailJson(course: Course): CourseDetailJson {
       by_chapter:    course.outcomes?.by_chapter    ?? {},
     },
     chapters,
-    final_test: course.final_test ? {
-      id:                       course.final_test.id,
-      title:                    course.final_test.title,
-      passing_score:            course.final_test.passing_score,
-      max_attempts:             course.final_test.max_attempts,
-      time_limit_minutes:       course.final_test.time_limit_minutes,
-      question_count:           finalQCount,
-      required_for_certificate: course.final_test.required_for_certificate,
-    } : undefined,
-    final_assignment: course.final_assignment ? {
-      id:                       course.final_assignment.id,
-      title:                    course.final_assignment.title,
-      required_for_certificate: course.final_assignment.required_for_certificate,
-      submission_type:          course.final_assignment.submission_type,
-    } : undefined,
+    chapter_tests: chapterTests,
+    chapter_assignments: chapterAssignments,
+    final_test: course.final_test ? toPlayerTest(course.final_test) : undefined,
+    final_assignment: course.final_assignment ? toPlayerAssignment(course.final_assignment) : undefined,
     certificate: {
       enabled:      course.certificate.enabled,
       title:        course.certificate.title,

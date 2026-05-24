@@ -27,6 +27,10 @@ export interface GitHubProfile {
   bio?:       string;
 }
 
+export function normalizeGitHubLogin(value: string): string {
+  return value.trim().replace(/^@+/, '').toLowerCase();
+}
+
 /**
  * Fetch a GitHub user's public profile.
  * The name is used for certificate generation when the enrollment form
@@ -139,6 +143,8 @@ function escapeRegex(s: string): string {
 export interface EnrollmentIssue {
   number:      number;
   labels:      string[];
+  /** GitHub username recorded on the enrollment issue. */
+  githubLogin: string;
   /** Name stored in issue body (for cert). Falls back to GitHub login. */
   displayName: string;
   /** Email stored in issue body (for cert delivery). May be empty. */
@@ -167,15 +173,18 @@ export async function findEnrollmentIssue(
     });
     if (data.length === 0) break;
     for (const issue of data) {
-      if (issue.user?.login === login) {
+      if (normalizeGitHubLogin(issue.user?.login ?? '') === normalizeGitHubLogin(login)) {
         const body       = issue.body ?? '';
         const certEmail  = parseIssueField(body, 'Email Address');
+        const loginMatch = body.match(/<!--\s*github:\s*(.+?)\s*-->/);
         // Name stored in issue body metadata comment (first line after "<!-- name: ... -->")
         const nameMatch  = body.match(/<!--\s*name:\s*(.+?)\s*-->/);
-        const displayName = nameMatch?.[1] ?? login;
+        const githubLogin = normalizeGitHubLogin(loginMatch?.[1] ?? issue.user?.login ?? login);
+        const displayName = nameMatch?.[1] ?? githubLogin;
         return {
           number:      issue.number,
           labels:      issue.labels.map((l) => (typeof l === 'string' ? l : l.name ?? '')),
+          githubLogin,
           displayName,
           certEmail,
           createdAt:   issue.created_at,

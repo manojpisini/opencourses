@@ -14,7 +14,7 @@ import TrackBadge from '../../components/TrackBadge.astro';
 import DifficultyBadge from '../../components/DifficultyBadge.astro';
 import Avatar from '../../components/Avatar.astro';
 import OC from '../../data/oc';
-import type { CourseDetailJson } from '../../types/course';
+import type { CourseDetailJson, PlayerAssignment, PlayerTest } from '../../types/course';
 
 // ── Load all course-detail JSON files at build time ───────────────────────────
 const detailModules = import.meta.glob<{ default: CourseDetailJson }>(
@@ -70,12 +70,16 @@ const githubRepo = 'manojpisini/opencourses';
 const githubRepoUrl = `https://github.com/${githubRepo}`;
 
 type CourseAction = {
+  kind: 'enroll' | 'test' | 'final-test' | 'assignment';
   title: string;
   eyebrow: string;
   summary: string;
   formUrl: string;
   ghCommand: string;
   body: string;
+  requiresEnrollment: boolean;
+  test?: PlayerTest;
+  assignment?: PlayerAssignment;
 };
 
 function issueFormUrl(template: string, title: string, labels: string): string {
@@ -92,6 +96,33 @@ function courseAssetUrl(courseId: string, file: string): string {
   if (file.startsWith('/')) return `${base}${file}`;
   const encodedPath = file.split('/').map(encodeURIComponent).join('/');
   return `https://raw.githubusercontent.com/${githubRepo}/main/engine/courses/${courseId}/${encodedPath}`;
+}
+
+function courseTreeUrl(courseId: string, file = ''): string {
+  const cleaned = file.replace(/^\/+/, '').replace(/\/?[^/]*$/, '');
+  const suffix = cleaned ? `/${cleaned.split('/').map(encodeURIComponent).join('/')}` : '';
+  return `${githubRepoUrl}/tree/main/engine/courses/${courseId}/${suffix}`;
+}
+
+function resourceKind(typeOrPath: string): 'image' | 'video' | 'pdf' | 'slide' | 'code' | 'data' | 'link' {
+  const value = typeOrPath.toLowerCase();
+  if (/\b(image|diagram|figure)\b/.test(value) || /\.(png|jpe?g|webp|gif|svg)$/.test(value)) return 'image';
+  if (/\b(video|lecture)\b/.test(value) || /\.(mp4|webm|ogg|mov)$/.test(value)) return 'video';
+  if (/\b(pdf|paper|book)\b/.test(value) || /\.pdf($|\?)/.test(value)) return 'pdf';
+  if (/\b(slide|deck|presentation)\b/.test(value) || /\.(pptx?|key)$/.test(value)) return 'slide';
+  if (/\b(code|repo|notebook)\b/.test(value) || /\.(py|ts|js|ipynb|md|yaml|json)$/.test(value)) return 'code';
+  if (/\b(data|dataset)\b/.test(value) || /\.(csv|jsonl|parquet|txt)$/.test(value)) return 'data';
+  return 'link';
+}
+
+function mediaEmbedUrl(url: string): string | null {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (yt) return `https://www.youtube-nocookie.com/embed/${yt[1]}`;
+  if (url.includes('youtube.com/embed/') || url.includes('youtube-nocookie.com/embed/')) return url;
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  if (url.includes('player.vimeo.com/video/')) return url;
+  return null;
 }
 
 function enrollmentBody(courseId: string): string {
@@ -114,7 +145,17 @@ Complete beginner
 - [x] I understand OpenCourses enrollment is tracked in the open repository.`;
 }
 
-function chapterTestBody(courseId: string, testId: string): string {
+function testAnswersTemplate(test?: PlayerTest): string {
+  const questions = test?.sections.flatMap(section => section.questions) ?? [];
+  if (!questions.length) {
+    return `### Answer: question-id
+Your answer here`;
+  }
+  return questions.map((question) => `### Answer: ${question.id}
+Your answer here`).join('\n\n');
+}
+
+function chapterTestBody(courseId: string, testId: string, test?: PlayerTest): string {
   return `### Your GitHub Username
 @YOUR_USERNAME
 
@@ -125,15 +166,13 @@ ${courseId}
 ${testId}
 
 ### Answers
-1. A
-2. B
-3. C
+${testAnswersTemplate(test)}
 
 ### Confirmation
 - [x] I understand this submission may trigger automated grading.`;
 }
 
-function finalTestBody(courseId: string): string {
+function finalTestBody(courseId: string, test?: PlayerTest): string {
   return `### Your GitHub Username
 @YOUR_USERNAME
 
@@ -144,73 +183,137 @@ ${courseId}
 https://github.com/manojpisini/opencourses/issues/ISSUE_NUMBER
 
 ### Final Test Answers
-1. A
-2. B
-3. C
+${testAnswersTemplate(test)}
 
 ### Confirmation
 - [x] I understand this final test may trigger automated grading and certificate generation.`;
 }
 
+function assignmentBody(courseId: string, chapterId: string, assignmentId: string): string {
+  return `### Your GitHub Username
+@YOUR_USERNAME
+
+### Course Slug
+${courseId}
+
+### Chapter ID
+${chapterId}
+
+### Assignment ID
+${assignmentId}
+
+### Repository Link
+https://github.com/YOUR_USERNAME/your-assignment-repo
+
+### What did you build?
+Describe your implementation, important decisions, and known limitations.
+
+### Self-review checklist
+- [ ] I completed the required deliverables.
+- [ ] My repository is public and accessible.
+- [ ] I ran the local tests or validation steps.
+
+### Confirmation
+- [x] I confirm this is my own work and uses the same GitHub username as enrollment.`;
+}
+
 const courseIdForActions = detail?.id ?? slugFallback;
 const courseActions: Record<string, CourseAction> = {};
+const chapterTestMap = new Map((detail?.chapter_tests ?? []).map(test => [test.id, test]));
+const chapterAssignmentMap = new Map((detail?.chapter_assignments ?? []).map(assignment => [assignment.id, assignment]));
 const enrollTitle = `[Enrolled] @YOUR_USERNAME - ${courseIdForActions}`;
 courseActions.enroll = {
+  kind: 'enroll',
   title: 'Enroll in Course',
   eyebrow: courseIdForActions,
   summary: 'Start this course with the web form or the GitHub CLI.',
   formUrl: issueFormUrl('enroll.yml', enrollTitle, 'enrollment-request'),
   ghCommand: ghWebCommand('enroll.yml', enrollTitle, 'enrollment-request'),
   body: enrollmentBody(courseIdForActions),
+  requiresEnrollment: false,
 };
 
 if (detail) {
   for (const chapter of detail.chapters) {
     const testId = chapter.chapter_test_id;
+    const test = chapterTestMap.get(testId);
     const title = `[Chapter Test] @YOUR_USERNAME - ${detail.id}/${testId}`;
     courseActions[`chapter:${chapter.id}`] = {
+      kind: 'test',
       title: `Submit ${chapter.title} Test`,
       eyebrow: testId,
       summary: `${chapter.test_summary.question_count} questions, ${chapter.test_summary.passing_score}% passing score.`,
       formUrl: issueFormUrl('quiz-submit.yml', title, 'quiz-submit'),
       ghCommand: ghWebCommand('quiz-submit.yml', title, 'quiz-submit'),
-      body: chapterTestBody(detail.id, testId),
+      body: chapterTestBody(detail.id, testId, test),
+      requiresEnrollment: true,
+      test,
     };
+    if (chapter.chapter_assignment_id) {
+      const assignment = chapterAssignmentMap.get(chapter.chapter_assignment_id);
+      const assignmentTitle = `[Assignment] @YOUR_USERNAME - ${detail.id}/${chapter.chapter_assignment_id}`;
+      courseActions[`assignment:${chapter.id}`] = {
+        kind: 'assignment',
+        title: assignment?.title ?? `Submit ${chapter.title} Assignment`,
+        eyebrow: chapter.chapter_assignment_id,
+        summary: assignment?.total_points
+          ? `${assignment.total_points} points, ${assignment.passing_score ?? 70}% passing score.`
+          : 'Submit your public GitHub repository for this chapter assignment.',
+        formUrl: issueFormUrl('assignment-submit.yml', assignmentTitle, 'assignment-submit'),
+        ghCommand: ghWebCommand('assignment-submit.yml', assignmentTitle, 'assignment-submit'),
+        body: assignmentBody(detail.id, chapter.id, chapter.chapter_assignment_id),
+        requiresEnrollment: true,
+        assignment,
+      };
+    }
   }
 
   if (detail.final_test) {
     const title = `[Final Test] @YOUR_USERNAME - ${detail.id}`;
     courseActions.final = {
+      kind: 'final-test',
       title: 'Submit Final Test',
       eyebrow: detail.final_test.id,
       summary: `${detail.final_test.question_count} questions, ${detail.final_test.passing_score}% passing score.`,
       formUrl: issueFormUrl('final-test.yml', title, 'final-test'),
       ghCommand: ghWebCommand('final-test.yml', title, 'final-test'),
-      body: finalTestBody(detail.id),
+      body: finalTestBody(detail.id, detail.final_test),
+      requiresEnrollment: true,
+      test: detail.final_test,
     };
   }
 } else {
   const chapterTestId = 'ch-01-test';
   const chapterTitle = `[Chapter Test] @YOUR_USERNAME - ${courseIdForActions}/${chapterTestId}`;
   courseActions['chapter:manual'] = {
+    kind: 'test',
     title: 'Submit Chapter Test',
     eyebrow: chapterTestId,
     summary: 'Use the course test ID shown in the course materials.',
     formUrl: issueFormUrl('quiz-submit.yml', chapterTitle, 'quiz-submit'),
     ghCommand: ghWebCommand('quiz-submit.yml', chapterTitle, 'quiz-submit'),
     body: chapterTestBody(courseIdForActions, chapterTestId),
+    requiresEnrollment: true,
   };
 
   const finalTitle = `[Final Test] @YOUR_USERNAME - ${courseIdForActions}`;
   courseActions.final = {
+    kind: 'final-test',
     title: 'Submit Final Test',
     eyebrow: courseIdForActions,
     summary: 'Use this when you have completed the course final test.',
     formUrl: issueFormUrl('final-test.yml', finalTitle, 'final-test'),
     ghCommand: ghWebCommand('final-test.yml', finalTitle, 'final-test'),
     body: finalTestBody(courseIdForActions),
+    requiresEnrollment: true,
   };
 }
+
+const courseRuntime = {
+  actions: courseActions,
+  courseId: courseIdForActions,
+  githubRepo,
+};
 
 // Helpers
 function fmtDuration(mins: number): string {
@@ -262,7 +365,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- FULL COURSE PLAYER                                                      -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="cp-root">
+    <div class="cp-root cp-root--locked" id="cp-root" data-course-id={courseIdForActions}>
 
       <!-- ── Top bar ──────────────────────────────────────────────────────── -->
       <header class="cp-topbar">
@@ -331,18 +434,25 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                     );
                   })}
                   <!-- Chapter test action -->
-                  <button class="cp-chapter-test-pill" type="button" data-course-action={`chapter:${ch.id}`}>
+                  <button class="cp-chapter-test-pill" type="button" data-course-action={`chapter:${ch.id}`} data-requires-enrollment="true">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                     Chapter Test · {ch.test_summary.question_count}q · {ch.test_summary.passing_score}% pass
                     <span class="cp-action-cue">Submit</span>
                   </button>
+                  {ch.chapter_assignment_id && (
+                    <button class="cp-chapter-test-pill cp-chapter-test-pill--assignment" type="button" data-course-action={`assignment:${ch.id}`} data-requires-enrollment="true">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v12"/></svg>
+                      Assignment · {ch.chapter_assignment_id}
+                      <span class="cp-action-cue">Submit</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
 
             <!-- Final Test / Assignment pills -->
             {detail.final_test && (
-              <button class="cp-final-pill cp-final-pill--test" type="button" data-course-action="final">
+              <button class="cp-final-pill cp-final-pill--test" type="button" data-course-action="final" data-requires-enrollment="true">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 Final Test · {detail.final_test.question_count}q
                 <span class="cp-action-cue">Submit</span>
@@ -374,18 +484,53 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 
         <!-- ── Main content area ─────────────────────────────────────────── -->
         <main class="cp-content" id="cp-content">
+          <article class="cp-pane cp-enrollment-gate" id="cp-enrollment-gate">
+            <div class="cp-gate-hero">
+              {detail.cover.thumbnail && (
+                <img src={detail.cover.thumbnail} alt={detail.title} class="cp-gate-hero__thumb" loading="lazy" />
+              )}
+              <div>
+                <div class="cp-gate-hero__eyebrow">Enrollment required</div>
+                <h1 class="cp-gate-hero__title">{detail.title}</h1>
+                <p class="cp-gate-hero__desc">{detail.description_short}</p>
+                <div class="cp-gate-hero__meta">
+                  <TrackBadge track={detail.track} />
+                  <DifficultyBadge level={detail.level} />
+                  <span>{detail.totalChapters} chapters</span>
+                  <span>{detail.totalLessons} lessons</span>
+                  <span>{totalH}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cp-enrollment-check">
+              <label class="cp-enrollment-check__label" for="cp-github-username">GitHub username</label>
+              <div class="cp-enrollment-check__row">
+                <input class="cp-enrollment-check__input" id="cp-github-username" type="text" placeholder="@your-username" autocomplete="username" />
+                <button class="cp-action-choice cp-action-choice--primary" type="button" id="cp-check-enrollment">Check enrollment</button>
+                <button class="cp-action-choice" type="button" data-course-action="enroll">Enroll</button>
+              </div>
+              <p class="cp-enrollment-check__status" id="cp-enrollment-status">
+                Enter your GitHub username to unlock the course after enrollment is confirmed.
+              </p>
+            </div>
+          </article>
 
           <!-- All lesson panes (show one at a time via JS) -->
           {flatLessons.map(({ lesson, chIdx, lIdx }, globalIdx) => {
             const ch = detail.chapters[chIdx]!;
             const isFirst = globalIdx === 0;
-            const imageFiles = (lesson.files ?? []).filter(file => file.type === 'image');
+            const resourceFiles = lesson.files ?? [];
+            const resourceLinks = [
+              ...(lesson.links ?? []),
+              ...(lesson.supplemental ?? []).map(link => ({ ...link, required: false, note: undefined })),
+            ];
             return (
               <article
                 class="cp-pane"
                 id={`cp-pane-${globalIdx}`}
                 data-lesson-id={lesson.id}
-                hidden={!isFirst}
+                hidden
               >
                 <!-- Pane header -->
                 <div class="cp-pane__header">
@@ -485,21 +630,85 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                   </div>
                 )}
 
-                <!-- ── LESSON FIGURES ─────────────────────────────────────── -->
-                {imageFiles.length > 0 && (
-                  <div class="cp-figures" aria-label="Lesson diagrams">
-                    {imageFiles.map(file => (
-                      <figure class="cp-figure">
-                        <img
-                          src={courseAssetUrl(detail.id, file.file)}
-                          alt={file.label}
-                          loading="lazy"
-                          class="cp-figure__img"
-                        />
-                        <figcaption class="cp-figure__caption">{file.label}</figcaption>
-                      </figure>
-                    ))}
-                  </div>
+                <!-- ── NATIVE RESOURCES ───────────────────────────────────── -->
+                {(resourceFiles.length > 0 || resourceLinks.length > 0) && (
+                  <section class="cp-resources" aria-label="Lesson resources">
+                    <div class="cp-resources__header">
+                      <span>Course Resources</span>
+                      <small>{resourceFiles.length + resourceLinks.length} item{resourceFiles.length + resourceLinks.length === 1 ? '' : 's'}</small>
+                    </div>
+                    <div class="cp-resource-grid">
+                      {resourceFiles.map(file => {
+                        const src = courseAssetUrl(detail.id, file.file);
+                        const kind = resourceKind(`${file.type} ${file.file}`);
+                        return (
+                          <article class={`cp-resource-card cp-resource-card--${kind}`}>
+                            <div class="cp-resource-card__media">
+                              {kind === 'image' && (
+                                <img src={src} alt={file.label} loading="lazy" class="cp-resource-card__img" />
+                              )}
+                              {kind === 'video' && (
+                                <video controls preload="metadata" class="cp-resource-card__video">
+                                  <source src={src} />
+                                </video>
+                              )}
+                              {kind === 'pdf' && (
+                                <iframe src={src} title={file.label} loading="lazy" class="cp-resource-card__frame"></iframe>
+                              )}
+                              {kind !== 'image' && kind !== 'video' && kind !== 'pdf' && (
+                                <div class="cp-resource-card__placeholder">
+                                  <span>{kind}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div class="cp-resource-card__body">
+                              <div>
+                                <h3>{file.label}</h3>
+                                <p>{file.file}</p>
+                              </div>
+                              <a href={src} target="_blank" rel="noopener" class="cp-resource-card__open">Open</a>
+                            </div>
+                          </article>
+                        );
+                      })}
+                      {resourceLinks.map(link => {
+                        const embed = mediaEmbedUrl(link.url);
+                        const kind = embed ? 'video' : resourceKind(`${link.type} ${link.url}`);
+                        return (
+                          <article class={`cp-resource-card cp-resource-card--${kind}`}>
+                            <div class="cp-resource-card__media">
+                              {embed && (
+                                <iframe
+                                  src={embed}
+                                  title={link.label}
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowfullscreen
+                                  loading="lazy"
+                                  class="cp-resource-card__frame"
+                                ></iframe>
+                              )}
+                              {!embed && kind === 'pdf' && (
+                                <iframe src={link.url} title={link.label} loading="lazy" class="cp-resource-card__frame"></iframe>
+                              )}
+                              {!embed && kind !== 'pdf' && (
+                                <div class="cp-resource-card__placeholder">
+                                  <span>{kind}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div class="cp-resource-card__body">
+                              <div>
+                                <h3>{link.label}</h3>
+                                <p>{link.note ?? link.type}</p>
+                              </div>
+                              <a href={link.url} target="_blank" rel="noopener" class="cp-resource-card__open">Open</a>
+                            </div>
+                            {link.required && <div class="cp-resource-card__required">Required</div>}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
                 )}
 
                 <!-- ── CODE BLOCKS ────────────────────────────────────────── -->
@@ -538,10 +747,16 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                       Hands-on Exercise
                     </div>
                     <div class="cp-exercise__body">
-                      <a href={lesson.exercise.starter_repo} class="cp-exercise__repo" target="_blank" rel="noopener">
+                      <a href={courseTreeUrl(detail.id, 'assets/starter')} class="cp-exercise__repo" target="_blank" rel="noopener">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.68-1.27-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.34.96.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
-                        Open Starter Repo
+                        Open starter files
                       </a>
+                      {lesson.exercise.entry_file && (
+                        <div class="cp-exercise__cmd">
+                          <span class="cp-exercise__cmd-label">Work in:</span>
+                          <code>{lesson.exercise.entry_file}</code>
+                        </div>
+                      )}
                       {lesson.exercise.test_command && (
                         <div class="cp-exercise__cmd">
                           <span class="cp-exercise__cmd-label">Run tests:</span>
@@ -567,44 +782,6 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                         </div>
                       </details>
                     )}
-                  </div>
-                )}
-
-                <!-- ── LINKS ──────────────────────────────────────────────── -->
-                {lesson.links && lesson.links.length > 0 && (
-                  <div class="cp-links">
-                    <div class="cp-links__title">Resources</div>
-                    <ul class="cp-links__list">
-                      {lesson.links.map(link => (
-                        <li class="cp-link-item">
-                          <a href={link.url} target="_blank" rel="noopener" class="cp-link-item__a">
-                            <span class="cp-link-item__label">{link.label}</span>
-                            <span class="cp-link-item__type">{link.type}</span>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                          </a>
-                          {link.required && <span class="cp-link-item__req">Required</span>}
-                          {link.note && <span class="cp-link-item__note">{link.note}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <!-- ── SUPPLEMENTAL ───────────────────────────────────────── -->
-                {lesson.supplemental && lesson.supplemental.length > 0 && (
-                  <div class="cp-links">
-                    <div class="cp-links__title">Supplemental Reading</div>
-                    <ul class="cp-links__list">
-                      {lesson.supplemental.map(link => (
-                        <li class="cp-link-item">
-                          <a href={link.url} target="_blank" rel="noopener" class="cp-link-item__a">
-                            <span class="cp-link-item__label">{link.label}</span>
-                            <span class="cp-link-item__type">{link.type}</span>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 )}
 
@@ -641,7 +818,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
         <aside class="cp-infopanel">
 
           <!-- Course actions -->
-          <div class="cp-card cp-action-card">
+          <div class="cp-card cp-action-card cp-card--public">
             <div class="cp-card__title">Course actions</div>
             <div class="cp-action-list">
               <button class="cp-action-row" type="button" data-course-action="enroll">
@@ -652,7 +829,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
               </button>
               {detail.chapters.length > 0 && (
-                <button class="cp-action-row" type="button" data-course-action={`chapter:${detail.chapters[0]!.id}`}>
+                <button class="cp-action-row" type="button" data-course-action={`chapter:${detail.chapters[0]!.id}`} data-requires-enrollment="true">
                   <span>
                     <strong>Submit chapter test</strong>
                     <small>Pick any chapter from the outline</small>
@@ -660,8 +837,17 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
               )}
+              {detail.chapters.find(ch => ch.chapter_assignment_id) && (
+                <button class="cp-action-row" type="button" data-course-action={`assignment:${detail.chapters.find(ch => ch.chapter_assignment_id)!.id}`} data-requires-enrollment="true">
+                  <span>
+                    <strong>Submit assignment</strong>
+                    <small>Chapter repository submission</small>
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              )}
               {detail.final_test && (
-                <button class="cp-action-row" type="button" data-course-action="final">
+                <button class="cp-action-row" type="button" data-course-action="final" data-requires-enrollment="true">
                   <span>
                     <strong>Submit final test</strong>
                     <small>{detail.final_test.id}</small>
@@ -673,7 +859,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
           </div>
 
           <!-- About this course -->
-          <div class="cp-card">
+          <div class="cp-card cp-card--public">
             <div class="cp-card__title">About this course</div>
             <p class="cp-card__text">{detail.description_short}</p>
             <div class="cp-card__pills">
@@ -833,14 +1019,14 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
             </span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
-          <button class="cp-action-row" type="button" data-course-action="chapter:manual">
+          <button class="cp-action-row" type="button" data-course-action="chapter:manual" data-requires-enrollment="true">
             <span>
               <strong>Submit chapter test</strong>
               <small>Edit the test ID before submitting</small>
             </span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
-          <button class="cp-action-row" type="button" data-course-action="final">
+          <button class="cp-action-row" type="button" data-course-action="final" data-requires-enrollment="true">
             <span>
               <strong>Submit final test</strong>
               <small>Complete the course final</small>
@@ -862,6 +1048,21 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
         <div class="cp-action-modal__eyebrow" id="cp-action-eyebrow"></div>
         <h2 class="cp-action-modal__title" id="cp-action-title">Course action</h2>
         <p class="cp-action-modal__summary" id="cp-action-summary"></p>
+
+        <label class="cp-action-body-label" for="cp-action-username">GitHub username</label>
+        <input class="cp-action-username" id="cp-action-username" type="text" placeholder="@your-username" autocomplete="username" />
+        <p class="cp-action-modal__hint" id="cp-action-username-hint">This username is written into the issue body and must match the account that opens the issue.</p>
+
+        <div class="cp-test-composer" id="cp-test-composer" hidden>
+          <div class="cp-test-composer__head">
+            <div>
+              <span class="cp-test-composer__eyebrow">In-course test</span>
+              <h3 id="cp-test-composer-title">Answer questions</h3>
+            </div>
+            <span class="cp-test-composer__meta" id="cp-test-composer-meta"></span>
+          </div>
+          <div class="cp-test-composer__questions" id="cp-test-composer-questions"></div>
+        </div>
 
         <div class="cp-action-modal__options">
           <a class="cp-action-choice cp-action-choice--primary" id="cp-action-form" href="#" target="_blank" rel="noopener">
@@ -886,8 +1087,10 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" is:inline></script>
 
-  <script define:vars={{ courseActions }} is:inline>
-    window.OC_COURSE_ACTIONS = courseActions;
+  <script define:vars={{ courseRuntime }} is:inline>
+    window.OC_COURSE_ACTIONS = courseRuntime.actions;
+    window.OC_COURSE_ID = courseRuntime.courseId;
+    window.OC_GITHUB_REPO = courseRuntime.githubRepo;
   </script>
 
   <script is:inline>
@@ -912,7 +1115,285 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     var actionBody = document.getElementById('cp-action-body');
     var copyGh = document.getElementById('cp-copy-gh');
     var copyBody = document.getElementById('cp-copy-body');
+    var testComposer = document.getElementById('cp-test-composer');
+    var testComposerTitle = document.getElementById('cp-test-composer-title');
+    var testComposerMeta = document.getElementById('cp-test-composer-meta');
+    var testComposerQuestions = document.getElementById('cp-test-composer-questions');
     var activeAction = null;
+    var root = document.getElementById('cp-root');
+    var gate = document.getElementById('cp-enrollment-gate');
+    var gateInput = document.getElementById('cp-github-username');
+    var modalInput = document.getElementById('cp-action-username');
+    var checkBtn = document.getElementById('cp-check-enrollment');
+    var enrollmentStatus = document.getElementById('cp-enrollment-status');
+    var courseId = window.OC_COURSE_ID || '';
+    var githubRepo = window.OC_GITHUB_REPO || 'manojpisini/opencourses';
+    var enrollmentIssue = null;
+    var playerReady = false;
+
+    function normalizeUsername(value) {
+      return String(value || '').trim().replace(/^@+/, '').toLowerCase();
+    }
+
+    function enrollmentStorageKey(username) {
+      return 'oc-enrollment-' + courseId + '-' + normalizeUsername(username);
+    }
+
+    function getStoredUsername() {
+      try { return localStorage.getItem('oc-github-username') || ''; }
+      catch { return ''; }
+    }
+
+    function setStoredUsername(username) {
+      try { localStorage.setItem('oc-github-username', normalizeUsername(username)); }
+      catch {}
+    }
+
+    function currentUsername() {
+      return normalizeUsername(
+        (modalInput && modalInput.value) ||
+        (gateInput && gateInput.value) ||
+        getStoredUsername()
+      );
+    }
+
+    function setUsernameInputs(username) {
+      var clean = normalizeUsername(username);
+      if (gateInput && gateInput.value !== clean) gateInput.value = clean ? '@' + clean : '';
+      if (modalInput && modalInput.value !== clean) modalInput.value = clean ? '@' + clean : '';
+    }
+
+    function withUsername(text, username) {
+      var clean = normalizeUsername(username) || 'YOUR_USERNAME';
+      var issueNumber = enrollmentIssue && enrollmentIssue.number ? String(enrollmentIssue.number) : 'ISSUE_NUMBER';
+      return String(text || '')
+        .replace(/@YOUR_USERNAME/g, '@' + clean)
+        .replace(/YOUR_USERNAME/g, clean)
+        .replace(/ISSUE_NUMBER/g, issueNumber);
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, function (char) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+      });
+    }
+
+    function getQuestionInputName(questionId) {
+      return 'cp-answer-' + String(questionId || '').replace(/[^a-zA-Z0-9_-]/g, '-');
+    }
+
+    function answerBlock(question, value) {
+      return '### Answer: ' + question.id + '\n' + String(value || '').trim();
+    }
+
+    function collectTestAnswers() {
+      if (!activeAction || !activeAction.test) return null;
+      var blocks = [];
+      activeAction.test.sections.forEach(function (section) {
+        section.questions.forEach(function (question) {
+          var name = getQuestionInputName(question.id);
+          var value = '';
+          if (question.type === 'multi') {
+            value = Array.from(document.querySelectorAll('[name="' + name + '"]:checked'))
+              .map(function (input) { return input.value; })
+              .join(', ');
+          } else {
+            var input = document.querySelector('[name="' + name + '"]');
+            value = input ? input.value : '';
+          }
+          blocks.push(answerBlock(question, value || 'Your answer here'));
+        });
+      });
+      return blocks.join('\n\n');
+    }
+
+    function mergeTestAnswers(body) {
+      var answers = collectTestAnswers();
+      if (!answers) return body;
+      if (body.indexOf('### Final Test Answers') !== -1) {
+        return body.replace(/### Final Test Answers[\s\S]*?### Confirmation/, '### Final Test Answers\n' + answers + '\n\n### Confirmation');
+      }
+      return body.replace(/### Answers[\s\S]*?### Confirmation/, '### Answers\n' + answers + '\n\n### Confirmation');
+    }
+
+    function mergeAssignmentFields(body) {
+      if (!activeAction || !activeAction.assignment) return body;
+      var repoInput = document.getElementById('cp-assignment-repo');
+      var repo = repoInput && repoInput.value ? repoInput.value.trim() : '';
+      if (!repo) return body;
+      return body.replace(/### Repository Link\n[^\n]*/, '### Repository Link\n' + repo);
+    }
+
+    function renderAction(action) {
+      if (!action) return;
+      var username = currentUsername();
+      if (actionForm) actionForm.href = withUsername(action.formUrl, username);
+      if (actionCommand) actionCommand.textContent = withUsername(action.ghCommand, username);
+      if (actionBody) actionBody.value = mergeAssignmentFields(mergeTestAnswers(withUsername(action.body, username)));
+    }
+
+    function renderTestComposer(action) {
+      if (!testComposer || !testComposerQuestions) return;
+      if (action && action.assignment) {
+        var assignment = action.assignment;
+        testComposer.hidden = false;
+        if (testComposerTitle) testComposerTitle.textContent = assignment.title;
+        if (testComposerMeta) {
+          var assignmentBits = [assignment.submission_type || 'github_url'];
+          if (assignment.total_points) assignmentBits.push(assignment.total_points + ' pts');
+          if (assignment.passing_score) assignmentBits.push(assignment.passing_score + '% pass');
+          testComposerMeta.textContent = assignmentBits.join(' · ');
+        }
+        var text = assignment.content && assignment.content.text && assignment.content.text.body
+          ? '<div class="cp-assignment-brief">' + escapeHtml(assignment.content.text.body) + '</div>'
+          : '';
+        var rubric = assignment.rubric && assignment.rubric.length
+          ? '<div class="cp-assignment-rubric"><h4>Rubric</h4>' + assignment.rubric.map(function (item) {
+              return '<div><span>' + escapeHtml(item.criterion) + '</span><strong>' + item.points + ' pts</strong></div>';
+            }).join('') + '</div>'
+          : '';
+        testComposerQuestions.innerHTML = text + rubric +
+          '<label class="cp-action-body-label" for="cp-assignment-repo">Repository link</label>' +
+          '<input class="cp-action-username" id="cp-assignment-repo" type="url" placeholder="https://github.com/your-username/your-assignment-repo">';
+        var repoInput = document.getElementById('cp-assignment-repo');
+        if (repoInput) {
+          repoInput.addEventListener('input', function () {
+            renderAction(activeAction);
+          });
+        }
+        return;
+      }
+      if (!action || !action.test || !action.test.sections) {
+        testComposer.hidden = true;
+        testComposerQuestions.innerHTML = '';
+        return;
+      }
+      var test = action.test;
+      testComposer.hidden = false;
+      if (testComposerTitle) testComposerTitle.textContent = test.title;
+      if (testComposerMeta) {
+        var bits = [test.question_count + ' questions', test.passing_score + '% pass', test.max_attempts + ' attempts'];
+        if (test.time_limit_minutes) bits.push(test.time_limit_minutes + ' min');
+        testComposerMeta.textContent = bits.join(' · ');
+      }
+      testComposerQuestions.innerHTML = test.sections.map(function (section) {
+        return '<section class="cp-test-section">' +
+          '<div class="cp-test-section__title">' + escapeHtml(section.title) + '<span>' + section.weight + '%</span></div>' +
+          section.questions.map(function (question, index) {
+            var name = getQuestionInputName(question.id);
+            var code = question.code && question.code.snippet
+              ? '<pre class="cp-test-question__code"><code>' + escapeHtml(question.code.snippet) + '</code></pre>'
+              : '';
+            var input = '';
+            if (question.options && question.options.length && question.type !== 'short') {
+              input = '<div class="cp-test-question__options">' + question.options.map(function (option, optIndex) {
+                var type = question.type === 'multi' ? 'checkbox' : 'radio';
+                var value = String.fromCharCode(65 + optIndex);
+                return '<label class="cp-test-option"><input type="' + type + '" name="' + name + '" value="' + value + '"><span>' + value + '. ' + escapeHtml(option) + '</span></label>';
+              }).join('') + '</div>';
+            } else if (question.type === 'truefalse') {
+              input = '<div class="cp-test-question__options">' +
+                '<label class="cp-test-option"><input type="radio" name="' + name + '" value="true"><span>True</span></label>' +
+                '<label class="cp-test-option"><input type="radio" name="' + name + '" value="false"><span>False</span></label>' +
+                '</div>';
+            } else {
+              input = '<textarea class="cp-test-answer" name="' + name + '" rows="5" placeholder="Write your answer here"></textarea>';
+            }
+            return '<article class="cp-test-question">' +
+              '<div class="cp-test-question__top"><span>Q' + (index + 1) + '</span><code>' + escapeHtml(question.id) + '</code><strong>' + question.points + ' pts</strong></div>' +
+              '<p class="cp-test-question__prompt">' + escapeHtml(question.question) + '</p>' +
+              code +
+              input +
+              '</article>';
+          }).join('') +
+          '</section>';
+      }).join('');
+      testComposerQuestions.querySelectorAll('input, textarea').forEach(function (input) {
+        input.addEventListener('input', function () { renderAction(activeAction); });
+        input.addEventListener('change', function () { renderAction(activeAction); });
+      });
+      if (typeof hljs !== 'undefined') {
+        testComposerQuestions.querySelectorAll('pre code').forEach(function (el) {
+          hljs.highlightElement(el);
+        });
+      }
+    }
+
+    function setStatus(message, tone) {
+      if (!enrollmentStatus) return;
+      enrollmentStatus.textContent = message;
+      enrollmentStatus.dataset.tone = tone || 'muted';
+    }
+
+    function unlockCourse(issue) {
+      enrollmentIssue = issue || enrollmentIssue;
+      if (!root) return;
+      root.classList.remove('cp-root--locked');
+      root.classList.add('cp-root--enrolled');
+      if (gate) gate.hidden = true;
+      if (!playerReady) initPlayer();
+      renderAction(activeAction);
+    }
+
+    function lockCourse(message) {
+      if (root) {
+        root.classList.add('cp-root--locked');
+        root.classList.remove('cp-root--enrolled');
+      }
+      if (gate) gate.hidden = false;
+      document.querySelectorAll('.cp-pane').forEach(function (pane) {
+        if (pane !== gate) pane.hidden = true;
+      });
+      setStatus(message || 'Enroll with your GitHub username to unlock lessons and test submission.', 'muted');
+    }
+
+    async function verifyEnrollment(username) {
+      var clean = normalizeUsername(username);
+      if (!clean) {
+        lockCourse('Enter your GitHub username first.');
+        return null;
+      }
+      setUsernameInputs(clean);
+      setStoredUsername(clean);
+      setStatus('Checking @' + clean + ' on GitHub...', 'loading');
+
+      var userResponse = await fetch('https://api.github.com/users/' + encodeURIComponent(clean), {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!userResponse.ok) {
+        lockCourse('GitHub user @' + clean + ' was not found.');
+        return null;
+      }
+
+      var labels = encodeURIComponent('enrolled,course:' + courseId);
+      var issuesResponse = await fetch('https://api.github.com/repos/' + githubRepo + '/issues?state=open&labels=' + labels + '&per_page=100', {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!issuesResponse.ok) {
+        lockCourse('Could not check enrollment right now. Use the enrollment form, then refresh this page.');
+        return null;
+      }
+
+      var issues = await issuesResponse.json();
+      var issue = issues.find(function (item) {
+        return normalizeUsername(item && item.user && item.user.login) === clean;
+      });
+      if (!issue) {
+        lockCourse('@' + clean + ' is a valid GitHub user, but no open enrollment record was found for this course.');
+        return null;
+      }
+
+      try {
+        localStorage.setItem(enrollmentStorageKey(clean), JSON.stringify({
+          number: issue.number,
+          url: issue.html_url,
+          checkedAt: new Date().toISOString(),
+        }));
+      } catch {}
+      setStatus('Enrollment confirmed for @' + clean + ' in issue #' + issue.number + '.', 'success');
+      unlockCourse({ number: issue.number, url: issue.html_url });
+      return issue;
+    }
 
     function copyText(text, btn) {
       if (!text) return;
@@ -940,13 +1421,17 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     function openActionPanel(key) {
       var action = actions[key];
       if (!action || !actionModal) return;
+      if (action.requiresEnrollment && root && root.classList.contains('cp-root--locked')) {
+        lockCourse('Enroll and confirm your GitHub username before submitting tests.');
+        action = actions.enroll || action;
+      }
       activeAction = action;
       if (actionTitle) actionTitle.textContent = action.title;
       if (actionEyebrow) actionEyebrow.textContent = action.eyebrow;
       if (actionSummary) actionSummary.textContent = action.summary;
-      if (actionForm) actionForm.href = action.formUrl;
-      if (actionCommand) actionCommand.textContent = action.ghCommand;
-      if (actionBody) actionBody.value = action.body;
+      setUsernameInputs(currentUsername());
+      renderTestComposer(action);
+      renderAction(action);
       actionModal.hidden = false;
       document.body.classList.add('cp-action-modal-open');
     }
@@ -976,12 +1461,27 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 
     if (copyGh) {
       copyGh.addEventListener('click', function () {
-        if (activeAction) copyText(activeAction.ghCommand, copyGh);
+        if (activeAction) copyText(withUsername(activeAction.ghCommand, currentUsername()), copyGh);
       });
     }
     if (copyBody) {
       copyBody.addEventListener('click', function () {
         copyText(actionBody ? actionBody.value : '', copyBody);
+      });
+    }
+    [gateInput, modalInput].forEach(function (input) {
+      if (!input) return;
+      input.addEventListener('input', function () {
+        setUsernameInputs(input.value);
+        setStoredUsername(input.value);
+        renderAction(activeAction);
+      });
+    });
+    if (checkBtn) {
+      checkBtn.addEventListener('click', function () {
+        verifyEnrollment(currentUsername()).catch(function () {
+          lockCourse('Enrollment check failed. Please try again in a moment.');
+        });
       });
     }
 
@@ -990,7 +1490,17 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     var STORAGE_KEY_PROGRESS = 'oc-player-done-'   + (window.location.pathname);
 
     var totalLessons = document.querySelectorAll('[data-lesson]').length;
-    if (!totalLessons) return; // fallback page, nothing to do
+    var storedUsername = getStoredUsername();
+    if (storedUsername) {
+      setUsernameInputs(storedUsername);
+    } else {
+      lockCourse('Enter your GitHub username to unlock the course after enrollment is confirmed.');
+    }
+
+    if (!totalLessons) {
+      if (storedUsername) verifyEnrollment(storedUsername).catch(function () {});
+      return; // fallback page, actions still work
+    }
 
     function getDone() {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY_PROGRESS) || '[]'); }
@@ -1065,6 +1575,10 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       // Update URL hash without scrolling
       history.replaceState(null, '', '#lesson-' + idx);
     }
+
+    function initPlayer() {
+      if (playerReady || !totalLessons) return;
+      playerReady = true;
 
     // ── Restore lesson from URL hash or localStorage ───────────────────────
     var hashMatch = window.location.hash.match(/^#lesson-(\d+)$/);
@@ -1155,6 +1669,24 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       });
     }
 
+    }
+
+    if (storedUsername) {
+      try {
+        var cached = JSON.parse(localStorage.getItem(enrollmentStorageKey(storedUsername)) || 'null');
+        if (cached && cached.number) {
+          enrollmentIssue = cached;
+          setStatus('Using saved enrollment for @' + normalizeUsername(storedUsername) + ' from issue #' + cached.number + '.', 'success');
+          unlockCourse(cached);
+        }
+      } catch {}
+      verifyEnrollment(storedUsername).catch(function () {});
+    }
+
+    if (!root || !root.classList.contains('cp-root--locked')) {
+      initPlayer();
+    }
+
   })();
   </script>
 </Base>
@@ -1169,6 +1701,20 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   flex-direction: column;
   height: calc(100vh - 56px);
   overflow: hidden;
+}
+
+.cp-root--locked [data-requires-enrollment],
+.cp-root--locked .cp-chapter,
+.cp-root--locked .cp-final-pill,
+.cp-root--locked .cp-topbar__progress,
+.cp-root--locked .cp-topbar__progress-label,
+.cp-root--locked .cp-infopanel .cp-card:not(.cp-card--public) {
+  display: none;
+}
+
+.cp-root--locked .cp-sidebar__course-sub::after {
+  content: " · enroll to unlock";
+  color: #38BDF8;
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────────────── */
@@ -1437,6 +1983,10 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   background: color-mix(in srgb, #fb923c 8%, var(--bg-surface));
   color: #fb923c;
 }
+.cp-chapter-test-pill--assignment:hover {
+  background: color-mix(in srgb, #a78bfa 8%, var(--bg-surface));
+  color: #a78bfa;
+}
 .cp-action-cue {
   margin-left: auto;
   color: currentColor;
@@ -1662,6 +2212,173 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 }
 body.cp-action-modal-open { overflow: hidden; }
 
+.cp-test-composer {
+  margin: 0 0 1rem;
+  border: 1px solid color-mix(in srgb, #2DD4BF 30%, var(--border-default));
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+.cp-test-composer__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  background: color-mix(in srgb, #2DD4BF 6%, var(--bg-surface));
+}
+.cp-test-composer__eyebrow {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #2DD4BF;
+  font: 0.68rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cp-test-composer__head h3 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+.cp-test-composer__meta {
+  align-self: start;
+  color: var(--text-muted);
+  font: 0.68rem var(--font-mono);
+  white-space: nowrap;
+}
+.cp-test-composer__questions {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+.cp-test-section {
+  display: grid;
+  gap: 0.75rem;
+}
+.cp-test-section__title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-secondary);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.cp-test-section__title span {
+  color: var(--text-muted);
+  font: 0.7rem var(--font-mono);
+}
+.cp-test-question {
+  padding: 0.9rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface);
+}
+.cp-test-question__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.55rem;
+  color: var(--text-muted);
+  font: 0.68rem var(--font-mono);
+}
+.cp-test-question__top span {
+  color: #38BDF8;
+  font-weight: 800;
+}
+.cp-test-question__top code {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cp-test-question__prompt {
+  margin: 0 0 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-size: 0.88rem;
+}
+.cp-test-question__code {
+  margin: 0 0 0.75rem;
+  max-height: 260px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #050b0c;
+}
+.cp-test-question__code code {
+  display: block;
+  padding: 0.85rem;
+  font: 0.76rem/1.5 var(--font-mono);
+}
+.cp-test-question__options {
+  display: grid;
+  gap: 0.45rem;
+}
+.cp-test-option {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.cp-test-option input {
+  margin-top: 0.18rem;
+  accent-color: #38BDF8;
+}
+.cp-test-answer {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 118px;
+  resize: vertical;
+  padding: 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font: 0.82rem/1.55 var(--font-mono);
+}
+.cp-assignment-brief {
+  white-space: pre-wrap;
+  padding: 0.9rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+.cp-assignment-rubric {
+  display: grid;
+  gap: 0.45rem;
+}
+.cp-assignment-rubric h4 {
+  margin: 0 0 0.15rem;
+  color: var(--text-muted);
+  font: 0.72rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.cp-assignment-rubric div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.cp-assignment-rubric strong {
+  flex-shrink: 0;
+  color: #2DD4BF;
+  font: 0.7rem var(--font-mono);
+}
+
 /* Sidebar toggle (mobile) */
 .cp-sidebar-toggle {
   display: none;
@@ -1696,6 +2413,106 @@ body.cp-action-modal-open { overflow: hidden; }
   padding: 0 2rem 4rem;
 }
 @media (max-width: 600px) { .cp-pane { padding: 0 1rem 3rem; } }
+
+.cp-enrollment-gate {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+.cp-gate-hero {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 1.25rem;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-default);
+}
+.cp-gate-hero__thumb {
+  width: 112px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.cp-gate-hero__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #2DD4BF;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cp-gate-hero__title {
+  margin: 0.35rem 0 0.5rem;
+  font-size: clamp(1.6rem, 4vw, 2.45rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+.cp-gate-hero__desc {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.cp-gate-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  color: var(--text-muted);
+  font: 0.75rem var(--font-mono);
+}
+.cp-enrollment-check {
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid color-mix(in srgb, #38BDF8 28%, var(--border-default));
+  border-radius: 8px;
+}
+.cp-enrollment-check__label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--text-muted);
+  font: 0.72rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cp-enrollment-check__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cp-enrollment-check__input,
+.cp-action-username {
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font: 0.82rem var(--font-mono);
+}
+.cp-enrollment-check__input {
+  flex: 1 1 220px;
+}
+.cp-action-username {
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+.cp-enrollment-check__status,
+.cp-action-modal__hint {
+  margin: 0.65rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.cp-enrollment-check__status[data-tone="success"] { color: #34d399; }
+.cp-enrollment-check__status[data-tone="loading"] { color: #38BDF8; }
+@media (max-width: 680px) {
+  .cp-gate-hero { grid-template-columns: 1fr; }
+  .cp-gate-hero__thumb { width: 88px; }
+}
 
 .cp-pane__header {
   padding: 2rem 0 1.5rem;
@@ -1745,10 +2562,14 @@ body.cp-action-modal-open { overflow: hidden; }
 .cp-video-wrap {
   position: relative;
   padding-top: 56.25%; /* 16:9 */
-  background: #000;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #38BDF8 10%, transparent), transparent 38%),
+    var(--bg-surface);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 0.75rem;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.16);
 }
 .cp-video {
   position: absolute;
@@ -1861,33 +2682,124 @@ body.cp-action-modal-open { overflow: hidden; }
   word-break: break-word;
 }
 
-/* Lesson figures */
-.cp-figures {
-  display: grid;
-  gap: 1rem;
+/* Native lesson resources */
+.cp-resources {
   margin: 0 0 1.5rem;
 }
-.cp-figure {
-  margin: 0;
+.cp-resources__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+.cp-resources__header span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cp-resources__header small {
+  color: var(--text-muted);
+  font: 0.68rem var(--font-mono);
+}
+.cp-resource-grid {
+  display: grid;
+  gap: 1rem;
+}
+.cp-resource-card {
+  position: relative;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: 8px;
   overflow: hidden;
 }
-.cp-figure__img {
+.cp-resource-card__media {
+  min-height: 180px;
+  background:
+    radial-gradient(circle at 12% 10%, color-mix(in srgb, #38BDF8 12%, transparent), transparent 28%),
+    color-mix(in srgb, var(--bg-surface) 78%, #0a1e1e);
+}
+.cp-resource-card__img,
+.cp-resource-card__video,
+.cp-resource-card__frame {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 560px;
-  object-fit: contain;
-  background: #050b0c;
+  border: 0;
 }
-.cp-figure__caption {
-  padding: 0.7rem 1rem;
+.cp-resource-card__img {
+  max-height: 620px;
+  object-fit: contain;
+  background: color-mix(in srgb, var(--bg-base) 88%, #38BDF8);
+}
+.cp-resource-card__video,
+.cp-resource-card__frame {
+  aspect-ratio: 16 / 9;
+  height: auto;
+  background: var(--bg-base);
+}
+.cp-resource-card__placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+}
+.cp-resource-card__placeholder span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, #38BDF8 42%, var(--border-default));
+  border-radius: 8px;
+  color: #38BDF8;
+  background: color-mix(in srgb, #38BDF8 8%, var(--bg-base));
+  font: 0.72rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cp-resource-card__body {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
   border-top: 1px solid var(--border-default);
+}
+.cp-resource-card__body h3 {
+  margin: 0 0 0.2rem;
   color: var(--text-secondary);
-  font-size: 0.78rem;
-  line-height: 1.45;
+  font-size: 0.85rem;
+}
+.cp-resource-card__body p {
+  margin: 0;
+  color: var(--text-muted);
+  font: 0.7rem/1.45 var(--font-mono);
+  word-break: break-word;
+}
+.cp-resource-card__open {
+  align-self: center;
+  flex-shrink: 0;
+  color: #38BDF8;
+  text-decoration: none;
+  font: 0.72rem var(--font-mono);
+}
+.cp-resource-card__required {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #fb923c 16%, var(--bg-base));
+  border: 1px solid color-mix(in srgb, #fb923c 38%, var(--border-default));
+  color: #fb923c;
+  font: 0.65rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cp-resource-card--image .cp-resource-card__media {
+  min-height: 0;
 }
 
 /* Code blocks */

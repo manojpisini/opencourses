@@ -24,7 +24,8 @@ const CERT_DIR = path.join('dist', 'certs');
 const TEMPLATE_PATH = path.join('templates', 'cert.svg');
 
 interface CertData {
-  student: string;
+  studentLogin: string;
+  studentName: string;
   course: string;
   courseTitle: string;
   issuedAt: string;
@@ -45,7 +46,7 @@ function generateCertId(student: string, course: string): string {
 function renderSVG(certData: CertData): string {
   const template = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
   return template
-    .replace(/\{\{student\}\}/g, certData.student)
+    .replace(/\{\{student\}\}/g, certData.studentName)
     .replace(/\{\{course\}\}/g, certData.course)
     .replace(/\{\{courseTitle\}\}/g, certData.courseTitle)
     .replace(/\{\{issuedAt\}\}/g, certData.issuedAt)
@@ -84,8 +85,9 @@ function buildOpenBadge(certData: CertData, svgUrl: string): object {
     },
     validFrom: certData.issuedAt,
     credentialSubject: {
-      id: `https://github.com/${certData.student}`,
+      id: `https://github.com/${certData.studentLogin}`,
       type: 'AchievementSubject',
+      name: certData.studentName,
       achievement: {
         id: `${certData.repoUrl}/releases/tag/cert-${certData.certId}`,
         type: 'Achievement',
@@ -119,18 +121,14 @@ function buildOpenBadge(certData: CertData, svgUrl: string): object {
 function appendToCertifiedMd(certData: CertData, releaseUrl: string) {
   const certifiedPath = 'CERTIFIED.md';
   let content = fs.existsSync(certifiedPath) ? fs.readFileSync(certifiedPath, 'utf-8') : '# 🏆 Certified Graduates\n\n| Student | Course | Date | Certificate |\n|---------|--------|------|-------------|\n';
-  const row = `| [@${certData.student}](https://github.com/${certData.student}) | ${certData.courseTitle} | ${certData.issuedAt.split('T')[0]} | [View](${releaseUrl}) |\n`;
+  const row = `| [@${certData.studentLogin}](https://github.com/${certData.studentLogin}) | ${certData.courseTitle} | ${certData.issuedAt.split('T')[0]} | [View](${releaseUrl}) |\n`;
   content += row;
   fs.writeFileSync(certifiedPath, content);
 }
 
-async function getGitHubUserName(): Promise<string> {
-  try {
-    const { data } = await octokit.users.getByUsername({ username: student });
-    return data.name ?? student;
-  } catch {
-    return student;
-  }
+async function getGitHubUserProfile(): Promise<{ login: string; name: string }> {
+  const { data } = await octokit.users.getByUsername({ username: student });
+  return { login: data.login, name: data.name?.trim() || data.login };
 }
 
 async function getCourseTitle(): Promise<string> {
@@ -147,16 +145,21 @@ async function getCourseTitle(): Promise<string> {
 async function main() {
   console.log(`Generating certificate for @${student} — ${course}`);
 
+  if (!student || !course || !issueNumber) {
+    throw new Error('STUDENT, COURSE, and ISSUE_NUMBER are required for certificate generation.');
+  }
+
   fs.mkdirSync(CERT_DIR, { recursive: true });
 
   const certId = generateCertId(student, course);
   const issuedAt = new Date().toISOString();
   const courseTitle = await getCourseTitle();
-  const displayName = await getGitHubUserName();
+  const profile = await getGitHubUserProfile();
   const repoUrl = `https://github.com/${owner}/${repo}`;
 
   const certData: CertData = {
-    student: displayName,
+    studentLogin: profile.login,
+    studentName: profile.name,
     course,
     courseTitle,
     issuedAt,
@@ -194,7 +197,7 @@ async function main() {
   // Create GitHub Release
   const releaseBody = `## 🎓 Certificate of Completion
 
-**Student:** @${student}
+**Student:** @${profile.login}
 **Course:** ${courseTitle}
 **Issued:** ${issuedAt.split('T')[0]}
 **Certificate ID:** \`${certId}\`
@@ -213,7 +216,7 @@ The Open Badges 3.0 JSON (\`${certId}.badge.json\`) can be imported into any com
   const { data: release } = await octokit.repos.createRelease({
     owner, repo,
     tag_name: releaseTag,
-    name: `🎓 ${courseTitle} — @${student}`,
+    name: `🎓 ${courseTitle} — @${profile.login}`,
     body: releaseBody,
     prerelease: false,
   });

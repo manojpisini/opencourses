@@ -58,16 +58,21 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const student = '${{ inputs.student }}'.trim().replace(/^@+/, '').toLowerCase();
+            const course = '${{ inputs.course }}'.trim().toLowerCase();
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
-              state: 'open', labels: 'enrolled',
+              state: 'all', labels: `enrolled,course:${course}`,
               per_page: 100
             });
-            const issue = issues.find(i =>
-              i.user?.login === '${{ inputs.student }}' ||
-              i.title.toLowerCase().includes('@${{ inputs.student }}')
-            );
+            const issue = issues.find(i => (i.user?.login ?? '').toLowerCase() === student);
             return issue?.number ?? 0;
+
+      - name: Stop if enrollment record is missing
+        if: steps.find_issue.outputs.result == '0'
+        run: |
+          echo "No enrollment issue found for @${{ inputs.student }} in ${{ inputs.course }}"
+          exit 1
 
       - name: Generate certificate
         run: bun run scripts/certify.ts
@@ -95,4 +100,3 @@ jobs:
               issue_number: ${{ steps.find_issue.outputs.result }},
               state: 'closed', state_reason: 'completed'
             });
-

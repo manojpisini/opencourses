@@ -125,14 +125,16 @@
   "changelog": [
     {
       "version": "1.0.0",
-      "date": "2025-05-23",
+      "date": "2026-05-24",
       "author": "manojpisini",
       "changes": [
-        "Initial release — 8 chapters, 8 chapter tests, 8 chapter assignments, final test, capstone",
+        "Updated course player data with native resources, visible tests, assignments, final test, and capstone",
+        "Refined LLM Engineering course content around the advanced open-source course blueprint",
+        "Added images, starter assets, grading-ready tests, and richer submission flows",
         "Covers transformer architecture through production deployment",
         "All resources are open-source (Apache 2.0, MIT, CC BY, arXiv)"
       ]
     }
   ],
-  "generatedAt": "2026-05-24T13:15:23.701Z"
+  "generatedAt": "2026-05-24T17:17:34.288Z"
 }

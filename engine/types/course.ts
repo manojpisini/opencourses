@@ -697,6 +697,7 @@ export interface PlayerLesson {
   exercise?: {
     starter_repo: string;
     solution_repo?: string;
+    entry_file?: string;
     test_command?: string;
     submission_type?: string;
   };
@@ -704,6 +705,54 @@ export interface PlayerLesson {
   links?: Array<{ label: string; url: string; type: string; required?: boolean; note?: string }>;
   files?: Array<{ label: string; file: string; type: string }>;
   supplemental?: Array<{ label: string; url: string; type: string }>;
+}
+
+export interface PlayerQuestion {
+  id: string;
+  type: QuestionType;
+  points: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  topic?: string;
+  question: string;
+  options?: string[];
+  code?: QuestionCodeBlock;
+  starter?: string;
+  language?: string;
+}
+
+export interface PlayerTestSection {
+  id: string;
+  title: string;
+  weight: number;
+  questions: PlayerQuestion[];
+}
+
+export interface PlayerTest {
+  id: string;
+  title: string;
+  attached_to: string;
+  passing_score: number;
+  max_attempts: number;
+  time_limit_minutes?: number;
+  question_count: number;
+  sections: PlayerTestSection[];
+  gates_next_chapter?: boolean;
+  required_for_certificate?: boolean;
+}
+
+export interface PlayerAssignment {
+  id: string;
+  title: string;
+  attached_to: string;
+  required_for_progress?: boolean;
+  required_for_certificate?: boolean;
+  submission_type: SubmissionType;
+  content?: AssignmentContent;
+  milestones?: Milestone[];
+  rubric?: RubricCriterion[];
+  total_points?: number;
+  passing_score?: number;
+  review?: ReviewSettings;
 }
 
 export interface PlayerChapter {
@@ -772,21 +821,10 @@ export interface CourseDetailJson {
     by_chapter: Record<string, string[]>;
   };
   chapters: PlayerChapter[];
-  final_test?: {
-    id: string;
-    title: string;
-    passing_score: number;
-    max_attempts: number;
-    time_limit_minutes?: number;
-    question_count: number;
-    required_for_certificate: boolean;
-  };
-  final_assignment?: {
-    id: string;
-    title: string;
-    required_for_certificate: boolean;
-    submission_type: SubmissionType;
-  };
+  chapter_tests: PlayerTest[];
+  chapter_assignments: PlayerAssignment[];
+  final_test?: PlayerTest;
+  final_assignment?: PlayerAssignment;
   certificate: {
     enabled: boolean;
     title: string;
