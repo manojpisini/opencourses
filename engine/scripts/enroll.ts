@@ -54,19 +54,6 @@ function listAvailableCourses(): string[] {
     .map((e) => e.name);
 }
 
-// ─── Helpers to flatten lessons from chapter ──────────────────────────────────
-
-function getLessonsFromChapter(ch: Course['curriculum']['chapters'][number]) {
-  if (ch.lessons && ch.lessons.length > 0) return ch.lessons;
-  if (ch.sections) {
-    return ch.sections.flatMap((sec) => {
-      if (sec.lessons) return sec.lessons;
-      return (sec.subsections ?? []).flatMap((sub) => sub.lessons);
-    });
-  }
-  return [];
-}
-
 // ─── Welcome comment ──────────────────────────────────────────────────────────
 
 function buildWelcomeComment(
@@ -77,35 +64,6 @@ function buildWelcomeComment(
 ): string {
   const courseId   = course.metadata.id;
   const courseTitle = course.identity.title;
-
-  // Build per-chapter summary
-  const curriculum = course.curriculum.chapters.map((ch, i) => {
-    const lessons = getLessonsFromChapter(ch);
-    const lessonLines = lessons
-      .map((l) => `  - **${l.title}** — ${l.type}${l.duration_minutes ? ` (${l.duration_minutes} min)` : ''}`)
-      .join('\n');
-
-    // Look up this chapter's test
-    const chTest = course.chapter_tests.find((t) => t.id === ch.chapter_test_id);
-    const testLine = chTest
-      ? `  📝 **Chapter Test:** \`${chTest.id}\` · pass: ${chTest.passing_score}% · attempts: ${chTest.max_attempts}`
-      : `  📝 **Chapter Test:** \`${ch.chapter_test_id}\``;
-
-    // Look up this chapter's assignment (if any)
-    const assignment = ch.chapter_assignment_id
-      ? course.chapter_assignments?.find((a) => a.id === ch.chapter_assignment_id)
-      : null;
-    const assignLine = assignment
-      ? `\n  🛠️ **Assignment:** \`${assignment.id}\` — ${assignment.title}`
-      : '';
-
-    return `**Chapter ${i + 1} · ${ch.title}**\n${lessonLines}\n${testLine}${assignLine}`;
-  }).join('\n\n');
-
-  // Final test section
-  const finalTestSection = course.final_test
-    ? `\n\n---\n### 🏁 Final Test\n\n\`${course.final_test.id}\` · pass: ${course.final_test.passing_score}% · attempts: ${course.final_test.max_attempts}\n\nThe final test unlocks after all chapter tests are passed.`
-    : '';
 
   // Certificate requirements
   const certRequirements: string[] = [];
@@ -120,50 +78,32 @@ function buildWelcomeComment(
   const certDelivery = certEmail
     ? `Certificate will be delivered to \`${certEmail}\` and posted to your enrollment issue.`
     : `Certificate will be posted to this issue (no email provided).`;
-
-  const finalTestId = course.final_test?.id ?? 'final-test';
+  const courseUrl = `../../tree/main/engine/courses/${courseId}`;
+  const coursePageUrl = `https://manojpisini.github.io/opencourses/courses/${courseId}/`;
 
   return `## 🎉 Welcome to ${courseTitle}!
 
-| | |
-|---|---|
-| **Student** | [@${profile.login}](${profile.profileUrl}) · ${profile.name} |
-| **Course** | ${courseTitle} \`v${course.metadata.version}\` |
-| **Track** | ${course.classification.category} |
-| **Level** | ${course.classification.level} |
-| **Estimated time** | ~${course.effort.total_hours} hours |
+Hi [@${profile.login}](${profile.profileUrl}) — you are enrolled in **${courseTitle}**.
 
-> Your GitHub username **@${profile.login}** is your identity for all chapter tests, the final test, and certificate issuance. No other login needed.
+Your GitHub username **@${profile.login}** is your identity for enrollment, chapter tests, assignments, the final test, and certificate generation.
 
----
-
-## 📋 Curriculum
-
-${curriculum}${finalTestSection}
-
----
-
-## 🎓 Certificate Requirements
+### Certificate checklist
 
 ${certRequirements.length > 0 ? certRequirements.map((r) => `- ${r}`).join('\n') : '- Complete all course requirements'}
 
 ${certDelivery}
 
----
+### Start here
 
-## 🚀 How to Progress
+- Open the course page: [${courseId}](${coursePageUrl})
+- Submit chapter tests from the course page after enrollment is confirmed.
+- Submit assignments with the assignment submission form.
 
-1. **Study each chapter** — follow lessons, watch videos, complete exercises
-2. **Submit a chapter test** → [Open a Chapter Test issue](../../issues/new?template=quiz-submit.yml) using the test ID from the curriculum above
-3. **Submit assignments** → [Open an Assignment Submit issue](../../issues/new?template=quiz-attempt.yml)
-4. **Pass the final test** (if required) → same quiz submit flow, use \`${finalTestId}\` as test ID
-5. **Receive your certificate** → issued automatically to @${profile.login} once all requirements are met
+### Useful links
 
-## 📌 Links
-
-- 🏆 [Leaderboard](../../blob/main/LEADERBOARD.md)
-- 📖 [Course file](../../blob/main/engine/courses/${courseId}/course.yaml)
-- 💬 [Get help](../../issues/new?template=help.yml)
+- [Course source](${courseUrl})
+- [Leaderboard](../../blob/main/LEADERBOARD.md)
+- [Get help](../../issues/new?template=help.yml)
 
 ---
 _Issue #${enrollmentIssue} is your progress tracker — keep it open. Labels are added here as you complete chapters._`;
