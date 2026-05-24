@@ -159,7 +159,7 @@ function buildCourseJson(course: Course): CourseJson {
 
 // ─── Video embed URL derivation ───────────────────────────────────────────────
 
-function deriveEmbedUrl(url: string, embedUrl?: string): string {
+function videoEmbedUrl(url: string, embedUrl?: string): string | null {
   if (embedUrl) return embedUrl;
   // YouTube standard: youtube.com/watch?v=ID
   const ytWatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
@@ -171,8 +171,11 @@ function deriveEmbedUrl(url: string, embedUrl?: string): string {
   if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
   // Vimeo player already
   if (url.includes('player.vimeo.com/video/')) return url;
-  // Fallback: return original
-  return url;
+  return null;
+}
+
+function deriveEmbedUrl(url: string, embedUrl?: string): string {
+  return videoEmbedUrl(url, embedUrl) ?? url;
 }
 
 // ─── Flatten lessons from a chapter (sections → subsections → lessons) ───────
@@ -193,10 +196,11 @@ function flattenLessons(ch: Course['curriculum']['chapters'][number]): Lesson[] 
 
 function toPlayerLesson(lesson: Lesson): PlayerLesson {
   const c = lesson.content;
+  const readingVideoEmbed = c?.reading ? videoEmbedUrl(c.reading.url) : null;
   const pl: PlayerLesson = {
     id:               lesson.id,
     title:            lesson.title,
-    type:             lesson.type,
+    type:             readingVideoEmbed && !c?.video ? 'video' : lesson.type,
     duration_minutes: lesson.duration_minutes ?? 0,
     free_preview:     lesson.free_preview ?? false,
     description:      lesson.description,
@@ -211,6 +215,14 @@ function toPlayerLesson(lesson: Lesson): PlayerLesson {
       channel:              c.video.channel,
       subtitles_available:  c.video.subtitles_available,
       timestamps:           c.video.timestamps,
+    };
+  } else if (c?.reading && readingVideoEmbed) {
+    pl.video = {
+      embed_url:           readingVideoEmbed,
+      url:                 c.reading.url,
+      source:              c.reading.source,
+      subtitles_available: undefined,
+      timestamps:          undefined,
     };
   }
   if (c?.reading) {

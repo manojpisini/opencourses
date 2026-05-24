@@ -125,6 +125,32 @@ function mediaEmbedUrl(url: string): string | null {
   return null;
 }
 
+function renderLessonMarkdown(markdown: string): string {
+  const escaped = markdown
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  const withCode = escaped.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) =>
+    `<pre class="cp-rich-code"><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`,
+  );
+
+  return withCode
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^\- (.+)$/gm, '<div class="cp-rich-bullet">$1</div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>')
+    .replace(/<p><h([23])>/g, '<h$1>')
+    .replace(/<\/h([23])><\/p>/g, '</h$1>')
+    .replace(/<p><pre/g, '<pre')
+    .replace(/<\/pre><\/p>/g, '</pre>');
+}
+
 function enrollmentBody(courseId: string): string {
   return `### Your GitHub Username
 @YOUR_USERNAME
@@ -520,6 +546,8 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
           {flatLessons.map(({ lesson, chIdx, lIdx }, globalIdx) => {
             const ch = detail.chapters[chIdx]!;
             const isFirst = globalIdx === 0;
+            const readingEmbed = lesson.reading ? mediaEmbedUrl(lesson.reading.url) : null;
+            const hasPrimaryPlayer = !!lesson.video || !!readingEmbed;
             const resourceFiles = lesson.files ?? [];
             const resourceLinks = [
               ...(lesson.links ?? []),
@@ -551,33 +579,48 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                   )}
                 </div>
 
-                <!-- ── VIDEO ─────────────────────────────────────────────── -->
-                {lesson.video && (
-                  <div class="cp-video-wrap">
-                    <iframe
-                      class="cp-video"
-                      data-src={lesson.video.embed_url}
-                      src={isFirst ? lesson.video.embed_url : undefined}
-                      title={lesson.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowfullscreen
-                      loading="lazy"
-                    ></iframe>
-                  </div>
-                )}
-                {lesson.video && (
-                  <div class="cp-video-meta">
-                    <a href={lesson.video.url} target="_blank" rel="noopener" class="cp-video-meta__link">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Open on {lesson.video.source}
-                    </a>
-                    {lesson.video.channel && (
-                      <span class="cp-video-meta__channel">by {lesson.video.channel}</span>
+                <!-- ── PRIMARY LEARNING STAGE ────────────────────────────── -->
+                {hasPrimaryPlayer && (
+                  <section class="cp-learning-stage">
+                    <div class="cp-learning-stage__bar">
+                      <span class="cp-learning-stage__label">{lesson.video ? 'Watch' : 'Watch before reading'}</span>
+                      <span class="cp-learning-stage__source">{lesson.video?.source ?? lesson.reading?.source}</span>
+                    </div>
+                    <div class="cp-video-wrap">
+                      <iframe
+                        class="cp-video"
+                        data-src={lesson.video?.embed_url ?? readingEmbed}
+                        src={isFirst ? (lesson.video?.embed_url ?? readingEmbed ?? undefined) : undefined}
+                        title={lesson.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        loading="lazy"
+                      ></iframe>
+                    </div>
+                    <div class="cp-video-meta">
+                      <a href={lesson.video?.url ?? lesson.reading?.url} target="_blank" rel="noopener" class="cp-video-meta__link">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Open source
+                      </a>
+                      {lesson.video?.channel && (
+                        <span class="cp-video-meta__channel">by {lesson.video.channel}</span>
+                      )}
+                      {lesson.video?.subtitles_available && (
+                        <span class="cp-video-meta__subs">CC available</span>
+                      )}
+                      {lesson.reading?.estimated_minutes && (
+                        <span class="cp-video-meta__subs">~{lesson.reading.estimated_minutes} min</span>
+                      )}
+                    </div>
+                    {readingEmbed && lesson.reading?.sections_to_read && lesson.reading.sections_to_read.length > 0 && (
+                      <div class="cp-watch-plan">
+                        <strong>Focus</strong>
+                        <ul>
+                          {lesson.reading.sections_to_read.map(s => <li>{s}</li>)}
+                        </ul>
+                      </div>
                     )}
-                    {lesson.video.subtitles_available && (
-                      <span class="cp-video-meta__subs">CC available</span>
-                    )}
-                  </div>
+                  </section>
                 )}
 
                 <!-- Video timestamps -->
@@ -596,12 +639,12 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                 )}
 
                 <!-- ── READING ────────────────────────────────────────────── -->
-                {lesson.reading && (
-                  <div class="cp-reading">
+                {lesson.reading && !readingEmbed && (
+                  <div class={`cp-reading ${readingEmbed ? 'cp-reading--with-player' : ''}`}>
                     <div class="cp-reading__source">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                       <a href={lesson.reading.url} target="_blank" rel="noopener" class="cp-reading__link">
-                        Read on {lesson.reading.source}
+                        {readingEmbed ? 'Source: ' : 'Read on '}{lesson.reading.source}
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                       </a>
                       {lesson.reading.estimated_minutes && (
@@ -610,7 +653,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                     </div>
                     {lesson.reading.sections_to_read && lesson.reading.sections_to_read.length > 0 && (
                       <div class="cp-reading__sections">
-                        <strong>Read these sections:</strong>
+                        <strong>{readingEmbed ? 'Focus while watching:' : 'Read these sections:'}</strong>
                         <ul>
                           {lesson.reading.sections_to_read.map(s => <li>{s}</li>)}
                         </ul>
@@ -624,9 +667,9 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                   <div class="cp-notes">
                     <div class="cp-notes__label">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      Curator Notes
+                      Lesson Guide
                     </div>
-                    <div class="cp-notes__body prose">{lesson.text_md}</div>
+                    <div class="cp-notes__body prose" set:html={renderLessonMarkdown(lesson.text_md)}></div>
                   </div>
                 )}
 
@@ -2408,7 +2451,7 @@ body.cp-action-modal-open { overflow: hidden; }
 
 /* Pane */
 .cp-pane {
-  max-width: 900px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 0 2rem 4rem;
 }
@@ -2515,8 +2558,8 @@ body.cp-action-modal-open { overflow: hidden; }
 }
 
 .cp-pane__header {
-  padding: 2rem 0 1.5rem;
-  border-bottom: 1px solid var(--border-default);
+  padding: 2rem 0 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, #38BDF8 18%, var(--border-default));
   margin-bottom: 1.5rem;
 }
 .cp-pane__breadcrumb {
@@ -2559,6 +2602,45 @@ body.cp-action-modal-open { overflow: hidden; }
 }
 
 /* Video */
+.cp-learning-stage {
+  margin-bottom: 1.15rem;
+  border: 1px solid color-mix(in srgb, #38BDF8 26%, var(--border-default));
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-surface);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+.cp-learning-stage__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.62rem 0.8rem;
+  border-bottom: 1px solid var(--border-default);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, #38BDF8 12%, var(--bg-surface)), var(--bg-surface));
+}
+.cp-learning-stage__label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #38BDF8 12%, var(--bg-base));
+  color: #38BDF8;
+  font: 0.64rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cp-learning-stage__source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
 .cp-video-wrap {
   position: relative;
   padding-top: 56.25%; /* 16:9 */
@@ -2566,10 +2648,9 @@ body.cp-action-modal-open { overflow: hidden; }
     linear-gradient(135deg, color-mix(in srgb, #38BDF8 10%, transparent), transparent 38%),
     var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: 10px;
+  border-radius: 0;
   overflow: hidden;
-  margin-bottom: 0.75rem;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.16);
+  margin-bottom: 0;
 }
 .cp-video {
   position: absolute;
@@ -2581,8 +2662,10 @@ body.cp-action-modal-open { overflow: hidden; }
 .cp-video-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 1.5rem;
+  padding: 0.62rem 0.8rem;
+  border-top: 1px solid var(--border-default);
   font-size: 0.78rem;
 }
 .cp-video-meta__link {
@@ -2594,6 +2677,37 @@ body.cp-action-modal-open { overflow: hidden; }
 }
 .cp-video-meta__link:hover { text-decoration: underline; }
 .cp-video-meta__channel, .cp-video-meta__subs { color: var(--text-muted); }
+.cp-watch-plan {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.7rem 0.8rem;
+  border-top: 1px solid var(--border-default);
+  background: color-mix(in srgb, #2DD4BF 5%, var(--bg-base));
+}
+.cp-watch-plan strong {
+  color: #2DD4BF;
+  font: 0.68rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cp-watch-plan ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cp-watch-plan li {
+  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  font-size: 0.75rem;
+}
 
 /* Timestamps */
 .cp-timestamps {
@@ -2625,10 +2739,13 @@ body.cp-action-modal-open { overflow: hidden; }
 /* Reading */
 .cp-reading {
   background: var(--bg-surface);
-  border: 1px solid var(--border-default);
+  border: 1px solid color-mix(in srgb, #2DD4BF 18%, var(--border-default));
   border-radius: 8px;
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
+}
+.cp-reading--with-player {
+  margin-top: -0.25rem;
 }
 .cp-reading__source {
   display: flex;
@@ -2657,29 +2774,83 @@ body.cp-action-modal-open { overflow: hidden; }
   border: 1px solid var(--border-default);
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 .cp-notes__label {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 0.6rem 1rem;
-  background: var(--bg-raised);
+  padding: 0.55rem 0.85rem;
+  background: color-mix(in srgb, #2DD4BF 7%, var(--bg-raised));
   border-bottom: 1px solid var(--border-default);
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-muted);
+  color: #2DD4BF;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .cp-notes__body {
-  padding: 1rem 1.25rem;
+  padding: 0.9rem 1rem;
   font-size: 0.88rem;
   color: var(--text-secondary);
   line-height: 1.7;
-  white-space: pre-wrap;
   word-break: break-word;
+}
+.cp-notes__body p {
+  margin: 0 0 1rem;
+}
+.cp-notes__body p:last-child {
+  margin-bottom: 0;
+}
+.cp-notes__body h2,
+.cp-notes__body h3 {
+  margin: 1.1rem 0 0.55rem;
+  color: var(--text-primary);
+  letter-spacing: 0;
+}
+.cp-notes__body h2 {
+  font-size: 1.05rem;
+}
+.cp-notes__body h3 {
+  font-size: 0.92rem;
+}
+.cp-notes__body code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-default);
+  color: #38BDF8;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+.cp-rich-bullet {
+  position: relative;
+  padding-left: 1rem;
+  margin: 0.28rem 0;
+}
+.cp-rich-bullet::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2DD4BF;
+}
+.cp-rich-code {
+  margin: 0.8rem 0;
+  overflow: auto;
+  border-radius: 8px;
+  background: #050b0c;
+}
+.cp-rich-code code {
+  display: block;
+  padding: 0.9rem;
+  border: 0;
+  color: #dbeafe;
+  background: transparent;
 }
 
 /* Native lesson resources */

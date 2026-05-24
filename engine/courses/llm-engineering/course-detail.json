@@ -189,7 +189,7 @@
         {
           "id": "ch-01-s-01-l-01",
           "title": "Why Tokenization Matters: The Unit of LLM Thought",
-          "type": "reading",
+          "type": "video",
           "duration_minutes": 25,
           "free_preview": true,
           "description": "Survey of tokenization strategies with an eye on what tokenization choices mean for model capability and failure modes.\n",
@@ -198,6 +198,11 @@
             "bpe",
             "vocabulary"
           ],
+          "video": {
+            "embed_url": "https://www.youtube-nocookie.com/embed/zduSFxRajkE",
+            "url": "https://www.youtube.com/watch?v=zduSFxRajkE",
+            "source": "Andrej Karpathy — Let's build the GPT Tokenizer"
+          },
           "reading": {
             "url": "https://www.youtube.com/watch?v=zduSFxRajkE",
             "source": "Andrej Karpathy — Let's build the GPT Tokenizer",
@@ -340,7 +345,7 @@
         {
           "id": "ch-01-s-03-l-01",
           "title": "Deriving Attention: Queries, Keys, Values",
-          "type": "reading",
+          "type": "video",
           "duration_minutes": 30,
           "free_preview": false,
           "description": "Walk through the attention formula, understand why it is scaled, and build intuition for what Q, K, V represent.\n",
@@ -348,6 +353,11 @@
             "attention",
             "transformer"
           ],
+          "video": {
+            "embed_url": "https://www.youtube-nocookie.com/embed/kCc8FmEb1nY",
+            "url": "https://www.youtube.com/watch?v=kCc8FmEb1nY",
+            "source": "Andrej Karpathy — Let's build GPT"
+          },
           "reading": {
             "url": "https://www.youtube.com/watch?v=kCc8FmEb1nY",
             "source": "Andrej Karpathy — Let's build GPT",
@@ -2584,5 +2594,5 @@
   "totalLessons": 31,
   "totalChapters": 8,
   "totalDurationMinutes": 1255,
-  "generatedAt": "2026-05-24T17:17:34.291Z"
+  "generatedAt": "2026-05-24T17:46:21.514Z"
 }
