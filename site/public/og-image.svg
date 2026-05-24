@@ -34,18 +34,18 @@
     <path d="M1124 498 H1068 V554" stroke="#38BDF8"/>
   </g>
 
-  <g transform="translate(332 204)">
-    <g transform="scale(2)">
-      <rect width="56" height="56" rx="12" fill="#38BDF8"/>
-      <rect x="8" y="8" width="40" height="40" rx="7" fill="#0a1e1e"/>
-      <rect x="14" y="16" width="28" height="3.5" rx="1.75" fill="#38BDF8"/>
-      <rect x="14" y="23" width="19" height="3.5" rx="1.75" fill="#2DD4BF"/>
-      <rect x="14" y="30" width="23" height="3.5" rx="1.75" fill="#38BDF8" opacity="0.6"/>
-      <rect x="14" y="37" width="12" height="3.5" rx="1.75" fill="#2DD4BF" opacity="0.5"/>
-      <rect x="33" y="32" width="12" height="12" rx="3.5" fill="#38BDF8"/>
-      <path d="M36 35 L38.5 37.5 M38.5 35 L36 37.5" fill="none" stroke="#0a1e1e" stroke-width="1.6" stroke-linecap="round"/>
+  <g transform="translate(275 222)">
+    <g transform="scale(2.2)">
+      <rect x="0" y="2" width="40" height="40" rx="9" fill="#38BDF8"/>
+      <rect x="5.5" y="7.5" width="29" height="29" rx="5" fill="#0a1e1e"/>
+      <rect x="10" y="13" width="20" height="2.5" rx="1.25" fill="#38BDF8"/>
+      <rect x="10" y="18" width="13" height="2.5" rx="1.25" fill="#2DD4BF"/>
+      <rect x="10" y="23" width="16" height="2.5" rx="1.25" fill="#38BDF8" opacity="0.6"/>
+      <rect x="10" y="28" width="9" height="2.5" rx="1.25" fill="#2DD4BF" opacity="0.5"/>
+      <rect x="23.5" y="24.5" width="9" height="9" rx="2.5" fill="#38BDF8"/>
+      <path d="M26 27 L28 29 M28 27 L26 29" fill="none" stroke="#0a1e1e" stroke-width="1.2" stroke-linecap="round"/>
     </g>
-    <text x="140" y="72" font-family="'Sora','DM Sans',system-ui,sans-serif" font-size="78" letter-spacing="0">
+    <text x="112" y="72" font-family="'Sora','DM Sans',system-ui,sans-serif" font-size="76" letter-spacing="0">
       <tspan font-weight="700" fill="#38BDF8">Open</tspan><tspan font-weight="400" fill="#ffffff">Courses</tspan>
     </text>
   </g>
@@ -58,13 +58,13 @@
   <g font-family="'JetBrains Mono',ui-monospace,monospace" font-size="18" text-anchor="middle">
     <g transform="translate(326 472)">
       <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#ffffff" font-weight="700">16+</text>
-      <text y="20" fill="#4a7070" font-size="13">COURSES</text>
+      <text y="-4" fill="#ffffff" font-weight="700">OPEN</text>
+      <text y="20" fill="#4a7070" font-size="13">SOURCE</text>
     </g>
     <g transform="translate(508 472)">
       <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#ffffff" font-weight="700">12</text>
-      <text y="20" fill="#4a7070" font-size="13">TRACKS</text>
+      <text y="-4" fill="#ffffff" font-weight="700">SELF</text>
+      <text y="20" fill="#4a7070" font-size="13">PACED</text>
     </g>
     <g transform="translate(690 472)">
       <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
@@ -73,7 +73,7 @@
     </g>
     <g transform="translate(872 472)">
       <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#2DD4BF" font-weight="700">$0</text>
+      <text y="-4" fill="#2DD4BF" font-weight="700">FREE</text>
       <text y="20" fill="#4a7070" font-size="13">FOREVER</text>
     </g>
   </g>
