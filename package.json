@@ -11,6 +11,7 @@
     "dev": "cd site && bun run dev",
     "build:site": "cd site && bun run build",
     "build:engine": "cd engine && bun run build",
+    "guard:credentials": "bun run scripts/guard-generated-credentials.ts",
     "install:all": "bun install --filter '*'"
   }
 }

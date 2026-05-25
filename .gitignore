@@ -9,6 +9,30 @@ site/.astro/
 engine/dist/
 engine/dist/certs/
 
+# ── Generated credentials (release-only; never hand-edit/commit) ─────────────
+# The certificate workflow writes final credential files to dist/certs and
+# uploads them as GitHub Release assets. Source templates belong in
+# engine/templates/ instead.
+dist/certs/
+certs/
+certificates/
+credentials/
+site/public/certs/
+site/public/certificates/
+site/public/credentials/
+**/certificate.pdf
+**/acknowledgment-of-course-completion.pdf
+**/openbadge.json
+**/certificate.svg.sig
+**/certificate.svg.asc
+**/certificate.pdf.sig
+**/certificate.pdf.asc
+**/openbadge.json.sig
+**/openbadge.json.asc
+**/*.badge.json
+**/*.badge.json.sig
+**/*.badge.json.asc
+
 # ── Lock files ───────────────────────────────────────────────────────────────
 bun.lock
 package-lock.json

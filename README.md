@@ -131,6 +131,9 @@ manojpisini             Grades code in < 60s          Enrolls · Certifies
      Submit the final test. Pass? A GPG-signed certificate is issued
      as a GitHub Release. Your name goes on the public leaderboard.
      The certificate lives on GitHub forever.
+     Final credential outputs are release-only generated files; PRs and
+     pushes are blocked if certificate PDFs, badges, or signatures are
+     committed by hand.
 ```
 
 <br/>
