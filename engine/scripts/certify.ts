@@ -34,6 +34,14 @@ interface CertData {
   version: string;
 }
 
+interface ShareLinks {
+  linkedInAddToProfile: string;
+  linkedInShare: string;
+  xShare: string;
+  shareText: string;
+  profileCredentialName: string;
+}
+
 function generateCertId(student: string, course: string): string {
   return crypto
     .createHash('sha256')
@@ -118,6 +126,64 @@ function buildOpenBadge(certData: CertData, svgUrl: string): object {
   };
 }
 
+function encodeParam(value: string): string {
+  return encodeURIComponent(value);
+}
+
+function formatLinkedInDate(isoDate: string): string {
+  const issued = new Date(isoDate);
+  const month = String(issued.getUTCMonth() + 1).padStart(2, '0');
+  return `${issued.getUTCFullYear()}${month}`;
+}
+
+function buildShareLinks(certData: CertData, releaseUrl: string): ShareLinks {
+  const profileCredentialName = `${certData.courseTitle} — OpenCourses Completion Certificate`;
+  const shareText = `I completed ${certData.courseTitle} on OpenCourses and earned a verifiable certificate.`;
+  const linkedInAddToProfile = [
+    'https://www.linkedin.com/profile/add',
+    `?startTask=CERTIFICATION_NAME`,
+    `&pfCertificationName=${encodeParam(profileCredentialName)}`,
+    `&pfCertificationUrl=${encodeParam(releaseUrl)}`,
+    `&pfLicenseNo=${encodeParam(certData.certId)}`,
+    `&pfCertStartDate=${encodeParam(formatLinkedInDate(certData.issuedAt))}`,
+  ].join('');
+  const linkedInShare = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeParam(releaseUrl)}`;
+  const xShare = [
+    'https://twitter.com/intent/tweet',
+    `?text=${encodeParam(shareText)}`,
+    `&url=${encodeParam(releaseUrl)}`,
+    '&hashtags=OpenCourses,OpenSource,Learning',
+  ].join('');
+
+  return {
+    linkedInAddToProfile,
+    linkedInShare,
+    xShare,
+    shareText,
+    profileCredentialName,
+  };
+}
+
+function buildShareMarkdown(shareLinks: ShareLinks, releaseUrl: string): string {
+  return `### Share Your Completion
+
+- [Add to LinkedIn profile](${shareLinks.linkedInAddToProfile}) — LinkedIn may ask you to confirm or enter the credential details.
+- [Share in a LinkedIn post](${shareLinks.linkedInShare})
+- [Share on X](${shareLinks.xShare})
+
+Suggested post:
+
+> ${shareLinks.shareText}
+> ${releaseUrl}
+
+Credential details for profiles and resumes:
+
+- Credential name: ${shareLinks.profileCredentialName}
+- Issuing organization: OpenCourses
+- Credential ID: \`${releaseUrl.split('/').pop()?.replace(/^cert-/, '') ?? ''}\`
+- Credential URL: ${releaseUrl}`;
+}
+
 function appendToCertifiedMd(certData: CertData, releaseUrl: string) {
   const certifiedPath = 'CERTIFIED.md';
   let content = fs.existsSync(certifiedPath) ? fs.readFileSync(certifiedPath, 'utf-8') : '# 🏆 Certified Graduates\n\n| Student | Course | Date | Certificate |\n|---------|--------|------|-------------|\n';
@@ -188,11 +254,15 @@ async function main() {
 
   // Open Badges JSON
   const releaseTag = `cert-${certId}`;
+  const expectedReleaseUrl = `${repoUrl}/releases/tag/${releaseTag}`;
   const svgUrl = `${repoUrl}/releases/download/${releaseTag}/${certId}.svg`;
   const badge = buildOpenBadge(certData, svgUrl);
   const badgePath = path.join(CERT_DIR, `${certId}.badge.json`);
   fs.writeFileSync(badgePath, JSON.stringify(badge, null, 2));
   console.log(`✓ Open Badges JSON: ${badgePath}`);
+
+  const shareLinks = buildShareLinks(certData, expectedReleaseUrl);
+  const shareMarkdown = buildShareMarkdown(shareLinks, expectedReleaseUrl);
 
   // Create GitHub Release
   const releaseBody = `## 🎓 Certificate of Completion
@@ -211,7 +281,9 @@ curl -sL ${svgUrl}.asc -o cert.svg.asc
 gpg --verify cert.svg.asc cert.svg
 \`\`\`
 
-The Open Badges 3.0 JSON (\`${certId}.badge.json\`) can be imported into any compliant digital wallet.`;
+The Open Badges 3.0 JSON (\`${certId}.badge.json\`) can be imported into any compliant digital wallet.
+
+${shareMarkdown}`;
 
   const { data: release } = await octokit.repos.createRelease({
     owner, repo,
@@ -251,6 +323,8 @@ ${badgeMarkdown}
 
 **Certificate ID:** \`${certId}\`
 **Release:** ${release.html_url}
+
+${buildShareMarkdown(buildShareLinks(certData, release.html_url), release.html_url)}
 
 ### Verify
 
