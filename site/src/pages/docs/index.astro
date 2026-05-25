@@ -53,14 +53,14 @@ const stats = [
 <Base title="Documentation" description="Complete guides for students, course creators, code contributors, and project architecture.">
   <div class="container">
     <!-- Header -->
-    <div class="docs-index-hero">
-      <div class="docs-index-hero__eyebrow">
+    <div class="page-head docs-index-hero">
+      <div class="page-head__crumbs docs-index-hero__eyebrow">
         <a href={`${base}/`}>~</a>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         <span>docs</span>
       </div>
-      <h1 class="docs-index-hero__title">Documentation</h1>
-      <p class="docs-index-hero__sub">
+      <h1 class="page-head__title docs-index-hero__title">Documentation</h1>
+      <p class="page-head__sub docs-index-hero__sub">
         Everything you need — whether you're learning, building courses, contributing code, or understanding the architecture.
         Select a guide to get started.
       </p>
@@ -138,31 +138,20 @@ const stats = [
 <style>
 /* Hero */
 .docs-index-hero {
-  padding: 3rem 0 2.5rem;
-  max-width: 720px;
+  margin-bottom: 2rem;
 }
 .docs-index-hero__eyebrow {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-bottom: 1.25rem;
 }
 .docs-index-hero__eyebrow a { color: var(--text-muted); text-decoration: none; }
 .docs-index-hero__eyebrow a:hover { color: var(--text-primary); }
 .docs-index-hero__title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: var(--text-primary);
   margin: 0 0 0.75rem;
-  letter-spacing: -0.03em;
 }
 .docs-index-hero__sub {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
   margin: 0 0 2rem;
 }
 .docs-index-stats {

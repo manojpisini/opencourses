@@ -1,42 +1,64 @@
 ---
 import OC from '../data/oc';
 
-const weeks = OC.activity;
-const cellSize = 11;
-const cellGap = 3;
-const W = weeks.length * (cellSize + cellGap);
-const monthLabels = ['May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'];
+interface Props {
+  weeks?: number[][];
+  tone?: 'repo' | 'course';
+  label?: string;
+}
+
+const { weeks: rawWeeks = OC.activity, tone = 'repo', label = 'updates' } = Astro.props;
+const weeks = rawWeeks.length === 52
+  ? rawWeeks.map((week) => Array.from({ length: 7 }, (_, i) => Number(week[i] ?? 0)))
+  : Array.from({ length: 52 }, () => Array(7).fill(0));
+const cellSize = 12;
+const cellGap = 4;
+const W = weeks.length * (cellSize + cellGap) - cellGap;
+const H = cellSize * 7 + cellGap * 6 + 22;
+const total = weeks.flat().reduce((sum, count) => sum + count, 0);
+const max = Math.max(...weeks.flat(), 1);
+
+const monthFormatter = new Intl.DateTimeFormat('en', { month: 'short' });
+const monthLabels = Array.from({ length: 12 }, (_, i) => {
+  const d = new Date(OC.today);
+  d.setMonth(d.getMonth() - (11 - i));
+  return monthFormatter.format(d);
+});
 
 function colorFor(c: number): string {
-  if (c === 0) return 'var(--bg-raised)';
-  if (c <= 2) return 'rgba(var(--accent-blue-rgb), 0.3)';
-  if (c <= 5) return 'rgba(var(--accent-blue-rgb), 0.6)';
-  return 'rgba(var(--accent-blue-rgb), 1)';
+  if (c === 0) return 'var(--heatmap-empty)';
+  const intensity = Math.min(1, c / max);
+  if (intensity <= 0.34) return 'rgba(var(--heatmap-rgb), 0.34)';
+  if (intensity <= 0.67) return 'rgba(var(--heatmap-rgb), 0.62)';
+  return 'rgba(var(--heatmap-rgb), 0.95)';
 }
 ---
-<div class="heatmap">
-  <svg class="heatmap__svg" viewBox={`0 0 ${W} ${cellSize * 8 + 14}`}>
-    {monthLabels.map((m, i) => (
-      <text x={i * (W / 12) + 4} y="10" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">{m}</text>
-    ))}
-    <g transform="translate(0,14)">
-      {weeks.map((days, wi) =>
-        days.map((c, di) => (
-          <rect
-            x={wi * (cellSize + cellGap)}
-            y={di * (cellSize + cellGap)}
-            width={cellSize}
-            height={cellSize}
-            rx="2"
-            fill={colorFor(c)}
-          >
-            <title>{c} update{c !== 1 ? 's' : ''}</title>
-          </rect>
-        ))
-      )}
-    </g>
-  </svg>
+<div class={`heatmap heatmap--${tone}`} style={`--heatmap-width:${W}px`}>
+  <div class="heatmap__scroll" tabindex="0" aria-label={`${total} ${label} in the last 52 weeks`}>
+    <svg class="heatmap__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${total} ${label} across the last 52 weeks`}>
+      {monthLabels.map((m, i) => (
+        <text x={Math.round(i * (W / 12)) + 2} y="11" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">{m}</text>
+      ))}
+      <g transform="translate(0,22)">
+        {weeks.map((days, wi) =>
+          days.map((c, di) => (
+            <rect
+              x={wi * (cellSize + cellGap)}
+              y={di * (cellSize + cellGap)}
+              width={cellSize}
+              height={cellSize}
+              rx="3"
+              fill={colorFor(c)}
+            >
+              <title>{c} {label}</title>
+            </rect>
+          ))
+        )}
+      </g>
+    </svg>
+  </div>
   <div class="heatmap__legend">
+    <span>{total} total</span>
     <span>Less</span>
     {[0, 1, 4, 8].map(c => <span class="heatmap__legend-cell" style={`background:${colorFor(c)}`} />)}
     <span>More</span>

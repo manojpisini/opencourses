@@ -1912,9 +1912,25 @@ body[data-nav="side"] .app-main {
 .heatmap {
   font-family: var(--font-mono);
   font-size: 11px;
+  --heatmap-empty: color-mix(in srgb, var(--bg-raised) 76%, transparent);
+  --heatmap-rgb: var(--accent-blue-rgb);
+}
+.heatmap--course {
+  --heatmap-rgb: 45, 212, 191;
+}
+.heatmap--repo {
+  --heatmap-rgb: 96, 165, 250;
+}
+.heatmap__scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0 6px;
+  scrollbar-width: thin;
 }
 .heatmap__svg {
-  width: 100%;
+  width: max(100%, var(--heatmap-width));
+  min-width: min(100%, var(--heatmap-width));
   height: auto;
   display: block;
 }
@@ -1931,6 +1947,63 @@ body[data-nav="side"] .app-main {
   width: 10px;
   height: 10px;
   border-radius: 2px;
+}
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.activity-panel {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--border-default) 82%, transparent);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--activity-color) 9%, transparent), transparent 38%),
+    var(--bg-surface);
+}
+.activity-panel--course {
+  --activity-color: #2DD4BF;
+}
+.activity-panel--repo {
+  --activity-color: #60A5FA;
+}
+.activity-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.activity-panel__head h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  letter-spacing: 0;
+}
+.activity-panel__head p {
+  max-width: 38rem;
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.activity-panel__head strong {
+  display: inline-grid;
+  min-width: 42px;
+  min-height: 32px;
+  place-items: center;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--activity-color) 36%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--activity-color) 10%, transparent);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+@media (max-width: 900px) {
+  .activity-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================================

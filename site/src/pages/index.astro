@@ -9,10 +9,12 @@ import VersionTag from '../components/VersionTag.astro';
 import OC from '../data/oc';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const featured = OC.COURSES.filter(c => c.featured);
+const explicitlyFeatured = OC.COURSES.filter(c => c.featured);
+const featured = (explicitlyFeatured.length > 0 ? explicitlyFeatured : OC.COURSES).slice(0, 4);
 const topContributors = OC.CONTRIBUTORS.slice(0, 6);
 const recentChangelog = (OC.CHANGELOG[0]?.entries ?? []).slice(0, 3);
-const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
+const totalRepoUpdates = OC.repoActivity.flat().reduce((a, b) => a + b, 0);
+const totalCourseUpdates = OC.courseActivity.flat().reduce((a, b) => a + b, 0);
 ---
 
 <Base title="OpenCourses" currentPath="/">
@@ -149,20 +151,39 @@ const totalCommits = OC.activity.flat().reduce((a, b) => a + b, 0);
 
   <hr class="section-divider" />
 
-  <!-- ACTIVITY HEATMAP -->
+  <!-- ACTIVITY HEATMAPS -->
   <section class="section">
     <div class="container">
       <div class="section-head">
         <div>
           <h2 class="section-head__title">Activity</h2>
-          <div class="section-head__sub">Last 12 months of curriculum updates</div>
+          <div class="section-head__sub">Last 12 months of course and repository movement</div>
         </div>
         <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">
-          {totalCommits} commits · 52 weeks
+          {totalCourseUpdates + totalRepoUpdates} updates · 52 weeks
         </span>
       </div>
-      <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:24px">
-        <Heatmap />
+      <div class="activity-grid">
+        <article class="activity-panel activity-panel--course">
+          <div class="activity-panel__head">
+            <div>
+              <h3>Course updates</h3>
+              <p>New lessons, resources, tests, and curriculum revisions.</p>
+            </div>
+            <strong>{totalCourseUpdates}</strong>
+          </div>
+          <Heatmap weeks={OC.courseActivity} tone="course" label="course updates" />
+        </article>
+        <article class="activity-panel activity-panel--repo">
+          <div class="activity-panel__head">
+            <div>
+              <h3>OpenCourses repo</h3>
+              <p>Platform, docs, data sync, and repository-level changes.</p>
+            </div>
+            <strong>{totalRepoUpdates}</strong>
+          </div>
+          <Heatmap weeks={OC.repoActivity} tone="repo" label="repo updates" />
+        </article>
       </div>
     </div>
   </section>

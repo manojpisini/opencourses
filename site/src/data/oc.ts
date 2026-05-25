@@ -264,15 +264,65 @@ export const TRACK_COLORS: Record<string, string> = {
 };
 
 // ============================================================
-// Activity heatmap — 52w × 7d
-// Loaded from activity.json (written by sync-site-data workflow).
-// Falls back to zero grid when data is not yet available.
+// Activity heatmaps — 52w × 7d
+// Repo activity is loaded from activity.json when the sync job provides it.
+// Course activity is derived from course updates and changelog entries so the
+// homepage still shows meaningful movement before live repo stats are synced.
 // ============================================================
 const _actRaw = activityRaw as { weeks?: number[][] };
-function loadActivity(): number[][] {
-  if (_actRaw.weeks && _actRaw.weeks.length === 52) return _actRaw.weeks;
+
+function emptyActivity(): number[][] {
   return Array.from({ length: 52 }, () => Array(7).fill(0));
 }
+
+function normalizeActivity(weeks?: number[][]): number[][] {
+  if (!weeks || weeks.length !== 52) return emptyActivity();
+  return weeks.map((week) => Array.from({ length: 7 }, (_, i) => Number(week[i] ?? 0)));
+}
+
+function activityTotal(weeks: number[][]): number {
+  return weeks.flat().reduce((sum, count) => sum + count, 0);
+}
+
+function buildActivityFromEvents(events: { date: string; count?: number }[]): number[][] {
+  const weeks = emptyActivity();
+  const dayMs = 86_400_000;
+  const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+  for (const event of events) {
+    const date = new Date(event.date);
+    if (Number.isNaN(date.getTime())) continue;
+
+    const eventAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const daysAgo = Math.floor((todayAtMidnight - eventAtMidnight) / dayMs);
+    if (daysAgo < 0 || daysAgo >= 52 * 7) continue;
+
+    const weekIndex = 51 - Math.floor(daysAgo / 7);
+    const dayIndex = date.getDay();
+    weeks[weekIndex][dayIndex] += Math.max(1, Number(event.count ?? 1));
+  }
+
+  return weeks;
+}
+
+const rawRepoActivity = normalizeActivity(_actRaw.weeks);
+
+const courseUpdateEvents = [
+  ...COURSES.map((course) => ({ date: course.updatedAt, count: 1 })),
+  ...CHANGELOG.flatMap((month) =>
+    month.entries.map((entry) => ({ date: entry.date, count: Math.max(1, entry.changes.length) }))
+  ),
+];
+
+const repoFallbackEvents = [
+  ...courseUpdateEvents,
+  ...COURSES.map((course) => ({ date: course.lastCommit || course.updatedAt, count: 1 })),
+];
+
+export const COURSE_ACTIVITY = buildActivityFromEvents(courseUpdateEvents);
+export const REPO_ACTIVITY = activityTotal(rawRepoActivity) > 0
+  ? rawRepoActivity
+  : buildActivityFromEvents(repoFallbackEvents);
 
 // ============================================================
 // Sparkline SVG
@@ -338,7 +388,9 @@ const OC = {
   TRACK_COLORS,
   MODULE_TEMPLATES,
   LEADERBOARD: leaderboardRaw as unknown as LeaderboardData,
-  activity: loadActivity(),
+  activity: REPO_ACTIVITY,
+  repoActivity: REPO_ACTIVITY,
+  courseActivity: COURSE_ACTIVITY,
   sparklineSvg,
   fuzzyScore,
   relativeTime,

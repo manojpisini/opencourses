@@ -143,7 +143,9 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
   display: grid;
   grid-template-columns: 220px 1fr 180px;
   grid-template-areas: "chapnav main sectoc";
-  gap: 0;
+  gap: 1rem;
+  width: min(100% - 2rem, 1440px);
+  margin: var(--space-6) auto 0;
   min-height: calc(100vh - 56px);
   align-items: start;
 }
@@ -166,13 +168,15 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 .docs-chapnav {
   grid-area: chapnav;
   position: sticky;
-  top: 56px;
-  height: calc(100vh - 56px);
+  top: 72px;
+  max-height: calc(100vh - 88px);
   overflow-y: auto;
   scrollbar-width: thin;
-  border-right: 1px solid var(--border-default);
+  border: 1px solid color-mix(in srgb, var(--border-default) 82%, transparent);
+  border-radius: 8px;
   padding: 1.5rem 0;
-  background: var(--bg-surface);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-raised) 64%, transparent), var(--bg-surface));
 }
 .docs-chapnav__header {
   padding: 0 1.25rem 1rem;
@@ -247,9 +251,30 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 
 /* Chapter header band */
 .docs-ch-header {
+  position: relative;
   padding: 2.5rem 2.5rem 2rem;
-  border-bottom: 1px solid var(--border-default);
-  background: color-mix(in srgb, var(--ch-color) 5%, var(--bg-surface));
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-default) 82%, transparent);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--ch-color) 12%, transparent), transparent 38%),
+    linear-gradient(315deg, color-mix(in srgb, #2DD4BF 7%, transparent), transparent 48%),
+    var(--bg-surface);
+}
+.docs-ch-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--border-default) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border-default) 38%, transparent) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(135deg, black, transparent 72%);
+  opacity: 0.36;
+  pointer-events: none;
+}
+.docs-ch-header > * {
+  position: relative;
 }
 .docs-ch-header__crumbs {
   display: flex;
@@ -280,11 +305,11 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 }
 .docs-ch-header__icon { font-size: 1.4rem; }
 .docs-ch-header__title {
-  font-size: 2rem;
+  font-size: clamp(2.25rem, 6vw, 4.6rem);
   font-weight: 800;
   color: var(--text-primary);
   margin: 0 0 0.5rem;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 .docs-ch-header__sub {
   font-size: 0.95rem;
@@ -296,18 +321,19 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 
 /* Content wrapper */
 .docs-content {
-  padding: 2rem 2.5rem;
+  padding: 2rem 0;
 }
 
 /* ── Right sidebar: section TOC ───────────────────────────────────────── */
 .docs-sectoc {
   grid-area: sectoc;
   position: sticky;
-  top: 56px;
-  height: calc(100vh - 56px);
+  top: 72px;
+  max-height: calc(100vh - 88px);
   overflow-y: auto;
   scrollbar-width: thin;
-  border-left: 1px solid var(--border-default);
+  border: 1px solid color-mix(in srgb, var(--border-default) 82%, transparent);
+  border-radius: 8px;
   padding: 1.5rem 1rem;
   background: var(--bg-surface);
 }
@@ -343,8 +369,10 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
 /* ── Chapter footer navigation ────────────────────────────────────────── */
 .docs-ch-footer {
   padding: 1.5rem 2.5rem;
-  border-top: 1px solid var(--border-default);
+  border: 1px solid color-mix(in srgb, var(--border-default) 82%, transparent);
+  border-radius: 8px;
   background: var(--bg-surface);
+  margin-bottom: 2.5rem;
 }
 .docs-ch-footer__inner {
   display: flex;
