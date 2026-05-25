@@ -125,30 +125,125 @@ function mediaEmbedUrl(url: string): string | null {
   return null;
 }
 
-function renderLessonMarkdown(markdown: string): string {
-  const escaped = markdown
+function escapeLessonHtml(value: string): string {
+  return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-  const withCode = escaped.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) =>
-    `<pre class="cp-rich-code"><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`,
-  );
-
-  return withCode
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^\- (.+)$/gm, '<div class="cp-rich-bullet">$1</div>')
+function renderInlineMarkdown(value: string): string {
+  return escapeLessonHtml(value)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-    .replace(/^/, '<p>')
-    .replace(/$/, '</p>')
-    .replace(/<p><h([23])>/g, '<h$1>')
-    .replace(/<\/h([23])><\/p>/g, '</h$1>')
-    .replace(/<p><pre/g, '<pre')
-    .replace(/<\/pre><\/p>/g, '</pre>');
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function isMarkdownTableDivider(line: string): boolean {
+  return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+}
+
+function splitMarkdownTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map(cell => cell.trim());
+}
+
+function renderParagraph(lines: string[]): string {
+  const text = lines.join('\n').trim();
+  return text ? `<p>${renderInlineMarkdown(text).replace(/\n/g, '<br>')}</p>` : '';
+}
+
+function renderLessonMarkdown(markdown: string): string {
+  const lines = String(markdown ?? '').replace(/\r\n/g, '\n').split('\n');
+  const blocks: string[] = [];
+  let paragraph: string[] = [];
+  let list: string[] = [];
+
+  const flushParagraph = () => {
+    if (paragraph.length) {
+      blocks.push(renderParagraph(paragraph));
+      paragraph = [];
+    }
+  };
+  const flushList = () => {
+    if (list.length) {
+      blocks.push(`<ul class="cp-rich-list">${list.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join('')}</ul>`);
+      list = [];
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? '';
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith('```')) {
+      flushParagraph();
+      flushList();
+      const lang = trimmed.replace(/^```/, '').trim() || 'text';
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !(lines[i] ?? '').trim().startsWith('```')) {
+        codeLines.push(lines[i] ?? '');
+        i++;
+      }
+      blocks.push(`<pre class="cp-rich-code"><code class="language-${escapeLessonHtml(lang)}">${escapeLessonHtml(codeLines.join('\n').trim())}</code></pre>`);
+      continue;
+    }
+
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    if (/^#{2,3}\s+/.test(trimmed)) {
+      flushParagraph();
+      flushList();
+      const level = trimmed.startsWith('###') ? 3 : 2;
+      blocks.push(`<h${level}>${renderInlineMarkdown(trimmed.replace(/^#{2,3}\s+/, ''))}</h${level}>`);
+      continue;
+    }
+
+    if (trimmed.includes('|') && i + 1 < lines.length && isMarkdownTableDivider(lines[i + 1] ?? '')) {
+      flushParagraph();
+      flushList();
+      const headers = splitMarkdownTableRow(trimmed);
+      i += 2;
+      const rows: string[][] = [];
+      while (i < lines.length && (lines[i] ?? '').trim().includes('|') && (lines[i] ?? '').trim()) {
+        rows.push(splitMarkdownTableRow(lines[i] ?? ''));
+        i++;
+      }
+      i--;
+      blocks.push(
+        '<div class="cp-rich-table-wrap"><table class="cp-rich-table"><thead><tr>' +
+        headers.map(cell => `<th>${renderInlineMarkdown(cell)}</th>`).join('') +
+        '</tr></thead><tbody>' +
+        rows.map(row => `<tr>${headers.map((_header, index) => `<td>${renderInlineMarkdown(row[index] ?? '')}</td>`).join('')}</tr>`).join('') +
+        '</tbody></table></div>',
+      );
+      continue;
+    }
+
+    const listMatch = trimmed.match(/^[-*]\s+(.+)$/);
+    if (listMatch) {
+      flushParagraph();
+      list.push(listMatch[1] ?? '');
+      continue;
+    }
+
+    flushList();
+    paragraph.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+  return blocks.join('\n');
 }
 
 function enrollmentBody(courseId: string): string {
@@ -352,17 +447,17 @@ function fmtDuration(mins: number): string {
 
 function lessonIcon(type: string): string {
   const icons: Record<string, string> = {
-    video: '▶',
-    reading: '📖',
-    code: '💻',
-    exercise: '🛠',
-    reference: '📋',
-    quiz: '📝',
-    discussion: '💬',
-    project: '🚀',
-    live: '🔴',
+    video: 'V',
+    reading: 'R',
+    code: 'C',
+    exercise: 'L',
+    reference: 'Ref',
+    quiz: 'Q',
+    discussion: 'D',
+    project: 'P',
+    live: 'Live',
   };
-  return icons[type] ?? '•';
+  return icons[type] ?? 'Step';
 }
 
 // Build flat lesson list with chapter info for navigation
@@ -391,7 +486,12 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- FULL COURSE PLAYER                                                      -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="cp-root cp-root--locked" id="cp-root" data-course-id={courseIdForActions}>
+    <div
+      class="cp-root cp-root--locked"
+      id="cp-root"
+      data-course-id={courseIdForActions}
+      style={`--course-primary:${detail.cover.color_primary};--course-secondary:${detail.cover.color_secondary};--course-banner:url('${detail.cover.banner}')`}
+    >
 
       <!-- ── Top bar ──────────────────────────────────────────────────────── -->
       <header class="cp-topbar">
@@ -688,7 +788,19 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                           <article class={`cp-resource-card cp-resource-card--${kind}`}>
                             <div class="cp-resource-card__media">
                               {kind === 'image' && (
-                                <img src={src} alt={file.label} loading="lazy" class="cp-resource-card__img" />
+                                <>
+                                  <img src={src} alt={file.label} loading="lazy" class="cp-resource-card__img" data-zoomable-image />
+                                  <button
+                                    class="cp-resource-card__zoom"
+                                    type="button"
+                                    data-image-viewer-open
+                                    data-image-src={src}
+                                    data-image-title={file.label}
+                                    aria-label={`View ${file.label} larger`}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="M9 21H3v-6"/><path d="m3 21 7-7"/></svg>
+                                  </button>
+                                </>
                               )}
                               {kind === 'video' && (
                                 <video controls preload="metadata" class="cp-resource-card__video">
@@ -730,10 +842,25 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                                   class="cp-resource-card__frame"
                                 ></iframe>
                               )}
+                              {!embed && kind === 'image' && (
+                                <>
+                                  <img src={link.url} alt={link.label} loading="lazy" class="cp-resource-card__img" data-zoomable-image />
+                                  <button
+                                    class="cp-resource-card__zoom"
+                                    type="button"
+                                    data-image-viewer-open
+                                    data-image-src={link.url}
+                                    data-image-title={link.label}
+                                    aria-label={`View ${link.label} larger`}
+                                  >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="M9 21H3v-6"/><path d="m3 21 7-7"/></svg>
+                                  </button>
+                                </>
+                              )}
                               {!embed && kind === 'pdf' && (
                                 <iframe src={link.url} title={link.label} loading="lazy" class="cp-resource-card__frame"></iframe>
                               )}
-                              {!embed && kind !== 'pdf' && (
+                              {!embed && kind !== 'pdf' && kind !== 'image' && (
                                 <div class="cp-resource-card__placeholder">
                                   <span>{kind}</span>
                                 </div>
@@ -1126,6 +1253,33 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     </div>
   )}
 
+  <div class="cp-image-viewer" id="cp-image-viewer" hidden>
+    <div class="cp-image-viewer__backdrop" data-image-viewer-close></div>
+    <section class="cp-image-viewer__dialog" role="dialog" aria-modal="true" aria-labelledby="cp-image-viewer-title">
+      <header class="cp-image-viewer__bar">
+        <h2 id="cp-image-viewer-title">Image preview</h2>
+        <div class="cp-image-viewer__actions">
+          <button class="cp-image-viewer__btn" type="button" data-image-zoom="out" aria-label="Zoom out">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </button>
+          <button class="cp-image-viewer__btn" type="button" data-image-zoom="reset">100%</button>
+          <button class="cp-image-viewer__btn" type="button" data-image-zoom="in" aria-label="Zoom in">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </button>
+          <button class="cp-image-viewer__btn" type="button" data-image-fullscreen>
+            Fullscreen
+          </button>
+          <button class="cp-image-viewer__btn cp-image-viewer__btn--close" type="button" data-image-viewer-close aria-label="Close image preview">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </header>
+      <div class="cp-image-viewer__stage" id="cp-image-viewer-stage">
+        <img id="cp-image-viewer-img" alt="" />
+      </div>
+    </section>
+  </div>
+
   <!-- Highlight.js for syntax highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" is:inline></script>
@@ -1169,10 +1323,15 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     var modalInput = document.getElementById('cp-action-username');
     var checkBtn = document.getElementById('cp-check-enrollment');
     var enrollmentStatus = document.getElementById('cp-enrollment-status');
+    var imageViewer = document.getElementById('cp-image-viewer');
+    var imageViewerImg = document.getElementById('cp-image-viewer-img');
+    var imageViewerTitle = document.getElementById('cp-image-viewer-title');
+    var imageViewerStage = document.getElementById('cp-image-viewer-stage');
     var courseId = window.OC_COURSE_ID || '';
     var githubRepo = window.OC_GITHUB_REPO || 'manojpisini/opencourses';
     var enrollmentIssue = null;
     var playerReady = false;
+    var imageZoom = 1;
 
     function normalizeUsername(value) {
       return String(value || '').trim().replace(/^@+/, '').toLowerCase();
@@ -1485,6 +1644,38 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       document.body.classList.remove('cp-action-modal-open');
     }
 
+    function applyImageZoom() {
+      if (!imageViewerImg) return;
+      imageViewerImg.style.transform = 'scale(' + imageZoom + ')';
+    }
+
+    function openImageViewer(src, title) {
+      if (!imageViewer || !imageViewerImg) return;
+      imageZoom = 1;
+      imageViewerImg.src = src;
+      imageViewerImg.alt = title || 'Course resource image';
+      if (imageViewerTitle) imageViewerTitle.textContent = title || 'Image preview';
+      applyImageZoom();
+      imageViewer.hidden = false;
+      document.body.classList.add('cp-image-viewer-open');
+    }
+
+    function closeImageViewer() {
+      if (!imageViewer) return;
+      imageViewer.hidden = true;
+      document.body.classList.remove('cp-image-viewer-open');
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function () {});
+      }
+    }
+
+    function updateImageZoom(direction) {
+      if (direction === 'reset') imageZoom = 1;
+      if (direction === 'in') imageZoom = Math.min(3, Math.round((imageZoom + 0.25) * 100) / 100);
+      if (direction === 'out') imageZoom = Math.max(0.5, Math.round((imageZoom - 0.25) * 100) / 100);
+      applyImageZoom();
+    }
+
     document.addEventListener('click', function (e) {
       var actionBtn = e.target.closest('[data-course-action]');
       if (actionBtn) {
@@ -1496,10 +1687,43 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
         closeActionPanel();
         return;
       }
+
+      var imageOpen = e.target.closest('[data-image-viewer-open]');
+      if (imageOpen) {
+        openImageViewer(imageOpen.dataset.imageSrc, imageOpen.dataset.imageTitle);
+        return;
+      }
+
+      var zoomableImage = e.target.closest('[data-zoomable-image]');
+      if (zoomableImage) {
+        openImageViewer(zoomableImage.currentSrc || zoomableImage.src, zoomableImage.alt);
+        return;
+      }
+
+      var zoomBtn = e.target.closest('[data-image-zoom]');
+      if (zoomBtn) {
+        updateImageZoom(zoomBtn.dataset.imageZoom);
+        return;
+      }
+
+      if (e.target.closest('[data-image-fullscreen]')) {
+        if (imageViewerStage && imageViewerStage.requestFullscreen) {
+          imageViewerStage.requestFullscreen().catch(function () {});
+        }
+        return;
+      }
+
+      if (e.target.closest('[data-image-viewer-close]')) {
+        closeImageViewer();
+        return;
+      }
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeActionPanel();
+      if (e.key === 'Escape') {
+        closeActionPanel();
+        closeImageViewer();
+      }
     });
 
     if (copyGh) {
@@ -1635,14 +1859,8 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       if (chk) chk.textContent = '✓';
     });
 
-    // Show initial lesson (first pane is rendered visible from SSR)
-    if (initLesson > 0) {
-      showLesson(initLesson);
-    } else {
-      // Activate first sidebar button
-      var firstBtn = document.querySelector('[data-lesson="0"]');
-      if (firstBtn) firstBtn.classList.add('active');
-    }
+    // Show the restored lesson. Lesson panes are SSR-hidden until the player is ready.
+    showLesson(initLesson);
 
     // ── Sidebar lesson click ───────────────────────────────────────────────
     document.addEventListener('click', function (e) {
@@ -2254,6 +2472,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   font: 0.78rem/1.55 var(--font-mono);
 }
 body.cp-action-modal-open { overflow: hidden; }
+body.cp-image-viewer-open { overflow: hidden; }
 
 .cp-test-composer {
   margin: 0 0 1rem;
@@ -2420,6 +2639,100 @@ body.cp-action-modal-open { overflow: hidden; }
   flex-shrink: 0;
   color: #2DD4BF;
   font: 0.7rem var(--font-mono);
+}
+
+.cp-image-viewer[hidden] { display: none; }
+.cp-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.cp-image-viewer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(10px);
+}
+.cp-image-viewer__dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1180px, calc(100vw - 2rem));
+  height: min(820px, calc(100vh - 2rem));
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, #38BDF8 28%, var(--border-default));
+  border-radius: 8px;
+  background: var(--bg-base);
+  box-shadow: 0 32px 90px rgba(0,0,0,0.5);
+}
+.cp-image-viewer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+}
+.cp-image-viewer__bar h2 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-image-viewer__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.cp-image-viewer__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 34px;
+  padding: 0 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.cp-image-viewer__btn:hover {
+  border-color: color-mix(in srgb, #38BDF8 45%, var(--border-default));
+  color: var(--text-primary);
+}
+.cp-image-viewer__stage {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+  background:
+    linear-gradient(45deg, color-mix(in srgb, var(--bg-surface) 65%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--bg-surface) 65%, transparent) 25%, transparent 25%),
+    var(--bg-base);
+  background-size: 24px 24px;
+}
+.cp-image-viewer__stage:fullscreen {
+  background: #05080a;
+}
+.cp-image-viewer__stage img {
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center center;
+  transition: transform 160ms ease;
+  border-radius: 4px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.35);
 }
 
 /* Sidebar toggle (mobile) */
@@ -2852,6 +3165,50 @@ body.cp-action-modal-open { overflow: hidden; }
   color: #dbeafe;
   background: transparent;
 }
+.cp-rich-list {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+}
+.cp-rich-list li {
+  margin: 0.28rem 0;
+}
+.cp-rich-table-wrap {
+  width: 100%;
+  margin: 0.9rem 0 1.2rem;
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+}
+.cp-rich-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  background: color-mix(in srgb, var(--bg-base) 70%, transparent);
+}
+.cp-rich-table th,
+.cp-rich-table td {
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--border-default);
+  border-right: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: top;
+}
+.cp-rich-table th:last-child,
+.cp-rich-table td:last-child {
+  border-right: 0;
+}
+.cp-rich-table tr:last-child td {
+  border-bottom: 0;
+}
+.cp-rich-table th {
+  color: var(--text-primary);
+  background: color-mix(in srgb, #38BDF8 8%, var(--bg-surface));
+  font-weight: 800;
+}
+.cp-rich-table td {
+  color: var(--text-secondary);
+}
 
 /* Native lesson resources */
 .cp-resources {
@@ -2888,6 +3245,7 @@ body.cp-action-modal-open { overflow: hidden; }
   overflow: hidden;
 }
 .cp-resource-card__media {
+  position: relative;
   min-height: 180px;
   background:
     radial-gradient(circle at 12% 10%, color-mix(in srgb, #38BDF8 12%, transparent), transparent 28%),
@@ -2904,6 +3262,7 @@ body.cp-action-modal-open { overflow: hidden; }
   max-height: 620px;
   object-fit: contain;
   background: color-mix(in srgb, var(--bg-base) 88%, #38BDF8);
+  cursor: zoom-in;
 }
 .cp-resource-card__video,
 .cp-resource-card__frame {
@@ -2955,6 +3314,24 @@ body.cp-action-modal-open { overflow: hidden; }
   color: #38BDF8;
   text-decoration: none;
   font: 0.72rem var(--font-mono);
+}
+.cp-resource-card__zoom {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, #38BDF8 40%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-base) 72%, transparent);
+  color: #38BDF8;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+}
+.cp-resource-card__zoom:hover {
+  background: color-mix(in srgb, #38BDF8 16%, var(--bg-base));
 }
 .cp-resource-card__required {
   position: absolute;
@@ -3300,5 +3677,417 @@ body.cp-action-modal-open { overflow: hidden; }
   font-size: 0.65rem;
   color: var(--text-muted);
   margin-top: 0.25rem;
+}
+
+/* Modern product shell */
+.cp-root {
+  --course-primary: var(--accent-blue);
+  --course-secondary: #2DD4BF;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--course-primary) 10%, transparent), transparent 32%),
+    linear-gradient(315deg, color-mix(in srgb, var(--course-secondary) 9%, transparent), transparent 38%),
+    var(--bg-base);
+}
+.cp-topbar {
+  height: 64px;
+  padding: 0 clamp(0.8rem, 2vw, 1.35rem);
+  gap: clamp(0.6rem, 1.5vw, 1rem);
+  background: color-mix(in srgb, var(--bg-surface) 78%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--course-primary) 24%, var(--border-default));
+  backdrop-filter: blur(18px);
+}
+.cp-topbar__back {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-base) 64%, transparent);
+  font-family: var(--font-body);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.cp-topbar__title {
+  font-size: clamp(0.95rem, 1.4vw, 1.08rem);
+  letter-spacing: 0;
+}
+.cp-topbar__duration,
+.cp-topbar__progress-label {
+  font-family: var(--font-body);
+  font-weight: 800;
+}
+.cp-topbar__progress {
+  width: clamp(88px, 12vw, 160px);
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border-default) 72%, transparent);
+}
+.cp-topbar__progress-bar {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--course-secondary), var(--course-primary));
+}
+.cp-body {
+  grid-template-columns: minmax(260px, 310px) minmax(0, 1fr) minmax(250px, 300px);
+  height: calc(100vh - 56px - 64px);
+  gap: 1px;
+  background: color-mix(in srgb, var(--border-default) 80%, transparent);
+}
+.cp-sidebar,
+.cp-infopanel,
+.cp-content {
+  border: 0;
+  background: var(--bg-base);
+}
+.cp-sidebar,
+.cp-infopanel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 84%, transparent), color-mix(in srgb, var(--bg-base) 94%, transparent));
+}
+.cp-sidebar__inner,
+.cp-infopanel {
+  padding: 14px;
+}
+.cp-sidebar__course-info {
+  position: relative;
+  overflow: hidden;
+  min-height: 154px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--course-primary) 24%, var(--border-default));
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg-base) 86%, transparent) 78%),
+    var(--course-banner) center / cover,
+    var(--bg-surface);
+}
+.cp-sidebar__thumb {
+  display: none;
+}
+.cp-sidebar__course-title {
+  font-size: 0.95rem;
+  white-space: normal;
+  line-height: 1.25;
+}
+.cp-sidebar__course-sub {
+  margin-top: 5px;
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+.cp-chapter {
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+}
+.cp-chapter__head {
+  min-height: 46px;
+  padding: 10px 12px;
+}
+.cp-chapter__title {
+  color: var(--text-primary);
+  font-size: 0.84rem;
+}
+.cp-chapter__count {
+  border-radius: 999px;
+}
+.cp-chapter__lessons {
+  padding: 6px;
+  background: color-mix(in srgb, var(--bg-base) 70%, transparent);
+}
+.cp-lesson-btn {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+}
+.cp-lesson-btn:hover,
+.cp-lesson-btn.active {
+  border-color: color-mix(in srgb, var(--course-primary) 36%, transparent);
+  background: color-mix(in srgb, var(--course-primary) 10%, var(--bg-surface));
+}
+.cp-lesson-btn__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-base);
+  color: var(--course-primary);
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+.cp-lesson-btn.active .cp-lesson-btn__title {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+.cp-chapter-test-pill,
+.cp-final-pill,
+.cp-enroll-btn,
+.cp-action-row,
+.cp-action-choice {
+  border-radius: 8px;
+}
+.cp-enroll-btn,
+.cp-action-choice--primary {
+  background: linear-gradient(135deg, var(--course-primary), var(--course-secondary));
+  color: #061014;
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--course-primary) 18%, transparent);
+}
+.cp-content {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 34%, transparent), transparent 240px),
+    var(--bg-base);
+}
+.cp-pane {
+  max-width: 980px;
+  padding-inline: clamp(1rem, 4vw, 3rem);
+}
+.cp-enrollment-gate {
+  padding-top: clamp(1rem, 4vw, 2.5rem);
+}
+.cp-gate-hero {
+  position: relative;
+  min-height: 380px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  overflow: hidden;
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+  border: 1px solid color-mix(in srgb, var(--course-primary) 26%, var(--border-default));
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg-base) 92%, transparent) 78%),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-base) 82%, transparent), transparent 74%),
+    var(--course-banner) center / cover,
+    var(--bg-surface);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.26);
+}
+.cp-gate-hero__thumb {
+  display: none;
+}
+.cp-gate-hero__eyebrow {
+  width: fit-content;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--course-secondary) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-base) 62%, transparent);
+  font-family: var(--font-body);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.cp-gate-hero__title {
+  max-width: 760px;
+  font-size: clamp(2.2rem, 7vw, 5.2rem);
+  letter-spacing: 0;
+}
+.cp-gate-hero__desc {
+  max-width: 760px;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+}
+.cp-gate-hero__meta {
+  font-family: var(--font-body);
+  font-weight: 800;
+}
+.cp-enrollment-check,
+.cp-learning-stage,
+.cp-reading,
+.cp-notes,
+.cp-resource-card,
+.cp-code-block,
+.cp-exercise,
+.cp-timestamps,
+.cp-links,
+.cp-card {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.16);
+}
+.cp-enrollment-check {
+  border-color: color-mix(in srgb, var(--course-primary) 28%, var(--border-default));
+}
+.cp-pane__header {
+  padding-top: clamp(1.5rem, 4vw, 3rem);
+  border-bottom: 0;
+}
+.cp-pane__breadcrumb,
+.cp-pane__dur,
+.cp-learning-stage__label,
+.cp-card__title,
+.cp-resources__header span,
+.cp-timestamps__title,
+.cp-notes__label {
+  font-family: var(--font-body);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.cp-pane__lesson-type {
+  border-radius: 999px;
+}
+.cp-pane__title {
+  max-width: 820px;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  letter-spacing: 0;
+}
+.cp-pane__desc {
+  max-width: 760px;
+  font-size: 1rem;
+}
+.cp-learning-stage {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--course-primary) 30%, var(--border-default));
+}
+.cp-learning-stage__bar {
+  padding: 0.85rem 1rem;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--course-primary) 12%, transparent), transparent),
+    var(--bg-surface);
+}
+.cp-learning-stage__label {
+  min-height: 28px;
+  color: var(--course-primary);
+}
+.cp-video-wrap {
+  border: 0;
+  background: #05080a;
+}
+.cp-video-meta,
+.cp-watch-plan,
+.cp-resource-card__body,
+.cp-code-block__bar,
+.cp-notes__label,
+.cp-exercise__header,
+.cp-links__title {
+  border-color: color-mix(in srgb, var(--border-default) 72%, transparent);
+}
+.cp-infopanel {
+  gap: 12px;
+}
+.cp-card {
+  border-color: color-mix(in srgb, var(--border-default) 82%, transparent);
+}
+.cp-action-modal__dialog {
+  width: min(1160px, calc(100vw - 2rem));
+  max-height: min(820px, calc(100vh - 2rem));
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--course-primary, #38BDF8) 10%, transparent), transparent 42%),
+    var(--bg-surface);
+}
+.cp-test-composer {
+  max-height: min(440px, 46vh);
+  overflow: auto;
+}
+.cp-test-composer__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.cp-test-composer__questions {
+  gap: 1.1rem;
+}
+.cp-test-section {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.cp-test-section__title {
+  grid-column: 1 / -1;
+  align-items: center;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
+}
+.cp-test-section__title span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #2DD4BF 12%, transparent);
+  color: #2DD4BF;
+}
+.cp-test-question {
+  min-width: 0;
+}
+.cp-test-question__top {
+  flex-wrap: wrap;
+}
+.cp-test-question__top code {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.cp-test-question__options {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.cp-test-option {
+  min-width: 0;
+}
+.cp-test-option span {
+  min-width: 0;
+}
+@media (max-width: 1280px) {
+  .cp-body {
+    grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+    grid-template-areas: "sidebar content";
+  }
+  .cp-infopanel {
+    display: none !important;
+  }
+}
+@media (max-width: 800px) {
+  .cp-body {
+    height: calc(100vh - 56px - 64px);
+  }
+  .cp-sidebar--open {
+    top: 120px;
+    height: calc(100vh - 120px);
+    width: min(86vw, 320px);
+  }
+  .cp-topbar__meta,
+  .cp-topbar__progress,
+  .cp-topbar__progress-label {
+    display: none;
+  }
+}
+@media (max-width: 680px) {
+  .cp-action-modal__dialog {
+    width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+    padding: 1rem;
+  }
+  .cp-test-section {
+    grid-template-columns: 1fr;
+  }
+  .cp-test-composer {
+    max-height: 48vh;
+  }
+  .cp-image-viewer {
+    padding: 0.5rem;
+  }
+  .cp-image-viewer__dialog {
+    width: calc(100vw - 1rem);
+    height: calc(100vh - 1rem);
+  }
+  .cp-image-viewer__bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .cp-image-viewer__actions {
+    flex-wrap: wrap;
+  }
+  .cp-gate-hero {
+    min-height: 330px;
+  }
+  .cp-pane__nav {
+    flex-direction: column;
+  }
+  .cp-pane__nav-btn,
+  .cp-pane__nav-btn--next {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    justify-content: center;
+  }
 }
 </style>

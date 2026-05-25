@@ -27,7 +27,21 @@ const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 1
         <span>courses</span>
       </div>
       <h1 class="page-head__title">Course Catalog</h1>
-      <p class="page-head__sub">{OC.COURSES.length} courses, version-controlled. Filter by track, difficulty, status, or duration.</p>
+      <p class="page-head__sub">Find hands-on, version-controlled courses built around real engineering outcomes instead of static documentation.</p>
+      <div class="catalog-hero-stats" aria-label="Catalog summary">
+        <div class="catalog-hero-stat">
+          <strong>{OC.COURSES.length}</strong>
+          <span>Courses</span>
+        </div>
+        <div class="catalog-hero-stat">
+          <strong>{OC.TRACKS.length}</strong>
+          <span>Tracks</span>
+        </div>
+        <div class="catalog-hero-stat">
+          <strong>{topTags.length}</strong>
+          <span>Popular tags</span>
+        </div>
+      </div>
     </div>
 
     <div class="catalog-layout">

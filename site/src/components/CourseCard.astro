@@ -33,6 +33,10 @@ const difficultyColor: Record<string,string> = {
   data-stars={course.stars}
   data-search-text={`${course.title} ${(course.tags||[]).join(' ')} ${course.description}`}
 >
+  <div class="course-card__visual" aria-hidden="true">
+    <div class="course-card__signal"></div>
+    <span class="course-card__track-mark">{course.track.slice(0, 2).toUpperCase()}</span>
+  </div>
   <div class="course-card__head">
     <GitStatus status={course.status} />
     <div class="course-card__head-text">
@@ -62,4 +66,15 @@ const difficultyColor: Record<string,string> = {
       <Sparkline svg={course.sparklineSvg || ''} />
     </span>
   </div>
+  {!dense && (
+    <div class="course-card__footer">
+      <div class="course-card__tags">
+        {(course.tags || []).slice(0, 3).map(tag => <span class="course-card__tag">{tag}</span>)}
+      </div>
+      <span class="course-card__cta">
+        Open course
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </span>
+    </div>
+  )}
 </a>
