@@ -2,7 +2,7 @@
  * course-parser.ts — Load, parse, and validate a course.yaml file.
  *
  * course.yaml is pure YAML — no Markdown frontmatter splitting.
- * Answers are NOT in course.yaml; they live in the private solutions.yaml.
+ * Answers are NOT in course.yaml; they live in the companion solutions.yaml.
  *
  * Usage:
  *   import { parseCourseFile, findCourseYamlFiles } from './course-parser.ts';

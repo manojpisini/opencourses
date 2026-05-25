@@ -156,25 +156,56 @@ function runSandbox(q: CourseQuestion, studentCode: string, courseDir: string): 
 
 /**
  * Load solutions.yaml from the course directory if present.
- * solutions.yaml is private (gitignored) — in CI it is injected as a secret.
+ * solutions.yaml is committed beside course.yaml for transparent grading.
  * Returns an empty map if the file is missing; graders degrade gracefully.
  */
 function loadSolutions(courseDir: string): SolutionMap {
   const p = path.join(courseDir, 'solutions.yaml');
   if (!fs.existsSync(p)) return {};
+
   try {
-    // Dynamic import to avoid hard dependency on yaml at type-check time
+    // Dynamic import to avoid hard dependency on yaml at type-check time.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const yaml = require('js-yaml') as { load: (s: string) => unknown };
     const raw = yaml.load(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
-    const map: SolutionMap = {};
-    for (const [qid, val] of Object.entries(raw)) {
-      if (typeof val === 'string' || Array.isArray(val) || typeof val === 'boolean') {
-        map[qid] = val as string | string[] | boolean;
+    const entries = Array.isArray(raw?.solutions)
+      ? raw.solutions as Array<Record<string, unknown>>
+      : [];
+
+    const letter = (n: number) => String.fromCharCode('A'.charCodeAt(0) + n);
+    const normalize = (value: unknown): string | string[] | boolean | undefined => {
+      if (typeof value === 'number') return letter(value);
+      if (typeof value === 'string') return value.trim().toUpperCase();
+      if (typeof value === 'boolean') return value;
+      if (Array.isArray(value)) {
+        return value.map((v) => typeof v === 'number' ? letter(v) : String(v).trim().toUpperCase());
       }
+      return undefined;
+    };
+
+    const map: SolutionMap = {};
+    for (const entry of entries) {
+      const qid = String(entry.question_id ?? '').trim();
+      if (!qid) continue;
+      const value = normalize(entry.answer ?? entry.answers);
+      if (value !== undefined) map[qid] = value;
     }
     return map;
-  } catch { return {}; }
+  } catch {
+    return {};
+  }
+}
+
+function assertSolutionsPresent(questions: CourseQuestion[], solutions: SolutionMap): void {
+  const needsSolution = new Set(['mcq', 'multi', 'truefalse']);
+  const missing = questions
+    .filter((q) => needsSolution.has(q.type))
+    .filter((q) => solutions[q.id] === undefined)
+    .map((q) => q.id);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing solutions for: ${missing.join(', ')}`);
+  }
 }
 
 // ─── Per-question grade dispatcher ───────────────────────────────────────────
@@ -382,6 +413,7 @@ async function main() {
   const answers   = parseAnswersFromIssueBody(body);
   const solutions = loadSolutions(courseDir);
   const questions = flattenQuestions(test);
+  assertSolutionsPresent(questions, solutions);
   const results: QuestionResult[] = [];
 
   for (const q of questions) {

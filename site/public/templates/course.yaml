@@ -6,7 +6,7 @@
 # ║  The automation engine reads this file top-to-bottom and fires               ║
 # ║  GitHub Actions for: build · enroll · grade · certify · notify.              ║
 # ║                                                                              ║
-# ║  COMPANION FILE: solutions.yaml (same directory, private branch)             ║
+# ║  COMPANION FILE: solutions.yaml (same directory)                            ║
 # ║                                                                              ║
 # ║  Validate locally:                                                           ║
 # ║    python -c "import yaml,sys; yaml.safe_load(sys.stdin)" < course.yaml      ║

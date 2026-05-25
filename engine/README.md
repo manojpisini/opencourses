@@ -30,7 +30,7 @@ GitHub, no external platform, no AI.
 ```
 engine/courses/<slug>/
 ├── course.yaml              ← machine-readable course manifest + content_blueprint
-├── solutions.yaml           ← private answers and grading config; never commit to main
+├── solutions.yaml           ← public answers, rubrics, and grading config
 ├── assets/
 │   ├── images/              ← lesson diagrams and screenshots
 │   ├── starter/             ← starter code per chapter
@@ -50,11 +50,15 @@ engine/courses/<slug>/
 
 ## Grading
 
-- **MCQ / true-false / multi**: exact answer match from private `solutions.yaml`
+- **MCQ / true-false / multi**: exact answer match from `solutions.yaml`
 - **Short answer**: keyword matching — no AI involved
 - **Code**: Docker sandbox runs student code, compares stdout
   - Static: `test_cases:` list in `solutions.yaml`
   - Dynamic: `test_generator:` path to script called with `--seed <int> --count <int>`
+
+OpenCourses keeps solutions public. The grader reads the course companion
+`solutions.yaml` from the same course directory; learners are trusted to use
+solutions responsibly and submit their own work.
 
 ## Scripts
 

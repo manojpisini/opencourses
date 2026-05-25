@@ -239,7 +239,8 @@ Additional files needed:
 
 ## `assets/solutions/`
 
-> ⚠️ PRIVATE BRANCH ONLY. Never commit to the public branch.
+Reference solutions are public so learners can review them after trying the
+work. OpenCourses trusts contributors and learners to act with integrity.
 
 One file per exercise:
 

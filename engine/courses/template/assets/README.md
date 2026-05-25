@@ -57,7 +57,5 @@ url: "https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/cour
 
 ## Notes on solutions/
 
-Reference solutions should ideally live in a **separate private branch** or
-be excluded from the public repo via `.gitignore` to prevent students from
-copying them directly. If you include them here, do so only after the cohort
-that uses them has finished.
+Reference solutions may live in the public course tree. OpenCourses assumes
+learners use them for review and submit their own work with integrity.

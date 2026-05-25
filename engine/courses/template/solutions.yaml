@@ -6,11 +6,10 @@
 # ║  Contains all answers, explanations, and sample solutions for every          ║
 # ║  question defined in course.yaml.                                            ║
 # ║                                                                              ║
-# ║  SECURITY                                                                    ║
+# ║  TRANSPARENCY                                                                ║
 # ║  ──────────────────────────────────────────────────────────────────────────  ║
-# ║  This file must NEVER be on a public branch.                                 ║
-# ║  Store in a private branch, encrypted secret, or private repo.               ║
-# ║  The automation engine fetches it at runtime via a GitHub App token.         ║
+# ║  Solutions are public so grading is inspectable. Learners are trusted to     ║
+# ║  use them for review and submit their own work with integrity.               ║
 # ║                                                                              ║
 # ║  LINKING TO course.yaml                                                      ║
 # ║  ──────────────────────────────────────────────────────────────────────────  ║
@@ -48,7 +47,7 @@ metadata:
   schema_version: "3.0"                     # [REQUIRED] do not change
   updated_at: "<YYYY-MM-DD>"               # [REQUIRED] update whenever any solution changes
   maintainer: <github-username>             # [REQUIRED]
-  visibility: private                       # [REQUIRED] NEVER change — always private
+  visibility: public                        # [REQUIRED] public for transparent grading
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

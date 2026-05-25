@@ -96,7 +96,7 @@ Stores:
 - hidden evaluation logic
 - dynamic test mappings
 
-The exact `solutions.yaml` shape follows the private companion template. Keep answers out of `course.yaml` and out of public branches.
+The exact `solutions.yaml` shape follows the companion template. Keep answers out of `course.yaml`; publish them in `solutions.yaml` for transparent review and grading.
 
 ---
 

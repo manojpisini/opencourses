@@ -3,7 +3,7 @@
  * Zero AI / Zero external API calls.
  *
  * In the course.yaml schema v3.0, correct answers are NOT stored in
- * course.yaml — they live in the private solutions.yaml.  Grader functions
+ * course.yaml — they live in the companion solutions.yaml.  Grader functions
  * therefore accept the expected answer as a separate parameter so the
  * caller (quiz-engine.ts) can supply it after loading solutions.yaml.
  *

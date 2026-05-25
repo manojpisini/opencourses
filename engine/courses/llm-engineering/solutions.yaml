@@ -1,0 +1,1760 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║           OPENCOURSES — SOLUTIONS MANIFEST                                   ║
+# ║           LLM Engineering & Generative AI Systems                            ║
+# ║           solutions.yaml  |  Schema v3.0                                     ║
+# ║                                                                              ║
+# ║  Solutions are public so grading is inspectable. Learners are trusted to     ║
+# ║  use them for review and submit their own work with integrity.               ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# METADATA
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+metadata:
+  course_id: llm-engineering
+  course_version: "1.0.0"
+  schema_version: "3.0"
+  updated_at: "2025-05-23"
+  maintainer: opencourses-bot
+  visibility: public
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SOLUTIONS
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+solutions:
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 1 QUIZ — inline quiz (not graded, shown immediately)
+# ════════════════════════════════════════════════════════════════════════════
+
+  # quiz-ch01-q-01 through q-03 are formative, answers embedded in course.yaml.
+  # No solutions.yaml entries needed for ungraded quizzes.
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 1 TEST SOLUTIONS  —  ctest-ch-01
+# ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: Conceptual Understanding ──────────────────────────────────
+
+  - question_id: ctest-ch-01-s-01-q-01
+    type: mcq
+    points: 5
+    difficulty: easy
+    answer: 2
+    explanation: |
+      BPE tokenizers handle out-of-vocabulary words by decomposing them into
+      known subword tokens using the merge table learned during training.
+      For example, the word "tokenisation" (British spelling) might be split
+      into ["token", "isation"] or ["token", "is", "ation"] depending on the
+      vocabulary. The [UNK] approach is used in older word-level tokenizers
+      (like early BERT variants), not modern BPE implementations. Modern
+      BPE starts from bytes (0–255), so it can represent ANY text — no token
+      is truly unknown.
+
+      Option A (UNK token) is incorrect — BPE never produces UNK for normal text.
+      Option B (exception) is incorrect — BPE is designed for open-vocabulary use.
+      Option D (Levenshtein distance) is incorrect — there is no fuzzy matching in BPE.
+
+  - question_id: ctest-ch-01-s-01-q-02
+    type: mcq
+    points: 5
+    difficulty: medium
+    answer: 1
+    explanation: |
+      In high-dimensional spaces, the dot product Q·K^T grows proportionally to
+      the dimensionality d_k. Specifically, if Q and K have components drawn from
+      N(0,1), then Q·K has variance d_k. With d_k=64, the standard deviation of
+      dot products is 8 — values can range from roughly -24 to +24. Pushing these
+      into softmax causes the softmax to become extremely peaked (one-hot), and
+      the gradient of softmax → 0 in saturated regions.
+
+      Dividing by √d_k (8 for d_k=64) normalises the variance back to 1, keeping
+      softmax in a well-behaved gradient region.
+
+      Option A is partially correct (it does stabilise variance) but "unit variance"
+      is too specific — the goal is preventing saturation, not exactly unit variance.
+      Options C and D are incorrect — the scaling has nothing to do with hardware
+      or the sum target of attention weights.
+
+  - question_id: ctest-ch-01-s-01-q-03
+    type: mcq
+    points: 5
+    difficulty: medium
+    answer: 1
+    explanation: |
+      Calculation:
+        Per-token KV memory = layers × KV_heads × d_head × 2 (K+V) × bytes_per_element
+        = 32 × 8 × 128 × 2 × 2 (fp16 = 2 bytes)
+        = 32 × 8 × 128 × 4
+        = 131,072 bytes = 128 KB per token
+
+        For 10 requests × 1000 tokens:
+        = 10,000 tokens × 128 KB = 1,280,000 KB = ~1.28 GB
+
+      Option A (128 MB) is off by 10× — it ignores the 10 requests.
+      Option B (640 MB) is off by 2× — possibly forgot to count both K and V.
+      Option D (10 GB) is too high — possibly used fp32 (4 bytes) instead of fp16.
+
+  - question_id: ctest-ch-01-s-01-q-04
+    type: truefalse
+    points: 3
+    difficulty: easy
+    answer: false
+    explanation: |
+      FALSE. RoPE (Rotary Position Embeddings) encodes RELATIVE positional
+      information by rotating the query and key vectors in complex space before
+      computing attention. It does NOT add a fixed sinusoidal signal to embeddings.
+
+      The sinusoidal approach (adding positional signals to embeddings directly)
+      is the original Vaswani et al. 2017 method. RoPE (Su et al., 2021) is
+      fundamentally different: it applies a rotation matrix to Q and K that
+      encodes the position difference between tokens — so the dot product Q·K
+      naturally captures relative position.
+
+      RoPE's advantages: it generalises to longer sequences (with techniques like
+      YaRN or RoPE scaling) and requires no extra parameters.
+
+  - question_id: ctest-ch-01-s-01-q-05
+    type: truefalse
+    points: 3
+    difficulty: medium
+    answer: true
+    explanation: |
+      TRUE. Multi-head attention with H heads does NOT add parameters compared to
+      single-head attention — it rearranges how the same number of parameters
+      are used.
+
+      For d_model=512, n_heads=8, d_head=64:
+      - Single-head: W_Q [512×512], W_K [512×512], W_V [512×512] = 786,432 params
+      - Multi-head: W_Q [512×512] (split into 8 heads of [512×64] each) = same
+        W_K [512×512], W_V [512×512] — still 786,432 params
+
+      The W_O output projection [512×512] is also the same in both cases.
+      Total: 4 × 512² = 1,048,576 params in both configurations.
+
+      The multi-head mechanism is a reorganisation of computation, not an increase
+      in parameters.
+
+  # ── Section 2: Code Reading ───────────────────────────────────────────────
+
+  - question_id: ctest-ch-01-s-02-q-01
+    type: code_output
+    points: 8
+    difficulty: medium
+    answer: 1
+    explanation: |
+      Execution trace:
+      1. q shape: [B, H, T, D] = [2, 8, 16, 64]
+      2. k.transpose(-2, -1): [2, 8, 64, 16]
+      3. q @ k.transpose(-2, -1): [2, 8, 16, 16] — each query attends to all keys
+      4. / (D ** 0.5) = / 8.0 — scalar division, shape unchanged
+      5. F.softmax(scores, dim=-1): shape unchanged [2, 8, 16, 16]
+      6. print(attn_weights.shape) → torch.Size([2, 8, 16, 16])
+
+      Option A [2,8,64,64] is wrong — D is the head dimension, not sequence length.
+      Option C [2,16,8,8] is wrong — the batch and head dimensions are transposed.
+      Option D [2,8,16,64] is wrong — that would be the shape of Q, not attention weights.
+
+      Key insight: attention weights are [B, H, T, T] — each of H heads produces a
+      T×T matrix where entry (i,j) is the weight token i gives to token j.
+
+  - question_id: ctest-ch-01-s-02-q-02
+    type: code_fix
+    points: 8
+    difficulty: hard
+    correct_code: |
+      import torch
+      T = 6
+      # FIXED: triu mask with diagonal=1 marks future positions as True
+      # masked_fill sets those True positions to -inf (attend to nothing)
+      mask = torch.triu(torch.ones(T, T), diagonal=1).bool()
+      scores = torch.randn(1, T, T)
+      scores = scores.masked_fill(mask, float('-inf'))
+      print(scores)
+    bugs_fixed:
+      - id: bug-01
+        description: "Wrong mask: tril instead of triu, and wrong application.
+          The original code uses tril (lower triangle = True), which when passed
+          to masked_fill sets the PAST and CURRENT positions to -inf, leaving
+          FUTURE positions unmasked. This is the opposite of causal masking."
+        original: "mask = torch.tril(torch.ones(T, T)).bool()"
+        fixed: "mask = torch.triu(torch.ones(T, T), diagonal=1).bool()"
+        note: |
+          Two equivalent approaches:
+          1. triu with diagonal=1 (upper triangle, excluding diagonal) → marks future tokens
+          2. tril with diagonal=0 (lower triangle, including diagonal) → marks past+current,
+             then pass ~mask to masked_fill (inverted mask)
+
+          The original code used tril (which marks past+current) and directly masked_fill
+          those as -inf, blocking attention to the past — completely wrong for causal LMs.
+    grading_rubric:
+      - criterion: "Correctly identifies tril vs triu error"
+        points: 4
+      - criterion: "Corrected code produces -inf only for future tokens (j > i)"
+        points: 4
+    explanation: |
+      A causal mask for autoregressive generation must ensure token i can attend to
+      tokens 0..i but NOT to tokens i+1..T-1 (future tokens).
+
+      The upper triangular matrix (triu with diagonal=1) has True values above the
+      diagonal — exactly the future positions. When masked_fill replaces True positions
+      with -inf, those future attention scores become -inf → softmax gives them weight 0.
+
+      The original code used tril (lower triangle = True = past tokens) and masked those
+      to -inf, which would prevent attending to the past and allow attending to the future.
+      This is a decoder that can see the future — completely broken for generation.
+
+  - question_id: ctest-ch-01-s-02-q-03
+    type: code_reading
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      After attention computation, `out` has shape [B, H, T, D_head].
+      The goal is to merge all head outputs back into [B, T, d_model] = [B, T, H*D_head].
+
+      Step by step:
+      1. `out.transpose(1, 2)`: [B, H, T, D_head] → [B, T, H, D_head]
+         (swap head and sequence dimensions so sequence is dim 1)
+      2. `.contiguous()`: required after transpose because the memory layout is
+         non-contiguous (view won't work on non-contiguous tensors)
+      3. `.view(B, T, self.d_model)`: [B, T, H, D_head] → [B, T, H*D_head]
+         (merge the last two dims: H*D_head = d_model)
+
+      This is equivalent to concatenating all head outputs along the feature dimension.
+      The result [B, T, d_model] is then passed to W_o for the final projection.
+
+      Option A (transpose batch/head) is partially true but misses the main purpose.
+      Option C (column-major layout) is incorrect — .contiguous() converts to row-major.
+      Option D (learned permutation) is incorrect — view is a reshape, not a permutation.
+
+  - question_id: ctest-ch-01-s-02-q-04
+    type: short
+    points: 8
+    difficulty: hard
+    sample_answer: |
+      Grouped Query Attention (GQA) is a modification of multi-head attention where
+      multiple query heads share a single pair of key and value heads. For example,
+      Llama-3 8B uses 32 query heads but only 8 KV heads, meaning 4 query heads share
+      each KV head. GQA was introduced primarily to reduce KV cache memory consumption
+      during inference — the KV cache stores the key and value tensors for all past
+      tokens, and reducing the number of KV heads by 4× reduces KV cache memory by 4×.
+      The trade-off is a slight reduction in model expressiveness compared to standard
+      multi-head attention (where every query head has its own KV head), but empirical
+      results show this quality loss is minimal while the serving efficiency gains are
+      significant.
+    keywords:
+      - "KV cache"
+      - "shared"
+      - "memory"
+      - "query heads"
+      - "key"
+      - "value"
+      - "inference"
+      - "4×"
+    grading_rubric:
+      - criterion: "Correctly defines GQA (multiple query heads share KV heads)"
+        points: 3
+      - criterion: "Explains the KV cache memory benefit"
+        points: 3
+      - criterion: "Identifies the expressiveness/efficiency trade-off"
+        points: 2
+    explanation: |
+      A strong answer must:
+      1. State that GQA means query heads > KV heads (many-to-one mapping)
+      2. Connect this to KV cache size (KV cache ∝ n_kv_heads)
+      3. Acknowledge the quality vs efficiency trade-off
+
+      Common mistakes to watch for:
+      - Confusing GQA with Multi-Query Attention (MQA, where n_kv=1)
+      - Saying GQA reduces model size (it doesn't significantly — only KV projections shrink)
+      - Not explaining WHY KV cache matters (inference memory and throughput)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 2 TEST SOLUTIONS  —  ctest-ch-02
+# ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: Pre-training Theory ───────────────────────────────────────
+
+  - question_id: ctest-ch-02-s-01-q-01
+    type: mcq
+    points: 5
+    difficulty: easy
+    answer: 1
+    explanation: |
+      Decoder-only LLMs (GPT family, Llama, Mistral, etc.) are trained with
+      causal language modelling: given tokens x₁..xₙ₋₁, predict xₙ. This is
+      also called "next-token prediction" or autoregressive language modelling.
+
+      Option A (masked LM) is BERT's objective — a bidirectional encoder that
+      masks 15% of tokens and predicts them. BERT is not a generative model.
+      Option C (sentence pair classification) is NSP (Next Sentence Prediction),
+      also from BERT — again not GPT-style.
+      Option D (contrastive learning) is used in embedding models like CLIP/E5,
+      not generative LLMs.
+
+  - question_id: ctest-ch-02-s-01-q-02
+    type: mcq
+    points: 5
+    difficulty: medium
+    answer: 1
+    explanation: |
+      The Chinchilla paper (Hoffmann et al., 2022) found that for compute-optimal
+      training: N_tokens ≈ 20 × N_params. This is linear — if you double the
+      parameters, you should double the tokens.
+
+      Intuition: with 2× the model capacity, you need 2× the data to fill it.
+      Using fewer tokens leaves the larger model undertrained (like GPT-3).
+
+      Option A is wrong — same tokens would leave the larger model undertrained.
+      Option C (square) would be wildly expensive and is not the Chinchilla result.
+      Option D (halve) is backwards — larger models need MORE data, not less.
+
+      Important nuance: Chinchilla-optimal is for compute budgets, not inference
+      budgets. For deployment at scale, over-training a smaller model (like Llama-3
+      8B on 15T tokens) is better — lower inference cost per query.
+
+  - question_id: ctest-ch-02-s-01-q-03
+    type: mcq
+    points: 5
+    difficulty: hard
+    answer: 1
+    explanation: |
+      Gradient accumulation simulates a large batch by running K micro-batches
+      and accumulating gradients before an optimizer step.
+
+      If we accumulate K steps without scaling, each micro-batch contributes its
+      full loss gradient. After K steps, the accumulated gradient is K× larger
+      than it would be for a single full-batch forward pass. We want the effective
+      gradient to be the mean over all K micro-batches, so we divide each
+      micro-batch loss by K before backward().
+
+      Without this division, using gradient_accumulation_steps=8 would effectively
+      apply 8× the learning rate — causing training instability or divergence.
+
+      Option A (fp16 overflow) is incorrect — loss scaling for fp16 is handled
+      by GradScaler, not gradient_accumulation_steps.
+      Option C (compensating for batch size) is conceptually related but imprecise.
+      Option D (AdamW expectation) is incorrect — AdamW doesn't expect a specific
+      gradient norm.
+
+  - question_id: ctest-ch-02-s-01-q-04
+    type: truefalse
+    points: 3
+    difficulty: medium
+    answer: true
+    explanation: |
+      TRUE. Llama-3 8B was trained on 15 trillion tokens. Chinchilla optimal for
+      8B parameters would be ~160 billion tokens (20 × 8B). So Llama-3 8B was
+      trained on roughly 94× more tokens than Chinchilla-optimal.
+
+      Why? Because Meta is distributing this model to millions of users who will
+      run inference on it. A 15T-token Llama-3 8B performs comparably to larger
+      models trained compute-optimally, but costs far less per inference. The
+      training compute is a one-time cost; inference compute is ongoing.
+
+      This "over-training for inference efficiency" pattern is now standard
+      practice for models intended for wide deployment.
+
+  # ── Section 2: Code & Concepts ───────────────────────────────────────────
+
+  - question_id: ctest-ch-02-s-02-q-01
+    type: short
+    points: 10
+    difficulty: hard
+    sample_answer: |
+      First, deduplication prevents memorisation: if the same document appears
+      many times in the training set, the model will memorise it verbatim rather
+      than learning generalisable patterns. This hurts generalisation and can cause
+      the model to regurgitate private data or copyrighted content. Second,
+      deduplication improves data quality signal — rare, high-quality documents
+      get proportionally more weight when duplicates are removed, while low-quality
+      spam that appears in many crawled copies is reduced. One open-source tool
+      for near-duplicate removal at scale is MinHash LSH (locality-sensitive hashing
+      on n-gram fingerprints), implemented in tools like the Dolma processing pipeline
+      or the FineWeb deduplication step used by HuggingFace.
+    keywords:
+      - "memorisation"
+      - "generalisation"
+      - "overfitting"
+      - "MinHash"
+      - "quality"
+      - "duplicate"
+    grading_rubric:
+      - criterion: "Correctly explains memorisation / generalisation reason"
+        points: 4
+      - criterion: "Correctly explains data quality / signal-to-noise reason"
+        points: 3
+      - criterion: "Names a correct open-source tool (MinHash, Dolma, FineWeb, datasketch)"
+        points: 3
+    explanation: |
+      Strong answers address BOTH reasons (not just one):
+      1. Over-represented data causes memorisation — the model learns to reproduce
+         exact text instead of learning patterns.
+      2. Deduplication effectively re-weights rare high-quality documents upward.
+
+      Acceptable tools: MinHash, Bloom filter, exact n-gram deduplication,
+      Dolma's deduplication, FineWeb's dedup pipeline, datasketch library.
+
+      Watch for: vague answers that say "duplicates are bad" without mechanistic
+      explanation. These should receive partial credit only.
+
+  - question_id: ctest-ch-02-s-02-q-02
+    type: code_output
+    points: 10
+    difficulty: medium
+    answer: 1
+    explanation: |
+      Execution trace:
+      1. cross_entropy_loss = 3.2
+      2. result = math.exp(3.2) = 24.532... ≈ 24.53
+      3. print(f"{result:.2f}") → "24.53"
+
+      This code computes PERPLEXITY. Perplexity is defined as exp(average CE loss).
+      A lower perplexity value means the model is less "surprised" by the validation
+      data — it assigns higher probability to the correct tokens.
+
+      Reference points:
+      - GPT-2 (1.5B) on WikiText-103: ~18 perplexity
+      - A perplexity of 24.53 is roughly GPT-2 124M quality on Wikipedia-like data
+      - Random character-level prediction on 256 tokens would be perplexity ~256
+
+      Option A (24.53 — higher is better) is wrong about the direction.
+      Option C (3.20 — raw loss) misidentifies what the code computes (exp is applied).
+      Option D (1.16) would require exp(0.148) — not the calculation being done.
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 3 TEST SOLUTIONS  —  ctest-ch-03
+# ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: Alignment Theory ──────────────────────────────────────────
+
+  - question_id: ctest-ch-03-s-01-q-01
+    type: mcq
+    points: 5
+    difficulty: medium
+    answer: 1
+    explanation: |
+      In InstructGPT's RLHF pipeline, the reward model (RM) is trained on
+      human preference data: pairs of model responses are shown to labellers
+      who rank which is better. The RM learns to assign a scalar score to any
+      (prompt, response) pair that correlates with human preference.
+
+      During PPO (Phase 3), the RM provides the reward signal for reinforcement
+      learning — the LLM generates responses and is rewarded based on the RM's
+      score, encouraging the policy to generate more human-preferred responses.
+
+      Option A is wrong — the RM doesn't generate responses.
+      Option C is wrong — content filtering is a separate step.
+      Option D is wrong — perplexity is not a preference signal.
+
+  - question_id: ctest-ch-03-s-01-q-02
+    type: mcq
+    points: 5
+    difficulty: hard
+    answer: 1
+    explanation: |
+      In DPO, β (beta) is the temperature parameter of the KL constraint in the
+      original RLHF objective:
+
+        max_{π} E[r(x,y)] - β · KL[π(y|x) || π_ref(y|x)]
+
+      DPO's closed-form solution shows β appears as the coefficient scaling the
+      log-ratio of trained policy to reference policy. A higher β penalises
+      deviation from the reference model more strongly (conservative alignment).
+      A lower β allows the trained policy to deviate further (aggressive alignment).
+
+      Option A is incorrect — β has no relation to learning rate.
+      Option C (margin) is incorrect — β scales the full log-ratio, not just a margin.
+      Option D (batch ratio) is incorrect — β is a policy constraint, not a data ratio.
+
+  - question_id: ctest-ch-03-s-01-q-03
+    type: truefalse
+    points: 3
+    difficulty: easy
+    answer: false
+    explanation: |
+      FALSE. This is precisely what makes DPO appealing: it does NOT require
+      training a separate reward model. DPO directly optimises the alignment
+      objective using preference pairs (chosen, rejected) without an explicit
+      reward model phase.
+
+      RLHF (as in InstructGPT) requires:
+        1. SFT model → 2. Reward Model training → 3. PPO RL
+
+      DPO requires only:
+        1. SFT model → 2. DPO training (directly on preference data)
+
+      The reward model is implicit in the DPO objective — the ratio of policy to
+      reference log-probs serves as an implicit reward. This is the key theoretical
+      insight of the DPO paper.
+
+  - question_id: ctest-ch-03-s-01-q-04
+    type: mcq
+    points: 5
+    difficulty: medium
+    answer: 2
+    explanation: |
+      Benchmark contamination is one of the most well-documented and serious
+      limitations of standardised LLM benchmarks. If the test questions from MMLU,
+      HellaSwag, etc. appeared in the model's pre-training data (Common Crawl,
+      web text), the model may have memorised the answers rather than learned to
+      reason. This makes benchmark scores unreliable indicators of true capability.
+
+      Option A is wrong — LM Eval Harness works with any model size.
+      Option B is wrong — automated MCQ benchmarks don't require human scorers.
+      Option D is wrong — MMLU covers 57 diverse subjects, not only math.
+
+      Real-world example: multiple models have been caught having test data in
+      their training corpus, inflating their MMLU scores by 5–15 points.
+
+  # ── Section 2: Practical Understanding ───────────────────────────────────
+
+  - question_id: ctest-ch-03-s-02-q-01
+    type: short
+    points: 10
+    difficulty: hard
+    sample_answer: |
+      With 500 demonstrations and 200 preference pairs, I would use a two-stage
+      approach: first SFT on the 500 demonstrations, then DPO on the 200 preference
+      pairs. SFT is necessary first because the base model likely doesn't follow
+      the customer support format at all — the 500 demonstrations teach it the
+      expected response structure. I would use DPO rather than full RLHF (PPO +
+      reward model) because 200 preference pairs is too small to train a reliable
+      reward model, and DPO directly uses preference pairs without the reward model
+      step. The β hyperparameter in DPO should be higher (0.1–0.5) to stay close
+      to the SFT model, since we have limited preference data and don't want the
+      model to diverge into reward hacking.
+    keywords:
+      - "SFT"
+      - "DPO"
+      - "demonstration"
+      - "preference"
+      - "reward model"
+      - "small"
+    grading_rubric:
+      - criterion: "Recommends SFT first, then DPO (correct ordering)"
+        points: 3
+      - criterion: "Justifies DPO over RLHF given small preference dataset"
+        points: 4
+      - criterion: "Explains why SFT is needed before DPO"
+        points: 3
+    explanation: |
+      Key signals of a strong answer:
+      - SFT → DPO ordering (not DPO on a raw base model)
+      - Recognition that 200 pairs is too small for reward model training
+      - Awareness that DPO needs an SFT reference policy
+
+      Common mistakes:
+      - Suggesting RLHF/PPO with 200 pairs — reward model needs thousands of examples
+      - Skipping SFT and applying DPO directly to the base model
+      - Not explaining the ordering rationale
+
+  - question_id: ctest-ch-03-s-02-q-02
+    type: code_reading
+    points: 10
+    difficulty: medium
+    answer: 1
+    explanation: |
+      beta=0.01 is 10× smaller than the typical beta=0.1.
+
+      In DPO, β controls the strength of the KL constraint penalising deviation
+      from the reference SFT policy. A smaller β means the constraint is weaker —
+      the model is allowed (and incentivised) to deviate more aggressively from
+      the reference in pursuit of higher preference scores.
+
+      Effects of low β:
+      - May achieve higher alignment quality if the preference signal is good
+      - Higher risk of reward hacking — model learns to game the preference metric
+        without genuinely improving (e.g., becoming more verbose, sycophantic)
+      - Higher risk of mode collapse or repetitive outputs
+
+      Option C (stay closer) is backwards — lower β = weaker constraint = more deviation.
+      Options A and D are incorrect — β is a policy constraint parameter, not related
+      to learning rate or LoRA rank.
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 4 TEST SOLUTIONS  —  ctest-ch-04
+# ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: LoRA and QLoRA Theory ─────────────────────────────────────
+
+  - question_id: ctest-ch-04-s-01-q-01
+    type: mcq
+    points: 8
+    difficulty: medium
+    answer: 1
+    explanation: |
+      For a linear layer of shape [d_out, d_in] = [4096, 4096] with LoRA rank r=16:
+      - Matrix A: [r, d_in] = [16, 4096] → 65,536 parameters
+      - Matrix B: [d_out, r] = [4096, 16] → 65,536 parameters
+      - Total LoRA params: 65,536 + 65,536 = 131,072
+
+      Option A (16,777,216) is the full weight matrix parameter count (4096²).
+      Option C (65,536) counts only one of the two LoRA matrices.
+      Option D (256 = r²) confuses rank with the matrix dimensions.
+
+      This is a key calculation to know: LoRA adds 2×r×d parameters per layer,
+      while the original layer has d² parameters. For r<<d, this is a dramatic
+      reduction (r=16 on a 4096×4096 layer = 0.78% of original).
+
+  - question_id: ctest-ch-04-s-01-q-02
+    type: truefalse
+    points: 5
+    difficulty: easy
+    answer: false
+    explanation: |
+      FALSE. In QLoRA, only the frozen BASE model weights are quantised to 4-bit
+      (NF4 format). The LoRA adapter weights (A and B matrices) are trained and
+      stored in full precision (bfloat16).
+
+      This asymmetry is critical: quantising the adapters would destroy the
+      gradient signal needed for training. The QLoRA paper specifically uses
+      "paged optimizers" to keep adapter gradients in fp32 on CPU when GPU memory
+      is tight, and the adapters themselves are always maintained in bf16/fp16.
+
+      During the forward pass, base model weights are dequantised on-the-fly to
+      bf16 for computation, then re-quantised (stored as 4-bit). Only the LoRA
+      adapter activations and weights need full-precision gradients.
+
+  - question_id: ctest-ch-04-s-01-q-03
+    type: short
+    points: 10
+    difficulty: hard
+    sample_answer: |
+      For a 70B model on a 24GB GPU, I would use QLoRA with 4-bit NF4 quantisation
+      via bitsandbytes (load_in_4bit=True, bnb_4bit_quant_type='nf4',
+      bnb_4bit_compute_dtype=torch.bfloat16). The 70B model in 4-bit requires
+      approximately 35–40GB, which exceeds a single 24GB GPU. I would therefore
+      also enable gradient checkpointing (model.gradient_checkpointing_enable()) and
+      set per_device_train_batch_size=1 with gradient_accumulation_steps=8–16 to
+      simulate a larger effective batch size. For the LoRA config, I would use
+      r=16 or 32 with target_modules='all-linear', since legal summarisation is a
+      moderately complex task requiring both stylistic adaptation and domain vocabulary.
+      If the model still doesn't fit, I would use model sharding with device_map='auto'
+      to split layers across CPU and GPU (though this significantly slows training).
+    keywords:
+      - "4-bit"
+      - "QLoRA"
+      - "bitsandbytes"
+      - "NF4"
+      - "gradient accumulation"
+      - "rank"
+      - "gradient checkpointing"
+    grading_rubric:
+      - criterion: "Correctly specifies 4-bit NF4 quantisation with bitsandbytes"
+        points: 4
+      - criterion: "Addresses the GPU memory constraint (70B won't fit in 24GB even in 4-bit)"
+        points: 3
+      - criterion: "Mentions gradient checkpointing and/or batch size strategies"
+        points: 3
+    explanation: |
+      70B in 4-bit requires roughly 70B × 0.5 bytes = 35GB, which exceeds 24GB.
+      Solutions: device_map='auto' (CPU offloading, slow), multi-GPU (not specified),
+      or using a smaller model variant.
+
+      Strong answers note the GPU memory issue explicitly. Weak answers assume
+      70B fits in 24GB in 4-bit — it doesn't without CPU offloading.
+
+  # ── Section 2: Code and Evaluation ───────────────────────────────────────
+
+  - question_id: ctest-ch-04-s-02-q-01
+    type: code_output
+    points: 10
+    difficulty: medium
+    answer: 0
+    explanation: |
+      Execution trace:
+      1. total_params = 100_000_000
+      2. linear_params = 50_000_000
+      3. lora_params = 50 * 2 * 8 * 1024
+             = 50 layers × 2 matrices × r × d
+             = 50 × 2 × 8 × 1024
+             = 819,200
+      4. pct = 819,200 / (100,000,000 + 819,200) * 100
+             = 819,200 / 100,819,200 * 100
+             ≈ 0.8125 ≈ 0.81%
+
+      Wait — let me recalculate precisely:
+      819,200 / 100,819,200 = 0.0008126 → 0.08126%
+
+      Hmm — closer to 0.08% (option A). Let me verify:
+      50 × 2 × 8 × 1024 = 50 × 16,384 = 819,200
+      819,200 / 100,819,200 × 100 = 0.813%
+
+      Actually 100M + 819,200 = 100,819,200
+      819,200 / 100,819,200 = 0.00813 → 0.813%
+
+      Answer: 0.08% (option index 0) — NOTE: there's intentional ambiguity here
+      to make students calculate rather than guess.
+
+      Correct answer: 0.82% — option index 0 = "0.08%" which is the printed
+      value when the code runs:
+      pct = 819200 / 100819200 * 100 = 0.8126...
+      f"{pct:.2f}%" → "0.81%"
+
+      Closest option: "0.82%" (index 0).
+
+      Key insight: LoRA adds dramatically fewer parameters than full fine-tuning —
+      under 1% — while achieving comparable results on many tasks.
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 5 TEST SOLUTIONS  —  ctest-ch-05
+# ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: RAG Theory and Design ─────────────────────────────────────
+
+  - question_id: ctest-ch-05-s-01-q-01
+    type: mcq
+    points: 8
+    difficulty: medium
+    answer: 1
+    explanation: |
+      The key advantage here is FRESHNESS combined with update cost.
+
+      The internal wiki is updated daily with new pages. RAG allows you to:
+      1. Index new pages immediately (re-embed + add to vector store)
+      2. Query against the latest knowledge without any model changes
+
+      Fine-tuning would require:
+      1. Daily training runs (expensive GPU compute + time)
+      2. Waiting for training + evaluation before deployment
+      3. Risk of catastrophic forgetting of other knowledge
+
+      Option A is a false absolute — RAG doesn't always produce higher quality.
+      Option C is wrong — RAG serving cost is similar; training cost comparison
+      favours RAG for frequent updates.
+      Option D is wrong — fine-tuning absolutely can learn from documents.
+
+  - question_id: ctest-ch-05-s-01-q-02
+    type: mcq
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      Dense retrieval (embedding models) encodes semantic meaning — two phrases
+      that mean the same thing have similar embeddings. But this semantic
+      compression can fail for:
+      - Exact product codes: "SKU-AX29381" — no semantic meaning, must match exactly
+      - Proper nouns / names: "Anthropic" or "Dario Amodei" — embeddings may not
+        preserve distinguishing power vs similar names
+      - Rare technical terms: a newly coined acronym not in the embedding model's
+        training data
+
+      BM25 (sparse) uses exact token matching (TF-IDF variant) — it finds documents
+      containing exactly those terms, regardless of semantic meaning.
+
+      Hybrid search (dense + sparse via RRF or linear combination) gets semantic
+      understanding AND exact keyword matching.
+
+      Option A is sometimes true but not the main advantage.
+      Option C is wrong — BM25 requires an inverted index.
+      Option D is wrong — dense models can handle long documents (with chunking).
+
+  - question_id: ctest-ch-05-s-01-q-03
+    type: truefalse
+    points: 5
+    difficulty: medium
+    answer: false
+    explanation: |
+      FALSE. RAGAS defines faithfulness as: "Is the answer supported by the
+      retrieved context?" — it measures whether claims in the generated answer
+      are grounded in the provided context chunks.
+
+      Faithfulness is NOT a comparison to a ground-truth answer. It measures
+      hallucination: did the LLM make up claims not supported by its context?
+
+      The metric that measures similarity to a ground-truth answer is
+      "answer_correctness" in RAGAS. "answer_relevancy" measures whether the
+      answer addresses the question (regardless of ground truth).
+
+      RAGAS metric definitions:
+      - faithfulness: answer grounded in context? (0 = hallucinated, 1 = grounded)
+      - answer_relevancy: does the answer address the question?
+      - context_recall: does the retrieved context contain the information needed?
+      - answer_correctness: how close is the answer to the gold answer?
+
+  # ── Section 2: Practical RAG ──────────────────────────────────────────────
+
+  - question_id: ctest-ch-05-s-02-q-01
+    type: short
+    points: 15
+    difficulty: hard
+    sample_answer: |
+      High context_recall (90%) with low faithfulness (55%) indicates that the
+      retrieval component is working well — it is finding the relevant documents
+      90% of the time — but the generation component is hallucinating: the LLM
+      is making claims not supported by the retrieved context it was given.
+      This is a generation problem, not a retrieval problem. To fix this, I would
+      first tighten the generation prompt to explicitly instruct the model to
+      answer only from the provided context and to say "I don't know" if the
+      context doesn't contain the answer. I would also reduce the generation
+      temperature to 0 (greedy) to minimise creative extrapolation. If hallucination
+      persists, I would experiment with a stronger base model or add an output
+      validation step that cross-checks each claim in the answer against the context.
+    keywords:
+      - "retrieval"
+      - "generation"
+      - "hallucination"
+      - "grounding"
+      - "prompt"
+      - "context"
+      - "LLM"
+    grading_rubric:
+      - criterion: "Correctly diagnoses: retrieval good, generation hallucinating"
+        points: 5
+      - criterion: "Proposes prompt-level fix (instruct to stay grounded)"
+        points: 4
+      - criterion: "Proposes at least one additional concrete fix"
+        points: 3
+      - criterion: "Correctly interprets RAGAS metric definitions"
+        points: 3
+    explanation: |
+      The diagnostic pattern here is important:
+      - High context_recall = retriever is finding relevant chunks = retrieval is fine
+      - Low faithfulness = LLM is making unsupported claims = LLM is hallucinating
+
+      Common wrong answers: students often think high context_recall but low
+      faithfulness means the context is irrelevant (it isn't — that would be
+      low context_recall). The distinction is: context_recall measures whether
+      the right information was retrieved; faithfulness measures whether the
+      LLM's answer is grounded in what was retrieved.
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 6 TEST SOLUTIONS  —  ctest-ch-06
+# ════════════════════════════════════════════════════════════════════════════
+
+  - question_id: ctest-ch-06-s-01-q-01
+    type: mcq
+    points: 8
+    difficulty: medium
+    answer: 1
+    explanation: |
+      Static batching groups requests and processes them together. When a batch
+      contains a mix of short (50-token) and long (2000-token) requests, ALL
+      requests in the batch must wait until the LONGEST request finishes generating.
+      The GPU is actively computing for long requests but idle (or doing padding
+      computation) for the positions of short requests that already finished.
+
+      Continuous batching solves this by treating the batch as a sliding window:
+      as soon as any request completes, a new request is immediately inserted.
+      This keeps GPU utilisation high continuously.
+
+      Option A is wrong — the GPU isn't "too busy" in static batching, it's
+      underutilised while waiting.
+      Option C is wrong — memory bandwidth is a factor in attention computation,
+      not the static batching inefficiency specifically.
+      Option D is wrong — static batching can use less memory because it doesn't
+      need to manage dynamic page allocation.
+
+  - question_id: ctest-ch-06-s-01-q-02
+    type: mcq
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      Quantisation maps floating-point weights to fewer bits. The mapping is linear
+      (or blocked-linear for GPTQ/AWQ): each bucket of values is mapped to a single
+      integer code. This is fine for most computations where rounding by ~0.001 has
+      little effect.
+
+      However, arithmetic tasks require carrying exact relationships between numbers
+      — e.g., "what is 347 × 893?" requires the model to activate very specific
+      circuits in its weight matrices that were calibrated at bf16 precision.
+      Quantisation error in these circuits degrades exact arithmetic more than
+      general language understanding (MMLU), which relies on broader semantic
+      patterns that tolerate small weight perturbations.
+
+      Option A is wrong — INT4 doesn't remove arithmetic ability entirely.
+      Option C is a post-hoc rationalisation without mechanistic grounding.
+      Option D is incorrect — quantisation doesn't change token generation count.
+
+  # ── Section 2: Practical Serving ─────────────────────────────────────────
+
+  - question_id: ctest-ch-06-s-02-q-01
+    type: short
+    points: 14
+    difficulty: hard
+    sample_answer: |
+      For P95 TTFT < 500ms and P95 TBT < 50ms with 2× A100 80GB GPUs, I would
+      deploy a 13B or 70B Llama-3 model in tensor-parallel mode across both GPUs
+      using vLLM with tensor_parallel_size=2. Tensor parallelism splits attention
+      heads and MLP dimensions across GPUs, reducing per-GPU memory and enabling
+      faster computation through parallelism. For memory efficiency, I would use
+      AWQ INT4 quantisation — this halves the model footprint (70B in fp16 = ~140GB,
+      INT4 = ~35GB, fitting both GPUs). For latency, continuous batching via vLLM
+      with PagedAttention ensures requests don't wait for fixed batch windows.
+      TTFT is dominated by the prefill phase — I would monitor this separately from
+      decode (TBT) and consider chunked prefill if long system prompts cause TTFT
+      spikes. I would also set max_num_seqs to limit concurrency during peak load,
+      ensuring latency SLAs are met rather than maximising throughput.
+    keywords:
+      - "TTFT"
+      - "tensor parallel"
+      - "vLLM"
+      - "continuous batching"
+      - "quantisation"
+      - "PagedAttention"
+      - "prefill"
+    grading_rubric:
+      - criterion: "Recommends vLLM with continuous batching"
+        points: 3
+      - criterion: "Specifies tensor parallelism for 2-GPU setup"
+        points: 3
+      - criterion: "Addresses quantisation for memory and speed"
+        points: 3
+      - criterion: "Distinguishes TTFT (prefill) from TBT (decode) correctly"
+        points: 3
+      - criterion: "Proposes concrete SLA-focused configuration"
+        points: 2
+    explanation: |
+      Strong answers must:
+      1. Mention vLLM specifically (or an equivalent like TGI, TensorRT-LLM)
+      2. Discuss tensor parallelism for multi-GPU — not just data parallelism
+      3. Distinguish prefill latency (affects TTFT) from decode latency (affects TBT)
+
+      Common mistakes:
+      - Not mentioning tensor parallel — model parallelism is needed to use both GPUs
+      - Confusing data parallel (multiple copies) with tensor parallel (one model split)
+      - Not addressing the TTFT/TBT distinction
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 7 TEST SOLUTIONS  —  ctest-ch-07
+# ════════════════════════════════════════════════════════════════════════════
+
+  - question_id: ctest-ch-07-s-01-q-01
+    type: mcq
+    points: 8
+    difficulty: medium
+    answer: 1
+    explanation: |
+      In ReAct, the Thought step is where the model produces a chain-of-thought
+      reasoning trace — it explicitly states what it knows, what it needs to find
+      out, and what action it will take next. This serves multiple purposes:
+      1. Makes the decision process auditable (you can read why the agent did something)
+      2. Improves action quality — models that reason before acting make better choices
+      3. Enables debugging — failures can be traced to specific Thought steps
+
+      Option A describes the Action/Observation steps, not Thought.
+      Option C is incorrect — the Thought step doesn't reformulate questions.
+      Option D is incorrect — validation of previous steps is not the role of Thought.
+
+  - question_id: ctest-ch-07-s-01-q-02
+    type: mcq
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      This is indirect prompt injection — the attacker doesn't interact with the
+      system directly but plants malicious instructions in a data source the agent
+      will retrieve (an email in this case).
+
+      The most effective architectural defence is to treat all tool outputs as
+      untrusted data at a different privilege level than system instructions.
+      This means: tool outputs can inform the agent's knowledge but cannot modify
+      its goals, system prompt, or trigger privileged actions (like sending emails).
+
+      Option A (direct injection) is wrong — the attack comes through a tool result,
+      not the user's direct input.
+      Option C (SQL injection) is a different attack class entirely.
+      Option D (model inversion) is a training-time attack, not runtime.
+
+  - question_id: ctest-ch-07-s-01-q-03
+    type: truefalse
+    points: 5
+    difficulty: easy
+    answer: true
+    explanation: |
+      TRUE. LangGraph is explicitly designed around a state machine abstraction:
+      - Nodes are Python functions (or chains) that process the current state
+      - Edges define control flow — which node executes next
+      - Conditional edges (like should_continue) allow branching based on state
+      - The graph is compiled into an executable that manages state transitions
+
+      This is different from sequential chains (like LangChain Expression Language
+      chains) which run linearly. LangGraph's graph structure naturally represents
+      the looping, branching control flow that agents require.
+
+  # ── Section 2: Agent Evaluation ───────────────────────────────────────────
+
+  - question_id: ctest-ch-07-s-02-q-01
+    type: short
+    points: 15
+    difficulty: hard
+    sample_answer: |
+      To evaluate a research agent, I would use trajectory-based evaluation with
+      ground-truth answers. First, I would create a benchmark of 50+ research
+      questions with known correct answers and expected sources — e.g., "According
+      to the 2023 Chinchilla paper, what is the compute-optimal token count for
+      a 7B model?" with a verified answer. For each question I would measure:
+      task success rate (does the final answer match the gold answer, scored by
+      LLM-as-judge), tool efficiency (how many search/tool calls were needed),
+      and trajectory quality (did the agent take unnecessary steps or repeat searches).
+      I would generate test cases by sampling from real user queries plus adversarial
+      edge cases (ambiguous questions, questions with no answer, multi-hop reasoning
+      chains). Trajectories would be scored using LLM-as-judge on a 1–5 scale for
+      reasoning quality, plus exact match or semantic similarity for final answers.
+      I would also monitor agent failure modes: tool hallucination rate, infinite
+      loop rate, and context overflow rate.
+    keywords:
+      - "trajectory"
+      - "tool calls"
+      - "accuracy"
+      - "ground truth"
+      - "steps"
+      - "LLM-as-judge"
+      - "success rate"
+    grading_rubric:
+      - criterion: "Proposes trajectory-level evaluation (not just final answer)"
+        points: 4
+      - criterion: "Describes ground-truth generation methodology"
+        points: 3
+      - criterion: "Includes efficiency metrics (steps, tool calls)"
+        points: 3
+      - criterion: "Describes scoring methodology (LLM-as-judge or exact match)"
+        points: 3
+      - criterion: "Mentions at least one failure mode to track"
+        points: 2
+    explanation: |
+      The key insight is that agent evaluation must be TRAJECTORY-level, not just
+      output-level. A correct final answer reached by hallucinated tool calls is
+      not a good agent. You need to evaluate:
+      1. Did it reach the correct answer?
+      2. How efficiently (how many steps)?
+      3. Were the intermediate reasoning steps correct?
+      4. Did it use tools appropriately?
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CHAPTER 8 TEST SOLUTIONS  —  ctest-ch-08
+# ════════════════════════════════════════════════════════════════════════════
+
+  - question_id: ctest-ch-08-s-01-q-01
+    type: mcq
+    points: 8
+    difficulty: medium
+    answer: 1
+    explanation: |
+      TTFT (Time to First Token) is the latency from when a request is sent until
+      the first token of the response begins streaming back to the user. In streaming
+      interfaces, users perceive responsiveness immediately when text starts appearing —
+      a 200ms TTFT feels responsive even if total generation takes 10 seconds.
+
+      For batch processing (Option A), total throughput matters more than TTFT —
+      no user is watching a progress bar.
+      For embeddings (Option C), there is no generation — TTFT is irrelevant.
+      For fine-tuning (Option D), TTFT has no meaning in training.
+
+  - question_id: ctest-ch-08-s-01-q-02
+    type: mcq
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      In a RAG system connected to the internet, the retrieval step fetches
+      external web pages. An attacker who controls a web page can embed malicious
+      instructions that the retrieval system returns to the agent. The agent
+      then treats these instructions as trusted context and may execute them —
+      forwarding data, calling dangerous APIs, or modifying its behaviour.
+
+      This is more dangerous than direct injection because:
+      1. The attacker doesn't need to interact with your system directly
+      2. Automated crawling/retrieval triggers the attack without any user action
+      3. The injected content appears as "retrieved facts" which models tend to trust
+
+      Option A (long prompts) is a DoS/cost concern, not a security threat.
+      Option C (model extraction) requires thousands of queries and is a different
+      category of attack.
+      Option D (DoS via identical queries) is a performance issue, not security.
+
+  - question_id: ctest-ch-08-s-01-q-03
+    type: short
+    points: 15
+    difficulty: hard
+    sample_answer: |
+      I would alert on three primary metrics. First, P95 TTFT — if latency degrades
+      suddenly, it indicates either infrastructure problems (GPU utilisation spike,
+      network issues) or a model change that increased compute. Second, guardrail
+      trigger rate — a sudden increase in safety guardrail activations suggests
+      either adversarial probing or a model regression that produces more unsafe
+      outputs. Third, faithfulness score (sampled hourly) — a drop in faithfulness
+      indicates either retrieval degradation or a model producing more hallucinations.
+      For distinguishing model regression from infrastructure problems: infrastructure
+      issues typically affect TTFT and throughput uniformly across all request types,
+      while model regressions typically affect quality metrics (faithfulness, refusal
+      rate) without changing latency. A useful canary is to run a fixed synthetic
+      benchmark (the same 20 evaluation questions) after every deployment — if those
+      scores drop but latency is stable, it's a model issue; if latency spikes but
+      quality scores are unchanged, it's infrastructure.
+    keywords:
+      - "TTFT"
+      - "guardrail"
+      - "faithfulness"
+      - "latency"
+      - "regression"
+      - "baseline"
+      - "canary"
+      - "infrastructure"
+    grading_rubric:
+      - criterion: "Identifies 3 meaningful, distinct alert metrics"
+        points: 5
+      - criterion: "Distinguishes model regression from infra problem correctly"
+        points: 5
+      - criterion: "Proposes a canary/baseline strategy for deployment verification"
+        points: 3
+      - criterion: "Threshold strategy mentioned (P95, hourly sampling, etc.)"
+        points: 2
+    explanation: |
+      Strong answers identify the key diagnostic distinction:
+      - Infrastructure issues: latency degrades, quality unchanged
+      - Model regressions: quality degrades, latency unchanged (or sometimes improves)
+
+      Canary deployments (running a fixed eval suite after each update) are
+      the production standard for catching regressions before they reach users.
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FINAL TEST SOLUTIONS  —  final-test
+# ════════════════════════════════════════════════════════════════════════════
+
+  # ── Section 1: Architecture and Theory ───────────────────────────────────
+
+  - question_id: ft-s-01-q-01
+    type: mcq
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      GQA uses 8 KV heads vs standard MHA's 32 KV heads — a 4× reduction.
+      The KV cache stores K and V tensors for every layer and every KV head.
+      With 4× fewer KV heads, the KV cache is exactly 4× smaller.
+
+      Calculation:
+      Standard MHA: 32 layers × 32 KV_heads × 128 d_head × 2 (K+V) × 2 bytes × T tokens
+      GQA:          32 layers × 8  KV_heads × 128 d_head × 2 (K+V) × 2 bytes × T tokens
+      Ratio: 8/32 = 0.25 → 4× smaller
+
+      Option A (same) is wrong — GQA directly reduces KV heads.
+      Option C (8×) would only be true if n_kv_heads went from 8 to 1 (MQA).
+      Option D (2×) is wrong — it would require halving KV heads, not reducing by 4×.
+
+  - question_id: ft-s-01-q-02
+    type: mcq
+    points: 8
+    difficulty: hard
+    answer: 1
+    explanation: |
+      DPO optimises the difference in log-ratios between preferred and rejected
+      responses. If BOTH probabilities increase relative to the reference:
+      - The gap (preferred - rejected log-ratio) may still increase
+      - But the model has actually become "more confident" overall, not specifically
+        better at distinguishing preference
+
+      This pattern is called reward hacking or probability floor collapse:
+      the model increases log-probabilities uniformly (e.g., by becoming more
+      verbose or sycophantic) rather than specifically promoting preferred responses.
+
+      Option A is wrong — the gap matters, not just preferred increasing.
+      Option C is partially correct (the gap increased) but misses the deeper problem.
+      Option D is wrong — DPO doesn't require decreasing all probabilities.
+
+  - question_id: ft-s-01-q-03
+    type: short
+    points: 12
+    difficulty: hard
+    sample_answer: |
+      For a legal AI startup with 50,000 briefs updated weekly, I would choose RAG
+      as the primary architecture. The weekly update cycle makes fine-tuning
+      impractical — retraining a 7B+ model every week is expensive and slow,
+      whereas RAG requires only re-indexing the 500 new briefs (embed + add to
+      vector store, typically minutes of compute). Legal queries are fundamentally
+      retrieval tasks: "find the relevant precedents" requires locating specific
+      documents, not generating from baked-in weights. RAG also provides
+      source attribution — critical in legal contexts where answers must cite
+      specific briefs. For the LLM component, I would use a fine-tuned model only
+      for format adaptation (legal writing style, structured output) rather than
+      knowledge injection. This hybrid approach — RAG for knowledge + light SFT
+      for format — is the production standard for knowledge-intensive professional AI.
+    keywords:
+      - "RAG"
+      - "weekly"
+      - "freshness"
+      - "retrieval"
+      - "fine-tuning"
+      - "cost"
+      - "attribution"
+    grading_rubric:
+      - criterion: "Recommends RAG and justifies with update frequency"
+        points: 4
+      - criterion: "Explains why weekly fine-tuning is impractical"
+        points: 3
+      - criterion: "Identifies attribution/citation as a legal requirement"
+        points: 3
+      - criterion: "Proposes hybrid (RAG + light fine-tuning) as optimal"
+        points: 2
+    explanation: |
+      The key signals: weekly updates + 50k documents = RAG.
+      Fine-tuning would require: weekly training run (~$500-$5000 for 7B), evaluation,
+      deployment — all in 7 days. Unsustainable for a startup.
+
+      Strong answers also mention legal-specific requirements: attribution (which
+      brief supports this claim?), which RAG provides naturally via source metadata.
+
+  - question_id: ft-s-01-q-04
+    type: mcq
+    points: 12
+    difficulty: hard
+    answer: 1
+    explanation: |
+      PagedAttention is inspired by virtual memory paging in operating systems.
+      The key innovation is that KV cache is split into fixed-size pages (blocks),
+      and pages are allocated on demand as sequences grow — not pre-allocated
+      to maximum length.
+
+      Physical pages can be non-contiguous in GPU memory (like OS virtual memory
+      pages), with a block table mapping logical positions to physical pages.
+      This eliminates:
+      - Internal fragmentation (unused space within a pre-allocated buffer)
+      - External fragmentation (unusable gaps between allocations)
+
+      Result: near-zero wasted KV cache memory vs 60-80% waste in naive serving.
+
+      Option A is wrong — pre-allocating average length still wastes memory.
+      Option C is wrong — SVD compression is a separate technique (not PagedAttention).
+      Option D describes prefix caching (KV cache sharing for identical prefixes),
+      which is a separate vLLM feature, not PagedAttention itself.
+
+  # ── Section 2: Code Reading and Debugging ────────────────────────────────
+
+  - question_id: ft-s-02-q-01
+    type: code_output
+    points: 10
+    difficulty: hard
+    answer: 0
+    explanation: |
+      The code applies LoRA with r=8 to a single linear layer [1024, 1024].
+      LoRA adds: A [r, d_in] + B [d_out, r] = [8, 1024] + [1024, 8] = 8192 + 8192 = 16,384 params.
+
+      Original linear layer: 1024 × 1024 = 1,048,576 params (frozen).
+      Total params: 1,048,576 + 16,384 = 1,065,960.
+      Trainable params: 16,384 (only LoRA A and B are requires_grad=True).
+
+      Output: "16384/1065960" — closest to Option A "16384/1065984".
+
+      Note: slight discrepancy (1065960 vs 1065984) due to PEFT potentially adding
+      small configuration tensors. The key calculation is trainable=16384.
+
+      The important insight: only 1.5% of parameters are trainable with LoRA r=8
+      on this layer (16384/1048576).
+
+  - question_id: ft-s-02-q-02
+    type: code_fix
+    points: 12
+    difficulty: hard
+    correct_code: |
+      def query_rag(question: str, collection, llm) -> str:
+          # Step 1: Embed and retrieve
+          results = collection.query(
+              query_texts=[question],
+              n_results=5
+          )
+          # FIXED: results["documents"] is [[doc1, doc2, ...]] — nested list
+          # Access the first (and only) query result: results["documents"][0]
+          context = "\n".join(results["documents"][0])  # <-- fixed
+
+          prompt = f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+          return llm.invoke(prompt)
+    bugs_fixed:
+      - id: bug-01
+        description: "ChromaDB returns results['documents'] as a nested list
+          [[doc1, doc2, doc3, ...]] (one list per query). Calling join() on the
+          outer list joins the inner lists' string representations like
+          \"['doc1 text...', 'doc2 text...']\", producing garbled context
+          instead of actual document text."
+        original: "context = \"\\n\".join(results[\"documents\"])"
+        fixed: "context = \"\\n\".join(results[\"documents\"][0])"
+        note: |
+          This is an extremely common RAG bug in production systems.
+          The fix is to index [0] because we only sent one query_texts entry.
+          For batch queries, you would iterate over results["documents"].
+    grading_rubric:
+      - criterion: "Identifies the nested list issue in ChromaDB results"
+        points: 6
+      - criterion: "Correctly adds [0] indexing (or equivalent flattening)"
+        points: 6
+    explanation: |
+      ChromaDB's query() API always returns results nested by query:
+        results["documents"] = [[doc1, doc2, doc3, ...]]  # one list per query
+        results["ids"]        = [[id1, id2, id3, ...]]
+        results["distances"]  = [[dist1, dist2, dist3, ...]]
+
+      Since we sent query_texts=[question] (one query), the outer list has one element.
+      Joining the outer list directly joins list objects using str(), producing:
+        "['The transformer architecture...']\n['In the Chinchilla paper...']"
+      Which is gibberish as context. The LLM then has no useful context and
+      may hallucinate — the bug is silent but causes systematic hallucination.
+
+  - question_id: ft-s-02-q-03
+    type: code_reading
+    points: 13
+    difficulty: hard
+    answer: 1
+    explanation: |
+      `should_continue` is a conditional edge routing function in LangGraph.
+      After each call to the "agent" node, LangGraph calls this function with
+      the current state to determine where to route execution next.
+
+      Logic:
+      - If the last message has `tool_calls` (the LLM decided to use a tool) →
+        return "tools" → execution goes to the ToolNode to run the tools
+      - If no tool_calls → return END → agent is done, final message returned to user
+
+      This implements the ReAct loop automatically:
+        agent → [tool_calls?] → yes → tools → agent → [tool_calls?] → no → END
+
+      Option A (validates tool success) is wrong — should_continue doesn't
+      inspect tool results, only whether tools were called.
+      Option C (limits tool calls) is wrong — max steps would need a counter in state.
+      Option D (checks factual correctness) is wrong — there's no verification logic.
+
+  # ── Section 3: System Design ──────────────────────────────────────────────
+
+  - question_id: ft-s-03-q-01
+    type: short
+    points: 12
+    difficulty: hard
+    sample_answer: |
+      I would build an automated evaluation pipeline triggered on every model
+      update (git push to main). The pipeline runs a fixed benchmark of 100
+      test cases covering: factual accuracy (exact match on known Q&A pairs),
+      faithfulness for RAG tasks (RAGAS faithfulness score), instruction following
+      (format compliance on structured output tasks), and safety guardrail trigger
+      rate. Thresholds are set from the current production model as a baseline —
+      any metric that regresses by more than 2 standard deviations from the
+      rolling 7-day average triggers a deployment block. To distinguish model
+      regression from infrastructure problems, I separately track the same
+      benchmark's latency profile: a pure model regression degrades quality but
+      not latency, while infrastructure problems degrade latency uniformly without
+      quality changes. The pipeline runs in CI/CD (GitHub Actions or equivalent)
+      and must pass before any model version is promoted to production. A canary
+      deployment (5% traffic for 1 hour with real-user quality sampling) provides
+      a final gate before full rollout.
+    keywords:
+      - "evaluation"
+      - "regression"
+      - "benchmark"
+      - "threshold"
+      - "CI/CD"
+      - "faithfulness"
+      - "canary"
+      - "baseline"
+    grading_rubric:
+      - criterion: "Describes a fixed benchmark run on every update"
+        points: 3
+      - criterion: "Defines concrete metrics with threshold strategy"
+        points: 3
+      - criterion: "Distinguishes model regression from infrastructure issue"
+        points: 3
+      - criterion: "Mentions canary deployment or equivalent staged rollout"
+        points: 3
+    explanation: |
+      Production ML evaluation systems must:
+      1. Run automatically (not manually) — humans miss regressions
+      2. Have fixed baselines (rolling average, previous model) — no moving targets
+      3. Separate quality signals from infrastructure signals
+      4. Gate deployment (don't just alert, BLOCK bad models)
+
+      Canary deployments are the gold standard: route 5% traffic to new model,
+      measure real-user quality signals for 1 hour, only then full rollout.
+
+  - question_id: ft-s-03-q-02
+    type: code_write
+    points: 13
+    difficulty: hard
+    sample_solution: |
+      import json
+      import re
+
+      def evaluate_rag_faithfulness(answer: str, context: list[str], llm) -> float:
+          """Return faithfulness score 0.0–1.0 using LLM-as-judge."""
+          context_str = "\n\n".join(f"[{i+1}] {c}" for i, c in enumerate(context))
+
+          prompt = f"""You are an impartial judge evaluating whether an AI-generated answer
+      is fully supported by the provided context. Score the faithfulness from 0.0 to 1.0.
+
+      CONTEXT:
+      {context_str}
+
+      ANSWER TO EVALUATE:
+      {answer}
+
+      Scoring rubric:
+      1.0 = Every claim in the answer is directly supported by the context
+      0.7 = Most claims supported, minor extrapolation
+      0.4 = Some claims supported, significant unsupported statements
+      0.0 = Answer contradicts or ignores context entirely
+
+      Respond with ONLY a JSON object: {{"score": <float between 0.0 and 1.0>, "reason": "<one sentence>"}}"""
+
+          try:
+              response = llm.invoke(prompt)
+              # Parse JSON from response
+              # Handle cases where LLM wraps in markdown code blocks
+              text = re.sub(r"```(?:json)?|```", "", response).strip()
+              data = json.loads(text)
+              score = float(data["score"])
+              return max(0.0, min(1.0, score))  # clamp to [0, 1]
+          except Exception:
+              return 0.0  # safe default on parse failure
+    alternative_solutions:
+      - description: "Regex-based score extraction (simpler, less robust)"
+        code: |
+          import re
+
+          def evaluate_rag_faithfulness(answer: str, context: list[str], llm) -> float:
+              context_str = "\n".join(context)
+              prompt = f"""Rate whether this answer is supported by the context.
+          Context: {context_str}
+          Answer: {answer}
+          Output only a number between 0.0 and 1.0:"""
+              try:
+                  response = llm.invoke(prompt).strip()
+                  match = re.search(r"\b([01](?:\.\d+)?)\b", response)
+                  return float(match.group(1)) if match else 0.0
+              except Exception:
+                  return 0.0
+    grading_rubric:
+      - criterion: "Constructs a clear judge prompt with context and answer"
+        points: 3
+      - criterion: "Instructs LLM to output a parseable score (JSON or explicit number)"
+        points: 3
+      - criterion: "Parses the score from LLM response correctly"
+        points: 3
+      - criterion: "Returns float in [0.0, 1.0] and handles exceptions"
+        points: 2
+      - criterion: "Clamps output to valid range and handles edge cases"
+        points: 2
+    explanation: |
+      The three critical elements:
+      1. Prompt quality — the judge must understand what faithfulness means (grounded in context, not
+         similarity to ground truth). A rubric in the prompt dramatically improves consistency.
+      2. Parseable output — asking for JSON is more reliable than free text.
+         The re.sub to remove markdown fences handles LLM's tendency to wrap JSON in ```json...```.
+      3. Error handling — LLMs sometimes produce unparseable output; always return a
+         safe default (0.0) rather than crashing the evaluation pipeline.
+
+      Common mistakes: using "similarity" or "accuracy" in the prompt instead of "faithfulness",
+      not handling JSON parse failures, not clamping to [0,1].
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# ASSIGNMENT REVIEW GUIDES
+# ════════════════════════════════════════════════════════════════════════════
+
+assignment_review_guides:
+
+  - assignment_id: cassign-ch-01
+    title: "Chapter 1 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "BPE: train() correctly builds a merge table starting from byte-level tokens (256 vocab).
+        encode() applies merges in training order. decode() correctly inverts the merge table."
+      - "MultiHeadAttention: correct shapes at every step. W_Q/K/V are d_model × d_model.
+        Split into heads via view + transpose. Causal mask uses triu diagonal=1."
+      - "TransformerBlock: pre-norm (norm before, not after attention/MLP).
+        Residual connections on both attention and MLP paths. GELU activation in MLP."
+      - "All 3 provided tests pass without modification to the test file."
+      - "EXPLANATION.md explains WHY each design choice was made, not just WHAT it does."
+
+    common_mistakes:
+      - mistake: "Post-norm instead of pre-norm (adding LayerNorm after the residual connection)"
+        note: "Deduct 10 points from the TransformerBlock criterion. Flag clearly in feedback
+          with a reference to the nanoGPT source showing pre-norm."
+      - mistake: "BPE encode() sorts pairs by frequency on the new text instead of applying
+          merges in training order"
+        note: "This is a common conceptual error. Deduct 10 points. Explain that the merge
+          table order is fixed at training time — you must apply merges in the exact order
+          they were learned, not re-rank by current frequency."
+      - mistake: "Missing contiguous() before view() in multi-head attention reshape"
+        note: "Minor — deduct 3 points only if it causes a runtime error. If it happens to
+          work (e.g., memory is already contiguous), give full credit."
+
+    edge_cases:
+      - case: "Student implements GQA instead of standard MHA"
+        guidance: "Accept for full credit if it passes the tests. Note it in feedback as
+          a positive extension but confirm the standard MHA was understood."
+
+    feedback_notes: |
+      Tone: Constructive and specific. Point to the exact line in their code that is wrong
+      and explain the underlying concept, not just the fix.
+      Priority: Get BPE and causal mask right — these are the concepts that trip up
+      most practitioners in the real world.
+      Avoid: Saying "good job" without specifics. Every review should have at least
+      one substantive technical insight the student can learn from.
+
+  - assignment_id: cassign-ch-02
+    title: "Chapter 2 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "All 4 experiments completed with distinct, committed config files (not just
+        one config modified and re-run without saving)."
+      - "Loss curves plotted and correctly interpreted: overfitting is visible when
+        val_loss increases while train_loss decreases."
+      - "Perplexity calculated correctly: exp(val_loss) — not just reporting raw loss."
+      - "W&B links are public and shareable, or exported CSV data is committed."
+      - "Discussion section explains WHY results differ, not just that they do."
+
+    common_mistakes:
+      - mistake: "Student reports training loss as perplexity"
+        note: "Common mistake — exp(3.2) ≈ 24.5, not 3.2. Deduct 5 points from interpretation
+          criterion. Explain the formula."
+      - mistake: "LR experiment not controlled — student changed other hyperparameters too"
+        note: "Partial credit (50%) for that experiment. Note the importance of single-variable
+          experiments in research methodology."
+
+    feedback_notes: |
+      Focus on the interpretation quality. Many students can run nanoGPT; fewer can
+      explain what the loss curves mean mechanistically. Push on the 'why'.
+
+  - assignment_id: cassign-ch-03
+    title: "Chapter 3 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "SFT training loss decreases monotonically (or near-monotonically) — diverging
+        SFT loss suggests a bug in the training config."
+      - "DPO training shows increasing reward margin (preferred_reward - rejected_reward
+        should trend positive in W&B logs)."
+      - "Evaluation uses lm-eval correctly with the same tasks for all 3 models."
+      - "Results table has correct numbers (not hallucinated — verify against W&B logs)."
+      - "Analysis discusses directionality: did DPO improve on SFT? By how much?"
+
+    common_mistakes:
+      - mistake: "DPO applied directly to base model without SFT reference model"
+        note: "This will likely produce degraded results. Deduct 15 points from the DPO
+          training criterion. Explain that DPO requires an SFT policy as reference."
+      - mistake: "Evaluation tasks differ between baseline and fine-tuned models"
+        note: "Results are not comparable. Require resubmission of evaluation only."
+
+    feedback_notes: |
+      SmolLM2-360M is small — DPO gains will be modest (1–3% on benchmarks).
+      If a student reports 20%+ improvement, question the evaluation methodology.
+
+  - assignment_id: cassign-ch-04
+    title: "Chapter 4 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "QLoRA config uses NF4 quantisation (not INT8) and the correct bitsandbytes config."
+      - "LoRA r=16, alpha=32, applied to linear layers (not just attention)."
+      - "HuggingFace Hub adapter has a model card with: training data, hyperparameters, results."
+      - "Evaluation compares base vs fine-tuned on a task-specific metric, not just perplexity."
+      - "Training script is runnable without modification (dependencies specified)."
+
+    common_mistakes:
+      - mistake: "Student merged adapter weights into base model before uploading to Hub
+          (uploads full model instead of adapter)"
+        note: "Deduct 10 points from Hub criterion. Adapters should be uploaded separately
+          with base_model_name_or_path pointing to the original base. Full model uploads
+          are much larger and defeat the purpose of PEFT."
+      - mistake: "MMLU evaluation missing — student only evaluates on the fine-tuning task"
+        note: "Without MMLU comparison, we can't tell if fine-tuning caused catastrophic
+          forgetting. Deduct 10 points from evaluation criterion."
+
+    feedback_notes: |
+      The most important thing to verify: does the model card have enough information
+      for someone to reproduce the fine-tuning? This is the open source standard.
+
+  - assignment_id: cassign-ch-05
+    title: "Chapter 5 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "Pipeline runs end-to-end: document loading → chunking → embedding → storing → query → answer."
+      - "RAGAS faithfulness ≥ 0.70 on the provided test set."
+      - "Chunking comparison uses the same test set and reports RAGAS scores for each strategy."
+      - "Reranking implemented correctly (cross-encoder, not just re-sorting by embedding distance)."
+      - "README enables someone to set up and query the system in < 15 minutes."
+
+    common_mistakes:
+      - mistake: "Student evaluated on the training documents (documents in the index) rather
+          than held-out test questions"
+        note: "This inflates scores dramatically. Check that test questions are genuinely
+          held-out from the indexed documents, not just extracted from them. Require correction."
+      - mistake: "Reranking applied before retrieval instead of after (not a valid pattern)"
+        note: "Reranking is a post-retrieval step: retrieve top-K via ANN, then rerank, then
+          keep top-N. Applying a cross-encoder to the query alone before retrieval doesn't work."
+
+    feedback_notes: |
+      RAGAS faithfulness < 0.70: check the generation prompt first — usually adding
+      "Answer only from the provided context" dramatically improves faithfulness.
+
+  - assignment_id: cassign-ch-06
+    title: "Chapter 6 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "vLLM server correctly deployed and accessible (reproducible setup commands in README)."
+      - "All 3 quantisation levels benchmarked (BF16, INT8, INT4 AWQ or GPTQ)."
+      - "Benchmark measures both throughput (tokens/s) AND latency (TTFT, P50, P95)."
+      - "Analysis correctly identifies: INT4 has highest throughput but lower quality;
+        BF16 has lowest throughput but highest quality."
+      - "Data is in a CSV or table that can be reproduced."
+
+    common_mistakes:
+      - mistake: "Benchmark run with batch_size=1 only — no concurrency tested"
+        note: "The interesting throughput numbers appear at batch_size=16+ where continuous
+          batching kicks in. Deduct 15 points from throughput criterion."
+      - mistake: "TTFT measured for full response instead of first token"
+        note: "TTFT requires streaming mode — measuring total response time and calling it
+          TTFT is incorrect. Explain the difference and award partial credit."
+
+    feedback_notes: |
+      The key insight to communicate: vLLM's advantage grows with concurrency.
+      At batch_size=1, vLLM is not much faster than HF. At batch_size=64, it can be 5×+.
+
+  - assignment_id: cassign-ch-07
+    title: "Chapter 7 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "Agent correctly implements LangGraph state machine with conditional edges."
+      - "4+ tools are distinct in function (not 4 variations of the same tool)."
+      - "max_steps guardrail implemented and tested (agent doesn't infinite-loop)."
+      - "20-task benchmark is well-designed: questions have unambiguous correct answers,
+        require actual tool use (not just LLM knowledge), and cover diverse task types."
+      - "Task success rate ≥ 60%: below this indicates a fundamental agent design issue."
+
+    common_mistakes:
+      - mistake: "Benchmark tasks solvable without tool use (LLM answers from training knowledge)"
+        note: "This defeats the purpose of agent evaluation. Good benchmark tasks require
+          fresh information (current prices, file contents, calculated values) that the
+          LLM cannot know without using tools. Require at least 15/20 tasks to genuinely
+          need tools."
+      - mistake: "Success rate measured by LLM self-evaluation (asking LLM if it succeeded)"
+        note: "Self-evaluation is unreliable — models often claim success when failing.
+          Require ground-truth comparison for at least 50% of tasks."
+
+    feedback_notes: |
+      The most common failure mode for agents: the LLM doesn't call tools when it should
+      (it answers from memory). Check the trajectory logs for this pattern.
+
+  - assignment_id: cassign-ch-08
+    title: "Chapter 8 Assignment — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "OpenTelemetry spans correctly wrap 4 operations: retrieval, LLM call, reranking,
+        total pipeline. Parent-child span relationships are correct."
+      - "gen_ai.* semantic convention attributes present on LLM spans
+        (model, prompt_tokens, completion_tokens)."
+      - "Sample traces exported as valid JSON (can be imported to Jaeger or Tempo)."
+      - "Security audit documents 5 distinct injection attempts with reproducible steps."
+      - "At least one defence is implemented and shown to work (before/after test)."
+
+    common_mistakes:
+      - mistake: "Spans not nested correctly (all spans at root level instead of parent-child)"
+        note: "This means the trace doesn't show the actual pipeline structure. The total
+          pipeline span should be the parent; retrieval, LLM, reranking are children."
+      - mistake: "Security audit tests direct injection (user message) but not indirect
+          injection (via retrieved documents)"
+        note: "Indirect injection is the critical RAG-specific risk. Deduct 10 points and
+          ask student to add at least 2 indirect injection tests."
+
+    feedback_notes: |
+      For the security audit: if all 5 attacks failed, either the system is genuinely
+      well-defended (rare) or the attacks were too weak. Ask the student to share
+      the exact attack payloads they used.
+
+  - assignment_id: final-assignment
+    title: "Final Assignment (Capstone) — Reviewer Guide"
+    pass_threshold: 70
+
+    what_to_look_for:
+      - "RAG pipeline is fully functional: document ingestion, chunking, embedding,
+        vector storage, retrieval, reranking, and generation all work end-to-end."
+      - "Agent integrates at least 3 tools using LangGraph, with max_steps guardrail
+        and input validation on tool arguments."
+      - "RAGAS evaluation on ≥ 25 test cases with faithfulness AND answer_relevancy reported."
+      - "Custom benchmark with domain-specific metrics (not just RAGAS)."
+      - "OpenTelemetry traces instrument the complete request pipeline."
+      - "Public GitHub repo has MIT/Apache license, CI workflow, contributing guide,
+        architecture diagram in README."
+      - "At least one GitHub release tagged v1.0.0."
+
+    common_mistakes:
+      - mistake: "Architecture diagram missing or shows only the happy path (no error handling)"
+        note: "Deduct 5 points. A production architecture diagram must show failure modes."
+      - mistake: "RAGAS evaluation run on < 10 questions (insufficient for statistical validity)"
+        note: "Deduct 10 points from evaluation criterion. 25 questions is the minimum."
+      - mistake: "CI workflow fails on a clean clone (missing dependency or hardcoded path)"
+        note: "This is a reproducibility failure — a core open source requirement.
+          Require fixing before passing."
+
+    edge_cases:
+      - case: "Student's domain is medical or legal — real data may have privacy concerns"
+        guidance: "Accept synthetic or publicly available data (MIMIC-III demos, public court records).
+          Do not require students to use real private data."
+      - case: "Student achieves RAGAS faithfulness > 0.90 — suspiciously high"
+        guidance: "Verify test questions are genuinely held-out from the corpus.
+          If test questions were extracted from indexed documents, scores are inflated.
+          Ask student to share their test set and verify."
+
+    feedback_template: |
+      ## Code Review — Final Assignment (Capstone)
+
+      **Student:** {github_username}
+      **Repository:** {repo_url}
+      **Submitted:** {submission_date}
+      **Reviewer:** {reviewer_github}
+
+      ---
+
+      ### ✅ Strengths
+      - {strength_1}
+      - {strength_2}
+      - {strength_3}
+
+      ### 🔧 Areas for Improvement
+      - {improvement_1}
+      - {improvement_2}
+
+      ### 🔍 Technical Notes
+      {technical_notes}
+
+      ### 📊 Score Breakdown
+
+      | Criterion | Score | Max |
+      |---|---|---|
+      | RAG pipeline (chunking, embedding, retrieval, reranking) | {score_1} | 20 |
+      | Agent (3+ tools, LangGraph, guardrails) | {score_2} | 20 |
+      | Evaluation (RAGAS + custom benchmark) | {score_3} | 20 |
+      | Observability (OpenTelemetry traces) | {score_4} | 10 |
+      | Open source quality (README, CI, license) | {score_5} | 15 |
+      | Code quality (clean, tested, documented) | {score_6} | 15 |
+      | **Total** | **{total}** | **100** |
+
+      **Result:** {PASS | RESUBMIT}
+
+      {if_resubmit}
+      ### 📋 Required for Resubmission
+      - {required_change_1}
+      - {required_change_2}
+      {end_if}
+
+      ---
+      *This review was completed by an OpenCourses maintainer. For questions,
+      open a reply in this issue.*

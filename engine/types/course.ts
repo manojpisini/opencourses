@@ -1,7 +1,7 @@
 /**
  * course.ts — TypeScript interfaces for the course.yaml schema v3.0.
  * A single course.yaml is the sole source of truth for a course.
- * Answers/solutions live in the companion solutions.yaml (private, never committed).
+ * Answers/solutions live in the companion solutions.yaml.
  */
 
 // ─── Primitive helpers ────────────────────────────────────────────────────────

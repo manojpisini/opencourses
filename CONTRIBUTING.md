@@ -176,7 +176,7 @@ A course PR should answer these questions clearly:
 - Are credits complete for every external resource?
 - Do chapter tests check understanding rather than trivia?
 - Do assignments have deterministic grading criteria where possible?
-- Is `solutions.yaml` kept private and excluded from the PR?
+- Does `solutions.yaml` include complete answers, explanations, rubrics, and sample solutions where needed?
 
 ### 3f. Open a PR
 
