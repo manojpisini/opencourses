@@ -276,6 +276,8 @@ select {
 .wordmark__icon-svg {
   display: block;
   flex-shrink: 0;
+  width: 28px;
+  height: 28px;
 }
 .wordmark__text {
   display: inline-flex;

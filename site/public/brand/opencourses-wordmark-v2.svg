@@ -1,0 +1,12 @@
+<svg viewBox="0 0 330 78" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">OpenCourses</title>
+  <desc id="desc">OpenCourses wordmark with the purple open-book logo.</desc>
+  <g transform="translate(0 3)">
+    <path d="M18.6 14.8 34.5 23.6v28.1L18.4 42.6l.2-27.8Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M53.4 14.8 37.5 23.6v28.1l16.1-9.1-.2-27.8Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M17.2 45.2 36 55.3l18.4-10.3" fill="none" stroke="#4C1BC9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="82" y="34" font-family="Geist, Sora, Inter, system-ui, sans-serif" font-size="31" font-weight="800" fill="#4C1BC9">Open</text>
+  <text x="170" y="34" font-family="Geist, Sora, Inter, system-ui, sans-serif" font-size="31" font-weight="400" fill="#171922">Courses</text>
+  <text x="84" y="58" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="2" fill="#7B738C">OPEN SOURCE LEARNING</text>
+</svg>
