@@ -1,3 +1,7 @@
+<img src="./docs/banner.svg?raw=1&v=2026-05-26" alt="OpenCourses — Free, open-source developer education" width="100%"/>
+
+<br/>
+
 # Code of Conduct
 
 ## Our Commitment

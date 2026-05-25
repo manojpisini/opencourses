@@ -1,5 +1,5 @@
 
-<img src="docs/banner.svg" alt="OpenCourses — Free, open-source developer education" width="100%"/>
+<img src="./docs/banner.svg?raw=1&v=2026-05-26" alt="OpenCourses — Free, open-source developer education" width="100%"/>
 
 <br/>
 <br/>

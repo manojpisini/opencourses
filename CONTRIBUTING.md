@@ -1,3 +1,7 @@
+<img src="./docs/banner.svg?raw=1&v=2026-05-26" alt="OpenCourses — Free, open-source developer education" width="100%"/>
+
+<br/>
+
 # Contributing to OpenCourses
 
 Thank you for helping make OpenCourses better. This guide covers how to add courses, fix content, improve the site, and submit engine changes.
