@@ -7,15 +7,12 @@ on what to create for each subdirectory.
 
 ## `assets/images/`
 
-### Course-Level Brand Assets
-| File | Dimensions | Description |
-|---|---|---|
-| `thumbnail.png` | 1600x900 (16:9) | Course card image — OpenCourses-branded transformer diagram with course title |
-| `banner.png` | 1800x600 (3:1) | Hero banner — token to embedding to attention to output flow |
-| `badge.png` | 512x512 | Certificate badge — "LLM Engineer" badge in the OpenCourses brand system |
+### Lesson-Level Diagrams
 
-`course.yaml` uses these for the public course card, banner/OG image, and certificate badge.
-The `ch-*` images below are only used as lesson-level diagrams.
+OpenCourses generates course card and hero artwork from `classification.category`,
+so this course does not need a banner, thumbnail, OG image, or certificate badge
+file. Keep this directory focused on diagrams that directly support lessons,
+resources, exercises, and assessments.
 
 ### Chapter Diagrams (produce as SVG, export PNG)
 | File | Content |

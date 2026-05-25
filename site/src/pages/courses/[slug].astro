@@ -473,7 +473,14 @@ if (detail) {
 
 const title  = detail?.title  ?? summaryFallback?.title  ?? slugFallback;
 const tagline = detail?.tagline ?? summaryFallback?.description ?? '';
-const color  = detail?.cover.color_primary ?? summaryFallback?.tags?.[0] ? '#38BDF8' : '#38BDF8';
+const primaryColor = detail?.cover.color_primary ?? '#38BDF8';
+const secondaryColor = detail?.cover.color_secondary ?? '#2DD4BF';
+const trackKey = detail?.track ?? summaryFallback?.track ?? 'foundations';
+const trackParts = trackKey.split('-').filter(Boolean);
+const trackMark = (trackParts.length > 1
+  ? trackParts.map(part => part[0]).join('')
+  : trackKey.slice(0, 2)
+).slice(0, 2).toUpperCase();
 const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.duration ?? '—');
 ---
 
@@ -490,7 +497,8 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       class="cp-root cp-root--locked"
       id="cp-root"
       data-course-id={courseIdForActions}
-      style={`--course-primary:${detail.cover.color_primary};--course-secondary:${detail.cover.color_secondary};--course-banner:url('${detail.cover.banner}')`}
+      data-track={trackKey}
+      style={`--course-primary:${primaryColor};--course-secondary:${secondaryColor}`}
     >
 
       <!-- ── Top bar ──────────────────────────────────────────────────────── -->
@@ -520,9 +528,9 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
           <div class="cp-sidebar__inner">
             <!-- Course info mini card -->
             <div class="cp-sidebar__course-info">
-              {detail.cover.thumbnail && (
-                <img src={detail.cover.thumbnail} alt={detail.title} class="cp-sidebar__thumb" loading="lazy" />
-              )}
+              <div class="cp-course-abstract cp-course-abstract--mini" data-track={trackKey} aria-hidden="true">
+                <span>{trackMark}</span>
+              </div>
               <div class="cp-sidebar__course-meta">
                 <div class="cp-sidebar__course-title">{detail.title}</div>
                 <div class="cp-sidebar__course-sub">
@@ -612,9 +620,9 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
         <main class="cp-content" id="cp-content">
           <article class="cp-pane cp-enrollment-gate" id="cp-enrollment-gate">
             <div class="cp-gate-hero">
-              {detail.cover.thumbnail && (
-                <img src={detail.cover.thumbnail} alt={detail.title} class="cp-gate-hero__thumb" loading="lazy" />
-              )}
+              <div class="cp-course-abstract cp-course-abstract--hero" data-track={trackKey} aria-hidden="true">
+                <span>{trackMark}</span>
+              </div>
               <div>
                 <div class="cp-gate-hero__eyebrow">Enrollment required</div>
                 <h1 class="cp-gate-hero__title">{detail.title}</h1>
@@ -2100,13 +2108,6 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   padding: 1rem;
   border-bottom: 1px solid var(--border-default);
 }
-.cp-sidebar__thumb {
-  width: 48px;
-  height: 27px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
 .cp-sidebar__course-meta { min-width: 0; }
 .cp-sidebar__course-title {
   font-size: 0.8rem;
@@ -2784,13 +2785,52 @@ body.cp-image-viewer-open { overflow: hidden; }
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-default);
 }
-.cp-gate-hero__thumb {
+.cp-course-abstract {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--course-primary) 36%, var(--border-default));
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 22% 20%, color-mix(in srgb, var(--course-secondary) 34%, transparent), transparent 32%),
+    linear-gradient(135deg, color-mix(in srgb, var(--course-primary) 28%, transparent), transparent 54%),
+    color-mix(in srgb, var(--bg-surface) 88%, transparent);
+}
+.cp-course-abstract::before {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  background:
+    linear-gradient(90deg, transparent 0 12px, color-mix(in srgb, var(--text-primary) 16%, transparent) 12px 13px, transparent 13px 24px),
+    linear-gradient(180deg, color-mix(in srgb, var(--course-primary) 28%, transparent), color-mix(in srgb, var(--course-secondary) 18%, transparent));
+  background-size: 24px 100%, 100% 100%;
+  transform: skewX(-12deg);
+  opacity: 0.8;
+}
+.cp-course-abstract span {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 42%;
+  aspect-ratio: 1.25;
+  border: 1px solid color-mix(in srgb, var(--course-primary) 44%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-base) 78%, transparent);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.cp-course-abstract--mini {
+  width: 48px;
+  height: 36px;
+}
+.cp-course-abstract--hero {
   width: 112px;
   aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
 }
 .cp-gate-hero__eyebrow {
   font-family: var(--font-mono);
@@ -2867,7 +2907,7 @@ body.cp-image-viewer-open { overflow: hidden; }
 .cp-enrollment-check__status[data-tone="loading"] { color: #38BDF8; }
 @media (max-width: 680px) {
   .cp-gate-hero { grid-template-columns: 1fr; }
-  .cp-gate-hero__thumb { width: 88px; }
+  .cp-course-abstract--hero { width: 88px; }
 }
 
 .cp-pane__header {
@@ -3756,11 +3796,18 @@ body.cp-image-viewer-open { overflow: hidden; }
   border-radius: 8px;
   background:
     linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg-base) 86%, transparent) 78%),
-    var(--course-banner) center / cover,
+    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--course-secondary) 30%, transparent), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--course-primary) 18%, transparent), transparent 58%),
     var(--bg-surface);
 }
-.cp-sidebar__thumb {
-  display: none;
+.cp-sidebar__course-info .cp-course-abstract--mini {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 58px;
+  height: 42px;
+  opacity: 0.82;
 }
 .cp-sidebar__course-title {
   font-size: 0.95rem;
@@ -3859,12 +3906,22 @@ body.cp-image-viewer-open { overflow: hidden; }
   background:
     linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg-base) 92%, transparent) 78%),
     linear-gradient(90deg, color-mix(in srgb, var(--bg-base) 82%, transparent), transparent 74%),
-    var(--course-banner) center / cover,
+    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--course-secondary) 30%, transparent), transparent 30%),
+    linear-gradient(135deg, color-mix(in srgb, var(--course-primary) 24%, transparent), transparent 62%),
     var(--bg-surface);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.26);
 }
-.cp-gate-hero__thumb {
-  display: none;
+.cp-gate-hero .cp-course-abstract--hero {
+  position: absolute;
+  top: clamp(1rem, 4vw, 2.25rem);
+  right: clamp(1rem, 4vw, 2.5rem);
+  display: grid;
+  width: min(28vw, 220px);
+  opacity: 0.72;
+}
+.cp-gate-hero > div:not(.cp-course-abstract) {
+  position: relative;
+  z-index: 1;
 }
 .cp-gate-hero__eyebrow {
   width: fit-content;
@@ -4078,6 +4135,10 @@ body.cp-image-viewer-open { overflow: hidden; }
   }
   .cp-gate-hero {
     min-height: 330px;
+  }
+  .cp-gate-hero .cp-course-abstract--hero {
+    width: 96px;
+    opacity: 0.44;
   }
   .cp-pane__nav {
     flex-direction: column;

@@ -46,11 +46,8 @@ export interface CourseIdentity {
     full: string;
   };
   cover: {
-    thumbnail: string;      // 16:9, min 800×450
-    banner: string;         // 3:1, min 1200×400
-    og_image: string;       // 1200×630
-    color_primary: string;
-    color_secondary: string;
+    color_primary?: string;
+    color_secondary?: string;
   };
 }
 
@@ -473,12 +470,6 @@ export interface CertificateRequirement {
   min_score: number;
 }
 
-export interface CourseBadge {
-  enabled: boolean;
-  image: string;
-  description: string;
-}
-
 export interface CourseCertificate {
   enabled: boolean;
   title: string;
@@ -486,7 +477,6 @@ export interface CourseCertificate {
   requirements: CertificateRequirement[];
   template?: string;
   custom_template?: string | null;
-  badge?: CourseBadge;
 }
 
 
@@ -574,8 +564,6 @@ export interface CourseJson {
   topics: string[];
   prerequisites: string[];       // prerequisite course ids
   total_hours: number;
-  thumbnail?: string;
-  banner?: string;
   color_primary?: string;
   status: CourseStatus;
   version: string;
@@ -784,8 +772,6 @@ export interface CourseDetailJson {
   description_short: string;
   description_full_md: string;   // raw markdown — rendered at build time in Astro
   cover: {
-    thumbnail?: string;
-    banner?: string;
     color_primary?: string;
     color_secondary?: string;
   };

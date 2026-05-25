@@ -5,7 +5,7 @@ This folder holds all supplementary files for the course. The structure is:
 ```
 assets/
 ├── images/          ← visual assets used in the course
-│   ├── banner.png       Course card image (1200×630 px)
+│   ├── diagrams/        Lesson diagrams and screenshots
 │   └── ...
 ├── starter/         ← starter code distributed to students
 │   ├── ch-01/
@@ -26,8 +26,14 @@ assets/
 
 ### Images
 ```yaml
-thumbnail: "./assets/images/banner.png"
+assets:
+  images:
+    - assets/images/diagrams/<lesson-diagram>.png
 ```
+
+Course card and hero artwork is generated automatically from
+`classification.category`; do not add banner, thumbnail, OG, or certificate
+badge files unless a specific lesson explicitly references them.
 
 ### Starter code — inline (preferred for short snippets)
 ```yaml

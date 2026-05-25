@@ -50,8 +50,6 @@ interface ParsedCourse {
   topics: string[];
   prerequisites: string[];
   total_hours: number;
-  thumbnail?: string;
-  banner?: string;
   color_primary?: string;
   status: 'draft' | 'review' | 'published' | 'archived' | 'deprecated';
   version: string;
@@ -253,7 +251,7 @@ async function buildCourses(slugs: string[]): Promise<SiteCourse[]> {
       repo:         '',   // course.yaml no longer has a single repo URL
       version:      parsed.version,
       updatedAt:    parsed.generatedAt,
-      featured:     false,
+      featured:     ['published', 'review'].includes(parsed.status),
       stars:        0,
       forks:        0,
       openIssues:   0,

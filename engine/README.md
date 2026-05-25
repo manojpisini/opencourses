@@ -32,7 +32,7 @@ engine/courses/<slug>/
 ├── course.yaml              ← machine-readable course manifest + content_blueprint
 ├── solutions.yaml           ← private answers and grading config; never commit to main
 ├── assets/
-│   ├── images/              ← banner.png, diagrams, screenshots
+│   ├── images/              ← lesson diagrams and screenshots
 │   ├── starter/             ← starter code per chapter
 │   ├── slides/              ← PDF slide decks
 │   ├── data/                ← datasets

@@ -24,6 +24,17 @@ Thank you for helping make OpenCourses better. This guide covers how to add cour
 - Check open issues and PRs to avoid duplicating work
 - For large changes, open an issue first to discuss scope
 
+OpenCourses has two main contribution paths:
+
+| Path | You edit | Review focus |
+|---|---|---|
+| Course contribution | `engine/courses/<slug>/course.yaml`, lesson assets, tests, starter projects | Accuracy, teachability, assessment quality, credits, reproducibility |
+| Code contribution | `site/`, `engine/`, `.github/workflows/`, shared docs | Correctness, accessibility, performance, security, maintainability |
+
+Keep those paths separate when possible. A PR that fixes a parser bug should not
+also rewrite a course chapter; a course PR should not casually change workflow
+automation. Smaller review surfaces get merged faster and age better.
+
 **Setup:**
 
 ```bash
@@ -91,11 +102,9 @@ identity:
     short: "Shown in course cards — under 200 characters."
     full: "Full multi-paragraph Markdown description."
   cover:
-    thumbnail: assets/images/thumbnail.png
-    banner: assets/images/banner.png
-    og_image: assets/images/og.png
     color_primary: "#38BDF8"
     color_secondary: "#2DD4BF"
+    # Course card and hero artwork is generated from classification.category.
 
 classification:
   category: web              # must be one of the 12 valid track slugs:
@@ -147,7 +156,29 @@ content_blueprint:
 **Contributor attribution is automatic.** `sync-site-data.ts` derives all contributor data
 from Git history and `people.curator`. You do not edit any contributor list manually.
 
-### 3d. Open a PR
+### 3d. Course asset rules
+
+Course-level artwork is not required. Do not add banners, thumbnails, OG images,
+or certificate badge images just to make a course publishable. The site generates
+track-specific abstracts from `classification.category` and uses optional accent
+colors from `identity.cover`.
+
+Use `assets/images/` only for lesson diagrams, screenshots, and visual references
+that are explicitly used inside the curriculum. Every listed asset must be
+referenced by a lesson, resource, assignment, or assessment.
+
+### 3e. Course review standards
+
+A course PR should answer these questions clearly:
+
+- What will a learner be able to build or explain after finishing?
+- Which open-source projects, papers, docs, or public references does it teach from?
+- Are credits complete for every external resource?
+- Do chapter tests check understanding rather than trivia?
+- Do assignments have deterministic grading criteria where possible?
+- Is `solutions.yaml` kept private and excluded from the PR?
+
+### 3f. Open a PR
 
 ```bash
 git add engine/courses/your-course-slug/
@@ -215,6 +246,16 @@ Before changing any workflow:
 The data pipeline (`sync-site-data.ts`) reads all `engine/courses/*/course.json` files and
 writes to `site/src/data/*.json`. If adding a new data field to courses, update both
 `engine/scripts/sync-site-data.ts` and the TypeScript interfaces in `site/src/data/oc.ts`.
+
+### Code contribution standards
+
+- Prefer small, focused changes with one behavioral purpose.
+- Keep generated files generated: change the source script or YAML first, then regenerate.
+- Avoid adding dependencies unless the repo has no small local alternative.
+- Treat GitHub Actions and grading scripts as security-sensitive code.
+- Preserve GitHub Pages base path support by using existing `base` helpers.
+- For UI work, verify desktop and mobile layouts and avoid hidden overflow or clipped text.
+- For parser/schema work, update `engine/types/course.ts`, parser logic, templates, site types, and docs together.
 
 ---
 

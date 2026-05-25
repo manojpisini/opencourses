@@ -144,8 +144,6 @@ export interface CourseDetailJson {
   description_short: string;
   description_full_md: string;
   cover: {
-    thumbnail?: string;
-    banner?: string;
     color_primary?: string;
     color_secondary?: string;
   };

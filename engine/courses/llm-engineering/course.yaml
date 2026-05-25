@@ -68,9 +68,6 @@ identity:
       - Technical founders building AI-native applications
 
   cover:
-    thumbnail: https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/thumbnail.png
-    banner: https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/banner.png
-    og_image: https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/banner.png
     color_primary: "#7C3AED"
     color_secondary: "#06B6D4"
 
@@ -4946,10 +4943,6 @@ certificate:
       min_score: 70
   template: default
   custom_template: null
-  badge:
-    enabled: true
-    image: assets/images/badge.png
-    description: "Awarded for completing LLM Engineering & Generative AI Systems on OpenCourses — covering transformer architecture, alignment (SFT/DPO/RLHF), fine-tuning (LoRA/QLoRA), RAG, inference optimisation, agent systems, and production hardening."
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -4958,9 +4951,6 @@ certificate:
 
 assets:
   images:
-    - assets/images/thumbnail.png
-    - assets/images/banner.png
-    - assets/images/badge.png
     - assets/images/ch-01-transformer-block.png
     - assets/images/ch-01-attention-diagram.png
     - assets/images/ch-01-kv-cache.png

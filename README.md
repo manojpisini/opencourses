@@ -166,6 +166,31 @@ OpenCourses uses 12 broad tracks that cover every area of computing:
 
 ---
 
+## ✦ Course Authoring Model
+
+Course authors only maintain the curriculum, assessments, credits, and supporting
+lesson assets. OpenCourses no longer requires course-level thumbnails, banners,
+OG images, or certificate badge artwork.
+
+Instead, the site generates a clean abstract visual for each of the 12 course
+tracks. A course chooses its visual system through `classification.category`;
+optional `cover.color_primary` and `cover.color_secondary` fields can tune the
+accent colors without making authors design artwork before they can publish.
+
+The source of truth remains:
+
+```
+engine/courses/<slug>/course.yaml
+```
+
+Generated outputs such as `course.json`, `course-detail.json`, and
+`site/src/data/*.json` are produced by the engine. Contributors should edit the
+YAML source, not the generated site data.
+
+<br/>
+
+---
+
 ## ✦ Feature Highlights
 
 ```

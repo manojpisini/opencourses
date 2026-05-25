@@ -16,6 +16,11 @@ const difficultyColor: Record<string,string> = {
   advanced: 'var(--color-advanced)',
   draft: 'var(--color-draft)',
 };
+const trackParts = course.track.split('-').filter(Boolean);
+const trackMark = (trackParts.length > 1
+  ? trackParts.map(part => part[0]).join('')
+  : course.track.slice(0, 2)
+).slice(0, 2).toUpperCase();
 ---
 <a
   href={`${base}/courses/${course.slug}`}
@@ -33,9 +38,11 @@ const difficultyColor: Record<string,string> = {
   data-stars={course.stars}
   data-search-text={`${course.title} ${(course.tags||[]).join(' ')} ${course.description}`}
 >
-  <div class="course-card__visual" aria-hidden="true">
-    <div class="course-card__signal"></div>
-    <span class="course-card__track-mark">{course.track.slice(0, 2).toUpperCase()}</span>
+  <div class="course-card__visual" data-track={course.track} aria-hidden="true">
+    <div class="course-card__abstract">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <span class="course-card__track-mark">{trackMark}</span>
   </div>
   <div class="course-card__head">
     <GitStatus status={course.status} />

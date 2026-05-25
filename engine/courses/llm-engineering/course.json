@@ -39,8 +39,6 @@
     "data-structures-algorithms"
   ],
   "total_hours": 88,
-  "thumbnail": "https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/thumbnail.png",
-  "banner": "https://raw.githubusercontent.com/manojpisini/opencourses/main/engine/courses/llm-engineering/assets/images/banner.png",
   "color_primary": "#7C3AED",
   "status": "review",
   "version": "1.0.0",
@@ -136,5 +134,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-05-24T17:46:21.510Z"
+  "generatedAt": "2026-05-25T03:37:32.193Z"
 }

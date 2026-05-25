@@ -13,7 +13,6 @@
 import * as fs   from 'fs';
 import * as path from 'path';
 import { parseCourseFile, findCourseYamlFiles, countLessons, countQuestions } from '../lib/course-parser.ts';
-import { setOutput } from '../lib/github.ts';
 import type {
   Course, CourseJson, CourseDetailJson,
   PlayerChapter, PlayerLesson, Lesson, ContentBlueprintFlowStage,
@@ -25,6 +24,11 @@ const args      = process.argv.slice(2);
 const allMode   = args.includes('--all');
 const pathFlag  = args.indexOf('--path');
 const single    = pathFlag !== -1 ? args[pathFlag + 1] : undefined;
+
+function setOutput(key: string, value: string | number | boolean): void {
+  if (!process.env.GITHUB_OUTPUT) return;
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
+}
 
 function summarize(course: Course): string {
   const totalLessons   = countLessons(course);
@@ -132,8 +136,6 @@ function buildCourseJson(course: Course): CourseJson {
     topics:          course.classification.topics,
     prerequisites:   course.prerequisites?.courses ?? [],
     total_hours:     course.effort.total_hours,
-    thumbnail:       course.identity.cover.thumbnail,
-    banner:          course.identity.cover.banner,
     color_primary:   course.identity.cover.color_primary,
     status:          course.metadata.status,
     version:         course.metadata.version,
@@ -366,8 +368,6 @@ function buildCourseDetailJson(course: Course): CourseDetailJson {
     description_short:   course.identity.description.short,
     description_full_md: course.identity.description.full,
     cover: {
-      thumbnail:       course.identity.cover.thumbnail,
-      banner:          course.identity.cover.banner,
       color_primary:   course.identity.cover.color_primary,
       color_secondary: course.identity.cover.color_secondary,
     },

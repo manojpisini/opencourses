@@ -2810,23 +2810,143 @@ body[data-nav="side"] .app-main {
   position: relative;
   height: 92px;
   overflow: hidden;
+  --track-a: #38BDF8;
+  --track-b: #2DD4BF;
+  --track-c: #A78BFA;
   background:
-    linear-gradient(120deg, color-mix(in srgb, var(--difficulty-color) 22%, transparent), transparent 46%),
-    linear-gradient(315deg, color-mix(in srgb, #2DD4BF 14%, transparent), transparent 48%),
+    radial-gradient(circle at 14% 18%, color-mix(in srgb, var(--track-a) 30%, transparent), transparent 30%),
+    linear-gradient(120deg, color-mix(in srgb, var(--track-a) 20%, transparent), transparent 46%),
+    linear-gradient(315deg, color-mix(in srgb, var(--track-b) 16%, transparent), transparent 48%),
     var(--bg-base);
   border-bottom: 1px solid var(--border-subtle);
 }
-.course-card__signal {
+.course-card__visual::before {
+  content: "";
   position: absolute;
-  inset: 18px 18px auto auto;
-  width: 150px;
-  height: 48px;
+  inset: 0;
   background:
-    linear-gradient(90deg, transparent 0 12px, color-mix(in srgb, var(--text-primary) 18%, transparent) 12px 13px, transparent 13px 24px),
-    linear-gradient(180deg, color-mix(in srgb, var(--accent-blue) 24%, transparent), color-mix(in srgb, #2DD4BF 18%, transparent));
-  background-size: 24px 100%, 100% 100%;
-  opacity: 0.58;
-  transform: skewX(-14deg);
+    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--text-primary) 6%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(90deg, transparent, #000 30%, #000 76%, transparent);
+  opacity: 0.55;
+}
+.course-card__abstract {
+  position: absolute;
+  inset: 16px 18px 14px auto;
+  width: min(54%, 168px);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  opacity: 0.82;
+  transform: skewX(-12deg);
+}
+.course-card__abstract span {
+  display: block;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--track-a) 38%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--track-a) 28%, transparent), color-mix(in srgb, var(--track-b) 18%, transparent));
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--track-a) 14%, transparent);
+}
+.course-card__visual[data-track="foundations"] {
+  --track-a: #60A5FA;
+  --track-b: #22D3EE;
+  --track-c: #818CF8;
+}
+.course-card__visual[data-track="foundations"] .course-card__abstract {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.course-card__visual[data-track="languages"] {
+  --track-a: #F472B6;
+  --track-b: #F59E0B;
+  --track-c: #A78BFA;
+}
+.course-card__visual[data-track="languages"] .course-card__abstract span {
+  border-radius: 999px;
+}
+.course-card__visual[data-track="web"] {
+  --track-a: #38BDF8;
+  --track-b: #34D399;
+  --track-c: #FDE68A;
+}
+.course-card__visual[data-track="web"] .course-card__abstract {
+  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-rows: repeat(2, 1fr);
+}
+.course-card__visual[data-track="backend"] {
+  --track-a: #2DD4BF;
+  --track-b: #A3E635;
+  --track-c: #60A5FA;
+}
+.course-card__visual[data-track="backend"] .course-card__abstract span {
+  border-radius: 50% / 20%;
+}
+.course-card__visual[data-track="systems"] {
+  --track-a: #FB923C;
+  --track-b: #FACC15;
+  --track-c: #94A3B8;
+}
+.course-card__visual[data-track="systems"] .course-card__abstract {
+  grid-template-columns: repeat(4, 1fr);
+}
+.course-card__visual[data-track="networks"] {
+  --track-a: #22D3EE;
+  --track-b: #C084FC;
+  --track-c: #93C5FD;
+}
+.course-card__visual[data-track="networks"] .course-card__abstract span {
+  border-radius: 50%;
+}
+.course-card__visual[data-track="data"] {
+  --track-a: #7C3AED;
+  --track-b: #06B6D4;
+  --track-c: #2DD4BF;
+}
+.course-card__visual[data-track="data"] .course-card__abstract {
+  transform: rotate(-8deg) skewX(-12deg);
+}
+.course-card__visual[data-track="security"] {
+  --track-a: #F43F5E;
+  --track-b: #F97316;
+  --track-c: #FDE047;
+}
+.course-card__visual[data-track="security"] .course-card__abstract {
+  grid-template-columns: repeat(2, 1fr);
+  width: 116px;
+}
+.course-card__visual[data-track="architecture"] {
+  --track-a: #14B8A6;
+  --track-b: #8B5CF6;
+  --track-c: #38BDF8;
+}
+.course-card__visual[data-track="architecture"] .course-card__abstract {
+  grid-template-columns: 1fr 1.6fr 1fr;
+}
+.course-card__visual[data-track="creative"] {
+  --track-a: #F97316;
+  --track-b: #EC4899;
+  --track-c: #A78BFA;
+}
+.course-card__visual[data-track="creative"] .course-card__abstract span:nth-child(odd) {
+  border-radius: 999px 999px 4px 4px;
+}
+.course-card__visual[data-track="emerging"] {
+  --track-a: #A78BFA;
+  --track-b: #22D3EE;
+  --track-c: #F0ABFC;
+}
+.course-card__visual[data-track="emerging"] .course-card__abstract {
+  transform: rotate(12deg);
+}
+.course-card__visual[data-track="applied"] {
+  --track-a: #84CC16;
+  --track-b: #38BDF8;
+  --track-c: #FB7185;
+}
+.course-card__visual[data-track="applied"] .course-card__abstract {
+  grid-template-columns: 2fr 1fr 2fr;
+  grid-template-rows: repeat(2, 1fr);
 }
 .course-card__track-mark {
   position: absolute;

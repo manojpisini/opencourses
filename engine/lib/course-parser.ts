@@ -132,11 +132,8 @@ function parseIdentity(raw: Record<string, unknown>): CourseIdentity {
       full:  str(desc, 'full',  `${ctx}.description`),
     },
     cover: {
-      thumbnail:       str(cover, 'thumbnail',       `${ctx}.cover`),
-      banner:          str(cover, 'banner',          `${ctx}.cover`),
-      og_image:        str(cover, 'og_image',        `${ctx}.cover`),
-      color_primary:   str(cover, 'color_primary',   `${ctx}.cover`),
-      color_secondary: str(cover, 'color_secondary', `${ctx}.cover`),
+      color_primary:   optStr(cover, 'color_primary'),
+      color_secondary: optStr(cover, 'color_secondary'),
     },
   };
 }
@@ -504,7 +501,6 @@ function parseCertificate(raw: Record<string, unknown>): CourseCertificate {
     requirements:    (ro['requirements'] as CourseCertificate['requirements']) ?? [],
     template:        optStr(ro, 'template'),
     custom_template: ro['custom_template'] as string | null | undefined,
-    badge:           ro['badge'] as CourseCertificate['badge'],
   };
 }
 
@@ -562,7 +558,10 @@ export function findCourseYamlFiles(dir: string): string[] {
     if (!fs.existsSync(d)) return;
     for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
       const full = `${d}/${entry.name}`;
-      if (entry.isDirectory()) walk(full);
+      if (entry.isDirectory()) {
+        if (entry.name === 'template') continue;
+        walk(full);
+      }
       else if (entry.name === 'course.yaml') results.push(full);
     }
   }

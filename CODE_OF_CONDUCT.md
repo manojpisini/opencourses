@@ -16,6 +16,8 @@ We are committed to making participation a positive experience for everyone.
 - **Be honest.** Attribute sources correctly. Do not claim others' work as your own.
 - **Be inclusive.** Use language that is welcoming to newcomers and people from diverse backgrounds.
 - **Ask before assuming.** Clarify intent before escalating a misunderstanding.
+- **Review with care.** Explain the risk, cite the file or behavior, and suggest a practical next step.
+- **Respect learning pace.** A beginner question is not a burden; it is part of the project.
 
 ---
 
@@ -37,6 +39,23 @@ The following will not be tolerated in any project space:
 ## Scope
 
 This Code of Conduct applies to all project spaces managed by this repository: GitHub Issues, pull requests, Discussions, code review comments, and any other channels linked from this repository. It also applies when an individual is publicly representing the project.
+
+It applies equally to code contributions, course content, review threads,
+assignment feedback, leaderboard/certificate discussions, and social links
+published by the project.
+
+---
+
+## Review Culture
+
+OpenCourses is both software and education. Reviews should protect learners
+without making contributors feel small.
+
+- Point to concrete behavior, content, or code.
+- Separate correctness issues from style preferences.
+- Ask for sources when factual claims are unclear.
+- Give extra context when a request touches accessibility, security, privacy, or licensing.
+- Avoid sarcasm, status games, or dismissive shorthand.
 
 ---
 
