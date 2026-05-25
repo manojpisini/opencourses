@@ -1,10 +1,7 @@
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="OpenCourses">
-  <rect width="64" height="64" rx="14" fill="#38BDF8"/>
-  <rect x="9" y="9" width="46" height="46" rx="9" fill="#0a1e1e"/>
-  <rect x="16" y="18" width="32" height="4" rx="2" fill="#38BDF8"/>
-  <rect x="16" y="26" width="22" height="4" rx="2" fill="#2DD4BF"/>
-  <rect x="16" y="34" width="28" height="4" rx="2" fill="#38BDF8" opacity="0.6"/>
-  <rect x="16" y="42" width="14" height="4" rx="2" fill="#2DD4BF" opacity="0.5"/>
-  <rect x="40" y="38" width="14" height="14" rx="4" fill="#38BDF8"/>
-  <path d="M44 42 L47.5 45.5 M47.5 42 L44 45.5" fill="none" stroke="#0a1e1e" stroke-width="1.8" stroke-linecap="round"/>
+  <rect x="5" y="5" width="54" height="54" rx="15" fill="#F7F5FF"/>
+  <rect x="5" y="5" width="54" height="54" rx="15" fill="none" stroke="#4C1BC9" stroke-width="4"/>
+  <path d="M18 17 31 24v22L18 38V17Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M46 17 33 24v22l13-8V17Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M17 41 32 49l15-8" fill="none" stroke="#4C1BC9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

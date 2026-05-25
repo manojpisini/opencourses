@@ -58,7 +58,7 @@ export async function fetchGitHubProfile(
 const LABEL_COLORS: Record<string, string> = {
   enrolled:           '2ea44f',
   certified:          'f5c542',
-  'quiz-submit':      '0075ca',
+  'quiz-submit':      '4C1BC9',
   'project-submit':   'e4e669',
   'chapter-complete': '0e8a16',
   'course-complete':  'fbca04',

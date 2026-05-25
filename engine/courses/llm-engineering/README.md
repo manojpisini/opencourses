@@ -38,8 +38,8 @@ resources, exercises, and assessments.
 
 **Design guidelines:**
 - Background: `#0A0A0A` (true black, consistent with OpenCourses dark theme)
-- Primary accent: `#7C3AED` (violet-600)
-- Secondary accent: `#06B6D4` (cyan-500)
+- Primary accent: `#4C1BC9` (OpenCourses brand purple)
+- Secondary accent: `#7C3AED` (violet-600)
 - Text: `#F8FAFC` (slate-50)
 - Code blocks in diagrams: `#1E1E2E` background, `#CDD6F4` text (Catppuccin Mocha)
 - Font: Inter for labels, JetBrains Mono for code annotations

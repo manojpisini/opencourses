@@ -102,8 +102,8 @@ identity:
     short: "Shown in course cards — under 200 characters."
     full: "Full multi-paragraph Markdown description."
   cover:
-    color_primary: "#38BDF8"
-    color_secondary: "#2DD4BF"
+    color_primary: "#4C1BC9"
+    color_secondary: "#7C3AED"
     # Course card and hero artwork is generated from classification.category.
 
 classification:

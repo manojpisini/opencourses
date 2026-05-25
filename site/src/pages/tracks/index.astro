@@ -61,7 +61,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <div class="track-grid" id="tracks-list">
         {OC.TRACKS.map(track => {
           const trackCourses = OC.COURSES.filter(c => c.track === track.slug);
-          const color = OC.TRACK_COLORS[track.slug] ?? '#38BDF8';
+          const color = OC.TRACK_COLORS[track.slug] ?? '#4C1BC9';
           return (
             <a
               id={track.slug}

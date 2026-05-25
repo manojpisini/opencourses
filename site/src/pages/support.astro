@@ -67,16 +67,7 @@ const socials = [
 
     <section class="support-hero">
       <div class="support-hero__mark" aria-hidden="true">
-        <svg width="54" height="54" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="9" fill="#38BDF8"/>
-          <rect x="5.5" y="5.5" width="29" height="29" rx="5" fill="#0a1e1e"/>
-          <rect x="10" y="11" width="20" height="2.5" rx="1.25" fill="#38BDF8"/>
-          <rect x="10" y="16" width="13" height="2.5" rx="1.25" fill="#2DD4BF"/>
-          <rect x="10" y="21" width="16" height="2.5" rx="1.25" fill="#38BDF8" opacity="0.6"/>
-          <rect x="10" y="26" width="9" height="2.5" rx="1.25" fill="#2DD4BF" opacity="0.5"/>
-          <rect x="23.5" y="22.5" width="9" height="9" rx="2.5" fill="#38BDF8"/>
-          <path d="M26 25 L28 27 M28 25 L26 27" stroke="#0a1e1e" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
+        <img src={`${base}/favicon.svg`} width="54" height="54" alt="" />
       </div>
       <div>
         <div class="support-hero__eyebrow">Open source, free forever</div>
@@ -159,7 +150,7 @@ const socials = [
     align-items: center;
     padding: 1.5rem;
     background: var(--bg-surface);
-    border: 1px solid color-mix(in srgb, #38BDF8 24%, var(--border-default));
+    border: 1px solid color-mix(in srgb, #4C1BC9 24%, var(--border-default));
     border-radius: 10px;
   }
   .support-hero__mark {
@@ -168,13 +159,13 @@ const socials = [
     display: grid;
     place-items: center;
     border-radius: 8px;
-    background: color-mix(in srgb, #38BDF8 10%, var(--bg-base));
-    border: 1px solid color-mix(in srgb, #38BDF8 26%, transparent);
+    background: color-mix(in srgb, #4C1BC9 10%, var(--bg-base));
+    border: 1px solid color-mix(in srgb, #4C1BC9 26%, transparent);
   }
   .support-hero__eyebrow {
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    color: #2DD4BF;
+    color: #7C3AED;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 0.35rem;
@@ -205,10 +196,10 @@ const socials = [
     justify-content: center;
     gap: 3px;
     padding: 0.8rem 0.95rem;
-    border: 1px solid color-mix(in srgb, #2DD4BF 30%, var(--border-default));
+    border: 1px solid color-mix(in srgb, #7C3AED 30%, var(--border-default));
     border-radius: 8px;
     background:
-      linear-gradient(135deg, color-mix(in srgb, #2DD4BF 8%, transparent), transparent 46%),
+      linear-gradient(135deg, color-mix(in srgb, #7C3AED 8%, transparent), transparent 46%),
       var(--bg-surface);
     color: inherit;
     text-decoration: none;
@@ -241,19 +232,19 @@ const socials = [
     padding: 1rem;
     background: var(--bg-surface);
     border: 1px solid var(--border-default);
-    border-left: 3px solid #2DD4BF;
+    border-left: 3px solid #7C3AED;
     border-radius: 8px;
     color: inherit;
     text-decoration: none;
     transition: border-color 150ms, background 150ms, transform 150ms;
   }
   .support-card:hover {
-    border-color: color-mix(in srgb, #2DD4BF 48%, var(--border-default));
+    border-color: color-mix(in srgb, #7C3AED 48%, var(--border-default));
     background: var(--bg-raised);
     transform: translateY(-2px);
   }
   .support-card--disabled {
-    border-left-color: #38BDF8;
+    border-left-color: #4C1BC9;
   }
   .support-card__title {
     font-size: 1rem;
@@ -269,7 +260,7 @@ const socials = [
   .support-card__action {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: #2DD4BF;
+    color: #7C3AED;
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }

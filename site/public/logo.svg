@@ -1,17 +1,12 @@
-<svg viewBox="0 0 168 56" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="OpenCourses">
-  <rect width="56" height="56" rx="12" fill="#38BDF8"/>
-  <rect x="8" y="8" width="40" height="40" rx="7" fill="#0a1e1e"/>
-  <rect x="14" y="16" width="28" height="3.5" rx="1.75" fill="#38BDF8"/>
-  <rect x="14" y="23" width="19" height="3.5" rx="1.75" fill="#2DD4BF"/>
-  <rect x="14" y="30" width="23" height="3.5" rx="1.75" fill="#38BDF8" opacity="0.6"/>
-  <rect x="14" y="37" width="12" height="3.5" rx="1.75" fill="#2DD4BF" opacity="0.5"/>
-  <rect x="33" y="32" width="12" height="12" rx="3.5" fill="#38BDF8"/>
-  <path d="M36 35 L38.5 37.5 M38.5 35 L36 37.5"
-        fill="none" stroke="#0a1e1e" stroke-width="1.6" stroke-linecap="round"/>
-  <text x="68" y="27"
-        font-family="sans-serif" font-size="22" font-weight="700"
-        fill="#38BDF8" letter-spacing="0">Open</text>
-  <text x="68" y="51"
-        font-family="sans-serif" font-size="22" font-weight="400"
-        fill="#ffffff" letter-spacing="0">Courses</text>
+<svg viewBox="0 0 300 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">OpenCourses</title>
+  <desc id="desc">OpenCourses horizontal wordmark with the purple open-book logo.</desc>
+  <g transform="translate(4 8)">
+    <path d="M12 7 27 15.3v25.5L11.8 32.2 12 7Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M48 7 33 15.3v25.5l15.2-8.6L48 7Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M10.5 34.6 30 45.2l19.1-10.8" fill="none" stroke="#4C1BC9" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="72" y="31" font-family="Geist, Sora, Inter, system-ui, sans-serif" font-size="28" font-weight="800" fill="#4C1BC9">Open</text>
+  <text x="151" y="31" font-family="Geist, Sora, Inter, system-ui, sans-serif" font-size="28" font-weight="400" fill="#F7F7FB">Courses</text>
+  <text x="73" y="53" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="2" fill="#8F95A3">OPEN SOURCE LEARNING</text>
 </svg>

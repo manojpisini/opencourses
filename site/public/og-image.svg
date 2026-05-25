@@ -1,80 +1,75 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-labelledby="title desc">
   <title id="title">OpenCourses</title>
-  <desc id="desc">OpenCourses brand image with the cyan course icon and wordmark.</desc>
+  <desc id="desc">OpenCourses brand image with the purple open-book logo and wordmark.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#061313"/>
-      <stop offset="1" stop-color="#0a1e1e"/>
+      <stop offset="0" stop-color="#0D0F12"/>
+      <stop offset="1" stop-color="#15111F"/>
     </linearGradient>
-    <linearGradient id="accent" x1="260" y1="0" x2="940" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#38BDF8" stop-opacity="0"/>
-      <stop offset="0.28" stop-color="#38BDF8" stop-opacity="0.85"/>
-      <stop offset="0.72" stop-color="#2DD4BF" stop-opacity="0.85"/>
-      <stop offset="1" stop-color="#2DD4BF" stop-opacity="0"/>
+    <linearGradient id="accent" x1="240" y1="0" x2="960" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4C1BC9" stop-opacity="0"/>
+      <stop offset="0.25" stop-color="#4C1BC9" stop-opacity="0.95"/>
+      <stop offset="0.72" stop-color="#7C3AED" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#7C3AED" stop-opacity="0"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="43%" r="48%">
-      <stop offset="0" stop-color="#38BDF8" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    <radialGradient id="glow" cx="50%" cy="42%" r="48%">
+      <stop offset="0" stop-color="#4C1BC9" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#4C1BC9" stop-opacity="0"/>
     </radialGradient>
-    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
-      <circle cx="1.5" cy="1.5" r="1.5" fill="#1a3030" opacity="0.72"/>
+    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0H0v34" fill="none" stroke="#2A2636" stroke-width="1" opacity="0.55"/>
     </pattern>
   </defs>
 
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <rect width="1200" height="630" fill="url(#dots)"/>
-  <ellipse cx="600" cy="270" rx="470" ry="230" fill="url(#glow)"/>
-  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
-  <rect x="0" y="626" width="1200" height="4" fill="url(#accent)" opacity="0.45"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <ellipse cx="600" cy="275" rx="470" ry="220" fill="url(#glow)"/>
+  <rect width="1200" height="4" fill="url(#accent)"/>
+  <rect y="626" width="1200" height="4" fill="url(#accent)" opacity="0.5"/>
 
-  <g opacity="0.18" fill="none" stroke-width="2">
-    <path d="M76 132 H132 V76" stroke="#38BDF8"/>
-    <path d="M1124 132 H1068 V76" stroke="#2DD4BF"/>
-    <path d="M76 498 H132 V554" stroke="#2DD4BF"/>
-    <path d="M1124 498 H1068 V554" stroke="#38BDF8"/>
+  <g opacity="0.24" fill="none" stroke-width="2">
+    <path d="M76 132 H132 V76" stroke="#4C1BC9"/>
+    <path d="M1124 132 H1068 V76" stroke="#7C3AED"/>
+    <path d="M76 498 H132 V554" stroke="#7C3AED"/>
+    <path d="M1124 498 H1068 V554" stroke="#4C1BC9"/>
   </g>
 
-  <g transform="translate(275 222)">
-    <g transform="scale(2.2)">
-      <rect x="0" y="2" width="40" height="40" rx="9" fill="#38BDF8"/>
-      <rect x="5.5" y="7.5" width="29" height="29" rx="5" fill="#0a1e1e"/>
-      <rect x="10" y="13" width="20" height="2.5" rx="1.25" fill="#38BDF8"/>
-      <rect x="10" y="18" width="13" height="2.5" rx="1.25" fill="#2DD4BF"/>
-      <rect x="10" y="23" width="16" height="2.5" rx="1.25" fill="#38BDF8" opacity="0.6"/>
-      <rect x="10" y="28" width="9" height="2.5" rx="1.25" fill="#2DD4BF" opacity="0.5"/>
-      <rect x="23.5" y="24.5" width="9" height="9" rx="2.5" fill="#38BDF8"/>
-      <path d="M26 27 L28 29 M28 27 L26 29" fill="none" stroke="#0a1e1e" stroke-width="1.2" stroke-linecap="round"/>
+  <g transform="translate(274 214)">
+    <g transform="scale(2.25)">
+      <path d="M10 8 27 17.4v28.9L9.8 36.6 10 8Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M51 8 34 17.4v28.9l17.2-9.7L51 8Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M8.6 39.2 30.5 51 52 38.9" fill="none" stroke="#4C1BC9" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
-    <text x="112" y="72" font-family="'Sora','DM Sans',system-ui,sans-serif" font-size="76" letter-spacing="0">
-      <tspan font-weight="700" fill="#38BDF8">Open</tspan><tspan font-weight="400" fill="#ffffff">Courses</tspan>
+    <text x="124" y="78" font-family="Geist, Sora, Inter, system-ui, sans-serif" font-size="78" letter-spacing="0">
+      <tspan font-weight="800" fill="#4C1BC9">Open</tspan><tspan font-weight="400" fill="#F7F7FB">Courses</tspan>
     </text>
   </g>
 
-  <text x="600" y="382" text-anchor="middle" font-family="'DM Sans',system-ui,sans-serif" font-size="24" fill="#aab7b7">
+  <text x="600" y="384" text-anchor="middle" font-family="DM Sans, Inter, system-ui, sans-serif" font-size="24" fill="#C9C5D8">
     Free, open-source developer education built on GitHub.
   </text>
-  <rect x="410" y="420" width="380" height="2" fill="url(#accent)" opacity="0.6"/>
+  <rect x="410" y="420" width="380" height="2" fill="url(#accent)" opacity="0.72"/>
 
-  <g font-family="'JetBrains Mono',ui-monospace,monospace" font-size="18" text-anchor="middle">
+  <g font-family="JetBrains Mono, ui-monospace, monospace" font-size="18" text-anchor="middle">
     <g transform="translate(326 472)">
-      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#ffffff" font-weight="700">OPEN</text>
-      <text y="20" fill="#4a7070" font-size="13">SOURCE</text>
+      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#15111F" stroke="#342753"/>
+      <text y="-4" fill="#F7F7FB" font-weight="700">OPEN</text>
+      <text y="20" fill="#8F85AC" font-size="13">SOURCE</text>
     </g>
     <g transform="translate(508 472)">
-      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#ffffff" font-weight="700">SELF</text>
-      <text y="20" fill="#4a7070" font-size="13">PACED</text>
+      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#15111F" stroke="#342753"/>
+      <text y="-4" fill="#F7F7FB" font-weight="700">SELF</text>
+      <text y="20" fill="#8F85AC" font-size="13">PACED</text>
     </g>
     <g transform="translate(690 472)">
-      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#ffffff" font-weight="700">GIT</text>
-      <text y="20" fill="#4a7070" font-size="13">NATIVE</text>
+      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#15111F" stroke="#342753"/>
+      <text y="-4" fill="#F7F7FB" font-weight="700">GIT</text>
+      <text y="20" fill="#8F85AC" font-size="13">NATIVE</text>
     </g>
     <g transform="translate(872 472)">
-      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#0d2525" stroke="#1f4545"/>
-      <text y="-4" fill="#2DD4BF" font-weight="700">FREE</text>
-      <text y="20" fill="#4a7070" font-size="13">FOREVER</text>
+      <rect x="-82" y="-30" width="164" height="64" rx="8" fill="#15111F" stroke="#342753"/>
+      <text y="-4" fill="#7C3AED" font-weight="700">FREE</text>
+      <text y="20" fill="#8F85AC" font-size="13">FOREVER</text>
     </g>
   </g>
 </svg>

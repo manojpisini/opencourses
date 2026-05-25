@@ -5,8 +5,8 @@
   "description_short": "A ground-up, systems-level course on Large Language Models — from the mathematics of the transformer to building production RAG pipelines, fine-tuning open-source models, and deploying high-throughput inference systems. Every concept is anchored in open-source code you can run, study, and contribute to.",
   "description_full_md": "Large Language Models are reshaping every layer of software. This course\nexists so engineers understand them deeply — not as black-box APIs, but\nas mathematical systems they can modify, evaluate, optimize, and build on.\n\nStarting from the transformer architecture and working up through\npre-training, alignment (RLHF, DPO), prompt engineering, retrieval-augmented\ngeneration, fine-tuning, and production serving, every chapter is built\naround open-source repositories — Llama, Mistral, vLLM, HuggingFace\nTransformers, LangChain, LlamaIndex, OpenTelemetry, and more.\n\n**What makes this course different:**\n- Every theory lesson is paired with a runnable code walkthrough in a real\n  open-source codebase — you read source, not toy examples.\n- Evaluation is first-class: every system you build is measured, not guessed at.\n- The capstone is a production-grade RAG + agent system submitted as a\n  public GitHub repository — a real open-source contribution.\n- Covers 2024–2025 frontier techniques: speculative decoding, FlashAttention-2,\n  continuous batching, LoRA/QLoRA, DPO, multi-agent orchestration, and more.\n\n**Who this is for:**\n- Software engineers who want to build serious LLM-powered products\n- ML engineers moving from classical ML into the LLM stack\n- Researchers who want production engineering skills alongside theory\n- Technical founders building AI-native applications",
   "cover": {
-    "color_primary": "#7C3AED",
-    "color_secondary": "#06B6D4"
+    "color_primary": "#4C1BC9",
+    "color_secondary": "#7C3AED"
   },
   "level": "advanced",
   "track": "data",

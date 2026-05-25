@@ -161,7 +161,7 @@
     // Nodes + labels
     nodeGroup.innerHTML = ''; labelGroup.innerHTML = '';
     sim.forEach(n => {
-      const color = TRACK_COLORS[n.track] || '#38BDF8';
+      const color = TRACK_COLORS[n.track] || '#4C1BC9';
       const isSel = selectedId === n.id;
       const g = svgEl('g');
       g.setAttribute('transform', `translate(${n.x},${n.y})`);
@@ -172,7 +172,7 @@
         const pulse = svgEl('circle');
         pulse.setAttribute('r', n.r + 6);
         pulse.setAttribute('fill', 'none');
-        pulse.setAttribute('stroke', 'var(--accent-blue)');
+        pulse.setAttribute('stroke', 'var(--accent-brand)');
         pulse.setAttribute('stroke-width', '2');
         pulse.setAttribute('opacity', '0.6');
         g.appendChild(pulse);
@@ -182,7 +182,7 @@
       c.setAttribute('r', n.r);
       c.setAttribute('fill', color);
       c.setAttribute('fill-opacity', isSel ? '0.6' : '0.28');
-      c.setAttribute('stroke', isSel ? 'var(--accent-blue)' : color);
+      c.setAttribute('stroke', isSel ? 'var(--accent-brand)' : color);
       c.setAttribute('stroke-width', isSel ? '2.5' : '1.6');
       g.appendChild(c);
       nodeGroup.appendChild(g);

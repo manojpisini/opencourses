@@ -1,106 +1,81 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1056 748" width="1056" height="748" font-family="Georgia, 'Times New Roman', serif">
-  <!-- Background -->
-  <rect width="1056" height="748" fill="#0d0f12"/>
+  <rect width="1056" height="748" fill="#0D0F12"/>
+  <rect x="24" y="24" width="1008" height="700" rx="12" ry="12" fill="none" stroke="#4C1BC9" stroke-width="2" opacity="0.55"/>
+  <rect x="40" y="40" width="976" height="668" rx="8" ry="8" fill="none" stroke="#4C1BC9" stroke-width="0.5" opacity="0.28"/>
 
-  <!-- Outer border -->
-  <rect x="24" y="24" width="1008" height="700" rx="12" ry="12"
-        fill="none" stroke="#38BDF8" stroke-width="2" opacity="0.4"/>
-
-  <!-- Inner border -->
-  <rect x="40" y="40" width="976" height="668" rx="8" ry="8"
-        fill="none" stroke="#38BDF8" stroke-width="0.5" opacity="0.2"/>
-
-  <!-- Corner decorations -->
-  <g fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.6">
-    <path d="M60 60 L90 60 L90 90" />
-    <path d="M996 60 L966 60 L966 90" />
-    <path d="M60 688 L90 688 L90 658" />
-    <path d="M996 688 L966 688 L966 658" />
+  <g fill="none" stroke="#4C1BC9" stroke-width="1.5" opacity="0.7">
+    <path d="M60 60 L90 60 L90 90"/>
+    <path d="M996 60 L966 60 L966 90"/>
+    <path d="M60 688 L90 688 L90 658"/>
+    <path d="M996 688 L966 688 L966 658"/>
   </g>
 
-  <!-- Radial glow behind seal -->
   <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.08"/>
-    <stop offset="100%" stop-color="#38BDF8" stop-opacity="0"/>
+    <stop offset="0%" stop-color="#4C1BC9" stop-opacity="0.14"/>
+    <stop offset="100%" stop-color="#4C1BC9" stop-opacity="0"/>
   </radialGradient>
   <ellipse cx="528" cy="374" rx="300" ry="200" fill="url(#glow)"/>
 
-  <!-- Issuer logo/wordmark -->
-  <g transform="translate(438 62)">
-    <g transform="scale(0.75)">
-      <rect width="56" height="56" rx="12" fill="#38BDF8"/>
-      <rect x="8" y="8" width="40" height="40" rx="7" fill="#0a1e1e"/>
-      <rect x="14" y="16" width="28" height="3.5" rx="1.75" fill="#38BDF8"/>
-      <rect x="14" y="23" width="19" height="3.5" rx="1.75" fill="#2DD4BF"/>
-      <rect x="14" y="30" width="23" height="3.5" rx="1.75" fill="#38BDF8" opacity="0.6"/>
-      <rect x="14" y="37" width="12" height="3.5" rx="1.75" fill="#2DD4BF" opacity="0.5"/>
-      <rect x="33" y="32" width="12" height="12" rx="3.5" fill="#38BDF8"/>
-      <path d="M36 35 L38.5 37.5 M38.5 35 L36 37.5" fill="none" stroke="#0a1e1e" stroke-width="1.6" stroke-linecap="round"/>
+  <g transform="translate(404 62)">
+    <g transform="scale(0.82)">
+      <path d="M10 8 27 17.4v28.9L9.8 36.6 10 8Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M51 8 34 17.4v28.9l17.2-9.7L51 8Z" fill="#4C1BC9" stroke="#4C1BC9" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M8.6 39.2 30.5 51 52 38.9" fill="none" stroke="#4C1BC9" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
-    <text x="54" y="29" font-family="'Helvetica Neue', Arial, sans-serif" font-size="28" letter-spacing="0">
-      <tspan font-weight="700" fill="#38BDF8">Open</tspan><tspan font-weight="400" fill="#eef0f4">Courses</tspan>
+    <text x="58" y="31" font-family="'Helvetica Neue', Arial, sans-serif" font-size="30" letter-spacing="0">
+      <tspan font-weight="800" fill="#4C1BC9">Open</tspan><tspan font-weight="400" fill="#eef0f4">Courses</tspan>
     </text>
   </g>
-  </text>
 
-  <!-- Certificate title -->
   <text x="528" y="170" text-anchor="middle" font-size="14" fill="#8892a4"
-        font-family="'Helvetica Neue', Arial, sans-serif" letter-spacing="6" text-transform="uppercase">
+        font-family="'Helvetica Neue', Arial, sans-serif" letter-spacing="6">
     CERTIFICATE OF COMPLETION
   </text>
 
-  <!-- Divider -->
-  <line x1="200" y1="190" x2="856" y2="190" stroke="#38BDF8" stroke-width="0.5" opacity="0.3"/>
+  <line x1="200" y1="190" x2="856" y2="190" stroke="#4C1BC9" stroke-width="0.5" opacity="0.42"/>
 
-  <!-- "This certifies that" -->
   <text x="528" y="240" text-anchor="middle" font-size="15" fill="#8892a4"
         font-style="italic" font-family="Georgia, serif">
     This certifies that
   </text>
 
-  <!-- Student name -->
   <text x="528" y="300" text-anchor="middle" font-size="42" fill="#eef0f4"
         font-family="Georgia, 'Times New Roman', serif" font-weight="bold">
     {{student}}
   </text>
 
-  <!-- "has successfully completed" -->
   <text x="528" y="350" text-anchor="middle" font-size="15" fill="#8892a4"
         font-style="italic" font-family="Georgia, serif">
-    has successfully completed all 5 stages of
+    has successfully completed all required stages of
   </text>
 
-  <!-- Course name -->
-  <text x="528" y="420" text-anchor="middle" font-size="32" fill="#38BDF8"
+  <text x="528" y="420" text-anchor="middle" font-size="32" fill="#4C1BC9"
         font-family="Georgia, 'Times New Roman', serif" font-weight="bold">
     {{courseTitle}}
   </text>
 
-  <!-- Divider -->
-  <line x1="200" y1="450" x2="856" y2="450" stroke="#38BDF8" stroke-width="0.5" opacity="0.3"/>
+  <line x1="200" y1="450" x2="856" y2="450" stroke="#4C1BC9" stroke-width="0.5" opacity="0.42"/>
 
-  <!-- Seal placeholder -->
-  <circle cx="528" cy="530" r="44" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.5"/>
-  <text x="528" y="522" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="28" letter-spacing="0">
-    <tspan font-weight="700" fill="#38BDF8">O</tspan><tspan font-weight="400" fill="#eef0f4">C</tspan>
-  </text>
-  <text x="528" y="548" text-anchor="middle" font-size="9" fill="#38BDF8" letter-spacing="2" opacity="0.7">
+  <circle cx="528" cy="530" r="44" fill="none" stroke="#4C1BC9" stroke-width="1.5" opacity="0.6"/>
+  <g transform="translate(498 500) scale(1.02)">
+    <path d="M10 8 27 17.4v28.9L9.8 36.6 10 8Z" fill="none" stroke="#4C1BC9" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M51 8 34 17.4v28.9l17.2-9.7L51 8Z" fill="none" stroke="#4C1BC9" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M8.6 39.2 30.5 51 52 38.9" fill="none" stroke="#4C1BC9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="528" y="586" text-anchor="middle" font-size="9" fill="#4C1BC9" letter-spacing="2" opacity="0.82">
     OPENCOURSES
   </text>
 
-  <!-- Left signature block -->
   <line x1="180" y1="650" x2="380" y2="650" stroke="#8892a4" stroke-width="0.5" opacity="0.5"/>
   <text x="280" y="668" text-anchor="middle" font-size="11" fill="#8892a4" font-family="sans-serif">
     Issued: {{issuedAt}}
   </text>
 
-  <!-- Right signature block -->
   <line x1="676" y1="650" x2="876" y2="650" stroke="#8892a4" stroke-width="0.5" opacity="0.5"/>
   <text x="776" y="668" text-anchor="middle" font-size="11" fill="#8892a4" font-family="sans-serif">
     OpenCourses Platform
   </text>
 
-  <!-- Certificate ID -->
   <text x="528" y="710" text-anchor="middle" font-size="10" fill="#4d5566"
         font-family="monospace" letter-spacing="1">
     ID: {{certId}} · v{{version}} · Verify: {{repoUrl}}/releases

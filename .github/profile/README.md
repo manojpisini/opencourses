@@ -6,9 +6,9 @@
 
 **Free, open-source developer education — built entirely on GitHub**
 
-[![Courses](https://img.shields.io/badge/dynamic/json?color=0075ca&label=Courses&query=%24.courses&url=https%3A%2F%2Fmanojpisini.github.io%2Fopencourses%2Fstats.json&style=flat-square)](https://manojpisini.github.io/opencourses/courses)
+[![Courses](https://img.shields.io/badge/dynamic/json?color=4C1BC9&label=Courses&query=%24.courses&url=https%3A%2F%2Fmanojpisini.github.io%2Fopencourses%2Fstats.json&style=flat-square)](https://manojpisini.github.io/opencourses/courses)
 [![Tracks](https://img.shields.io/badge/Tracks-12-6e40c9?style=flat-square)](https://manojpisini.github.io/opencourses/tracks)
-[![License](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](https://github.com/manojpisini/opencourses/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-4C1BC9?style=flat-square)](https://github.com/manojpisini/opencourses/blob/main/LICENSE)
 
 </div>
 
