@@ -266,33 +266,23 @@ select {
 .wordmark {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1rem;
-  letter-spacing: 0;
-  color: var(--text-primary);
+  flex-shrink: 0;
 }
-.wordmark__icon-svg {
+.wordmark__logo {
   display: block;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: clamp(92px, 10vw, 128px);
+  height: auto;
+  max-height: 48px;
 }
-.wordmark__text {
-  display: inline-flex;
-  align-items: baseline;
+.wordmark__logo--light {
+  display: none;
 }
-.wordmark__open {
-  color: #4C1BC9;
-  font-weight: 700;
+[data-theme="light"] .wordmark__logo--dark {
+  display: none;
 }
-.wordmark__courses {
-  color: #ffffff;
-  font-weight: 400;
-}
-[data-theme="light"] .wordmark__courses {
-  color: var(--text-primary);
+[data-theme="light"] .wordmark__logo--light {
+  display: block;
 }
 .nav-links {
   display: flex;
