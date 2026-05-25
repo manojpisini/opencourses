@@ -14,6 +14,8 @@ on:
 permissions:
   contents: write
   issues: write
+  id-token: write
+  attestations: write
 
 jobs:
   certify:
@@ -27,7 +29,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.COURSE_BOT_TOKEN }}
+          token: ${{ secrets.COURSE_BOT_TOKEN || github.token }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -128,7 +130,7 @@ jobs:
         id: find_issue
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.COURSE_BOT_TOKEN || github.token }}
           script: |
             const student = '${{ inputs.student }}'.trim().replace(/^@+/, '').toLowerCase();
             const course = '${{ steps.course.outputs.slug }}';
@@ -149,18 +151,24 @@ jobs:
       - name: Generate certificate
         run: bun run scripts/certify.ts
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN || github.token }}
           REPO: ${{ github.repository }}
+          SITE_URL: https://manojpisini.github.io/opencourses
           STUDENT: ${{ inputs.student }}
           COURSE: ${{ steps.course.outputs.slug }}
           ISSUE_NUMBER: ${{ steps.find_issue.outputs.result }}
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
 
+      - name: Attest generated credential assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: engine/dist/certs/*
+
       - name: Add certified label to enrollment issue
         if: steps.find_issue.outputs.result != '0'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.COURSE_BOT_TOKEN || github.token }}
           script: |
             await github.rest.issues.addLabels({
               owner: context.repo.owner, repo: context.repo.repo,

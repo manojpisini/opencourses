@@ -2592,5 +2592,11 @@
   "totalLessons": 31,
   "totalChapters": 8,
   "totalDurationMinutes": 1255,
-  "generatedAt": "2026-05-25T03:37:32.195Z"
+  "qualityBadges": [
+    "actively-maintained",
+    "has-assignments",
+    "has-final-project",
+    "certificate-enabled"
+  ],
+  "generatedAt": "2026-05-25T16:39:00.502Z"
 }

@@ -12,6 +12,14 @@ export type CoursePace = 'self-paced' | 'scheduled';
 export type CourseStatus = 'draft' | 'review' | 'published' | 'archived' | 'deprecated';
 export type SubmissionType = 'github_url' | 'file_upload' | 'inline';
 export type QuestionType = 'mcq' | 'multi' | 'truefalse' | 'short' | 'code_output' | 'code_fix' | 'code_write' | 'code_reading';
+export type CourseQualityBadge =
+  | 'actively-maintained'
+  | 'has-assignments'
+  | 'has-final-project'
+  | 'certificate-enabled'
+  | 'beginner-friendly'
+  | 'needs-reviewers'
+  | 'community-verified';
 
 export interface PlayerLesson {
   id: string;
@@ -199,5 +207,6 @@ export interface CourseDetailJson {
   totalLessons: number;
   totalChapters: number;
   totalDurationMinutes: number;
+  qualityBadges: CourseQualityBadge[];
   generatedAt: string;
 }

@@ -479,6 +479,15 @@ export interface CourseCertificate {
   custom_template?: string | null;
 }
 
+export type CourseQualityBadge =
+  | 'actively-maintained'
+  | 'has-assignments'
+  | 'has-final-project'
+  | 'certificate-enabled'
+  | 'beginner-friendly'
+  | 'needs-reviewers'
+  | 'community-verified';
+
 
 // ─── Section 15: Assets ──────────────────────────────────────────────────────
 
@@ -579,6 +588,7 @@ export interface CourseJson {
   totalChapterTests: number;
   hasFinaTest: boolean;
   hasFinalAssignment: boolean;
+  qualityBadges: CourseQualityBadge[];
   certificate: {
     enabled: boolean;
     requirements: CertificateRequirement[];
@@ -827,6 +837,7 @@ export interface CourseDetailJson {
   totalLessons: number;
   totalChapters: number;
   totalDurationMinutes: number;
+  qualityBadges: CourseQualityBadge[];
   generatedAt: string;
 }
 

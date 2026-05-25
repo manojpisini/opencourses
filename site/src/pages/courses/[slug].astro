@@ -482,6 +482,20 @@ const trackMark = (trackParts.length > 1
   : trackKey.slice(0, 2)
 ).slice(0, 2).toUpperCase();
 const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.duration ?? '—');
+const qualityLabels: Record<string, string> = {
+  'actively-maintained': 'Actively maintained',
+  'has-assignments': 'Has assignments',
+  'has-final-project': 'Has final project',
+  'certificate-enabled': 'Certificate enabled',
+  'beginner-friendly': 'Beginner friendly',
+  'needs-reviewers': 'Needs reviewers',
+  'community-verified': 'Community verified',
+};
+const qualityBadges = detail?.qualityBadges ?? [];
+
+function lessonObjective(detail: CourseDetailJson, chapterId: string, lessonDescription?: string): string {
+  return lessonDescription || detail.outcomes.by_chapter[chapterId]?.[0] || detail.outcomes.by_completion[0] || 'Complete the current lesson and move one step closer to certification.';
+}
 ---
 
 <Base
@@ -518,6 +532,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
           <div class="cp-topbar__progress-bar" id="cp-progress-bar" style="width:0%"></div>
         </div>
         <span class="cp-topbar__progress-label" id="cp-progress-label">0 / {flatLessons.length}</span>
+        <button class="cp-resume-btn" id="cp-resume-btn" type="button" hidden>Continue</button>
       </header>
 
       <!-- ── Player body: sidebar + content ───────────────────────────────── -->
@@ -537,6 +552,19 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                   {detail.totalChapters} chapters · {detail.totalLessons} lessons
                 </div>
               </div>
+            </div>
+
+            <div class="cp-sidebar-progress" aria-label="Course chapter timeline">
+              <div class="cp-sidebar-progress__top">
+                <span>Progress timeline</span>
+                <strong id="cp-sidebar-progress-label">0%</strong>
+              </div>
+              <div class="cp-timeline" id="cp-timeline">
+                {detail.chapters.map((ch, ci) => (
+                  <span class="cp-timeline__seg" data-timeline-chapter={ci} title={ch.title}></span>
+                ))}
+              </div>
+              <p class="cp-current-objective" id="cp-current-objective">Choose a lesson to begin.</p>
             </div>
 
             <!-- Chapter list -->
@@ -666,6 +694,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                 class="cp-pane"
                 id={`cp-pane-${globalIdx}`}
                 data-lesson-id={lesson.id}
+                data-objective={lessonObjective(detail, ch.id, lesson.description)}
                 hidden
               >
                 <!-- Pane header -->
@@ -685,6 +714,10 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                       {fmtDuration(lesson.duration_minutes)}
                     </div>
                   )}
+                  <div class="cp-objective">
+                    <span>Current objective</span>
+                    <strong>{lessonObjective(detail, ch.id, lesson.description)}</strong>
+                  </div>
                 </div>
 
                 <!-- ── PRIMARY LEARNING STAGE ────────────────────────────── -->
@@ -783,11 +816,11 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
 
                 <!-- ── NATIVE RESOURCES ───────────────────────────────────── -->
                 {(resourceFiles.length > 0 || resourceLinks.length > 0) && (
-                  <section class="cp-resources" aria-label="Lesson resources">
-                    <div class="cp-resources__header">
+                  <details class="cp-resources" aria-label="Lesson resources" open>
+                    <summary class="cp-resources__header">
                       <span>Course Resources</span>
                       <small>{resourceFiles.length + resourceLinks.length} item{resourceFiles.length + resourceLinks.length === 1 ? '' : 's'}</small>
-                    </div>
+                    </summary>
                     <div class="cp-resource-grid">
                       {resourceFiles.map(file => {
                         const src = courseAssetUrl(detail.id, file.file);
@@ -886,7 +919,7 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
                         );
                       })}
                     </div>
-                  </section>
+                  </details>
                 )}
 
                 <!-- ── CODE BLOCKS ────────────────────────────────────────── -->
@@ -1035,6 +1068,15 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
               )}
             </div>
           </div>
+
+          {qualityBadges.length > 0 && (
+            <div class="cp-card cp-card--quality cp-card--public">
+              <div class="cp-card__title">Course quality</div>
+              <div class="cp-quality-badges">
+                {qualityBadges.map(badge => <span class="cp-quality-badge">{qualityLabels[badge] ?? badge}</span>)}
+              </div>
+            </div>
+          )}
 
           <!-- About this course -->
           <div class="cp-card cp-card--public">
@@ -1335,6 +1377,9 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     var imageViewerImg = document.getElementById('cp-image-viewer-img');
     var imageViewerTitle = document.getElementById('cp-image-viewer-title');
     var imageViewerStage = document.getElementById('cp-image-viewer-stage');
+    var currentObjective = document.getElementById('cp-current-objective');
+    var sidebarProgressLabel = document.getElementById('cp-sidebar-progress-label');
+    var resumeBtn = document.getElementById('cp-resume-btn');
     var courseId = window.OC_COURSE_ID || '';
     var githubRepo = window.OC_GITHUB_REPO || 'manojpisini/opencourses';
     var enrollmentIssue = null;
@@ -1759,7 +1804,6 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
         });
       });
     }
-
     // ── State ──────────────────────────────────────────────────────────────
     var STORAGE_KEY_LESSON   = 'oc-player-lesson-' + (window.location.pathname);
     var STORAGE_KEY_PROGRESS = 'oc-player-done-'   + (window.location.pathname);
@@ -1793,6 +1837,13 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       try { localStorage.setItem(STORAGE_KEY_LESSON, String(idx)); }
       catch {}
     }
+    if (resumeBtn) {
+      var savedLesson = getSavedLesson();
+      if (savedLesson > 0) resumeBtn.hidden = false;
+      resumeBtn.addEventListener('click', function () {
+        showLesson(getSavedLesson());
+      });
+    }
 
     var done = getDone();
     var currentLesson = 0;
@@ -1801,8 +1852,10 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
     function updateProgress() {
       var bar   = document.getElementById('cp-progress-bar');
       var label = document.getElementById('cp-progress-label');
-      if (bar)   bar.style.width = (done.length / totalLessons * 100) + '%';
+      var pct = totalLessons ? Math.round(done.length / totalLessons * 100) : 0;
+      if (bar)   bar.style.width = pct + '%';
       if (label) label.textContent = done.length + ' / ' + totalLessons;
+      if (sidebarProgressLabel) sidebarProgressLabel.textContent = pct + '%';
     }
 
     // ── Show a lesson pane ─────────────────────────────────────────────────
@@ -1819,6 +1872,12 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
       // Activate sidebar button
       document.querySelectorAll('[data-lesson]').forEach(function (btn) {
         btn.classList.toggle('active', parseInt(btn.dataset.lesson, 10) === idx);
+      });
+      var activeBtn = document.getElementById('cp-lessonbtn-' + idx);
+      if (currentObjective && pane.dataset.objective) currentObjective.textContent = pane.dataset.objective;
+      document.querySelectorAll('[data-timeline-chapter]').forEach(function (seg) {
+        var chapter = activeBtn && activeBtn.closest('[data-ch-lessons]');
+        seg.classList.toggle('active', !!chapter && seg.dataset.timelineChapter === chapter.dataset.chLessons);
       });
 
       // Lazy-load iframe: set src from data-src
@@ -2053,6 +2112,17 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   color: var(--text-muted);
   flex-shrink: 0;
 }
+.cp-resume-btn {
+  min-height: 30px;
+  padding: 0 0.75rem;
+  border: 1px solid color-mix(in srgb, #4C1BC9 36%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, #4C1BC9 10%, var(--bg-base));
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.cp-resume-btn[hidden] { display: none; }
 
 /* ── Body ────────────────────────────────────────────────────────────────── */
 .cp-body {
@@ -2121,6 +2191,43 @@ const totalH = detail ? `${detail.effort.total_hours}h` : (summaryFallback?.dura
   font-size: 0.68rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
+}
+.cp-sidebar-progress {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, #4C1BC9 24%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-base) 58%, transparent);
+}
+.cp-sidebar-progress__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font: 0.68rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.cp-sidebar-progress__top strong { color: #4C1BC9; }
+.cp-timeline {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+}
+.cp-timeline__seg {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--border-default);
+}
+.cp-timeline__seg.active { background: #4C1BC9; }
+.cp-current-objective {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.45;
 }
 
 /* Chapter accordion */
@@ -2952,6 +3059,26 @@ body.cp-image-viewer-open { overflow: hidden; }
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+.cp-objective {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border: 1px solid color-mix(in srgb, #4C1BC9 24%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, #4C1BC9 7%, var(--bg-surface));
+}
+.cp-objective span {
+  color: #4C1BC9;
+  font: 0.68rem var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.cp-objective strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 /* Video */
@@ -3959,6 +4086,28 @@ body.cp-image-viewer-open { overflow: hidden; }
   border-radius: 8px;
   background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
   box-shadow: 0 18px 70px rgba(0, 0, 0, 0.16);
+}
+.cp-resources > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.cp-resources > summary::-webkit-details-marker { display: none; }
+.cp-quality-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.cp-quality-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 0.6rem;
+  border: 1px solid color-mix(in srgb, #4C1BC9 34%, var(--border-default));
+  border-radius: 999px;
+  background: color-mix(in srgb, #4C1BC9 9%, var(--bg-base));
+  color: #4C1BC9;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 .cp-enrollment-check {
   border-color: color-mix(in srgb, var(--course-primary) 28%, var(--border-default));

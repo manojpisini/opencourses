@@ -105,6 +105,12 @@
   "totalChapterTests": 8,
   "hasFinaTest": true,
   "hasFinalAssignment": true,
+  "qualityBadges": [
+    "actively-maintained",
+    "has-assignments",
+    "has-final-project",
+    "certificate-enabled"
+  ],
   "certificate": {
     "enabled": true,
     "requirements": [
@@ -134,5 +140,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-05-25T03:37:32.193Z"
+  "generatedAt": "2026-05-25T16:39:00.454Z"
 }

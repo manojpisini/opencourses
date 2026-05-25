@@ -17,7 +17,7 @@ import type {
   Course, CourseJson, CourseDetailJson,
   PlayerChapter, PlayerLesson, Lesson, ContentBlueprintFlowStage,
   CourseQuestion, ChapterTest, FinalTest, ChapterAssignment, FinalAssignment,
-  PlayerQuestion, PlayerTest, PlayerAssignment,
+  PlayerQuestion, PlayerTest, PlayerAssignment, CourseQualityBadge,
 } from '../types/course.ts';
 
 const args      = process.argv.slice(2);
@@ -104,9 +104,25 @@ function validateCourse(course: Course): string[] {
   return warnings;
 }
 
+function buildQualityBadges(course: Course): CourseQualityBadge[] {
+  const badges = new Set<CourseQualityBadge>();
+  const tags = course.classification.tags.map((tag) => tag.toLowerCase());
+
+  if (course.metadata.status === 'published' || course.metadata.status === 'review') badges.add('actively-maintained');
+  if ((course.chapter_assignments?.length ?? 0) > 0) badges.add('has-assignments');
+  if (course.final_assignment) badges.add('has-final-project');
+  if (course.certificate.enabled) badges.add('certificate-enabled');
+  if (course.classification.level === 'beginner') badges.add('beginner-friendly');
+  if (tags.some((tag) => ['needs-reviewers', 'needs-reviewer', 'needs-contributor', 'help-wanted'].includes(tag))) badges.add('needs-reviewers');
+  if ((course.people.reviewers?.length ?? 0) > 0) badges.add('community-verified');
+
+  return [...badges];
+}
+
 /** Build the stripped public course.json from a parsed Course */
 function buildCourseJson(course: Course): CourseJson {
   const totalLessons = countLessons(course);
+  const qualityBadges = buildQualityBadges(course);
 
   const chapters = course.curriculum.chapters.map((ch) => {
     let lessonCount = ch.lessons?.length ?? 0;
@@ -145,6 +161,7 @@ function buildCourseJson(course: Course): CourseJson {
     totalChapterTests:   course.chapter_tests.length,
     hasFinaTest:         !!course.final_test,
     hasFinalAssignment:  !!course.final_assignment,
+    qualityBadges,
     certificate: {
       enabled:      course.certificate.enabled,
       requirements: course.certificate.requirements,
@@ -323,6 +340,7 @@ function toPlayerAssignment(assignment: ChapterAssignment | FinalAssignment): Pl
 // ─── Build full CourseDetailJson ──────────────────────────────────────────────
 
 function buildCourseDetailJson(course: Course): CourseDetailJson {
+  const qualityBadges = buildQualityBadges(course);
   const chapters: PlayerChapter[] = course.curriculum.chapters.map((ch) => {
     const rawLessons = flattenLessons(ch);
     const lessons    = rawLessons.map(toPlayerLesson);
@@ -433,6 +451,7 @@ function buildCourseDetailJson(course: Course): CourseDetailJson {
     totalLessons,
     totalChapters:        chapters.length,
     totalDurationMinutes: totalDuration,
+    qualityBadges,
     generatedAt:          new Date().toISOString(),
   };
 }

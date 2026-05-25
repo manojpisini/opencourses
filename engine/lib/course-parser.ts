@@ -542,7 +542,7 @@ export function parseCourseFile(filePath: string): Course {
     final_test:            parseFinalTest(doc),
     final_assignment:      parseFinalAssignment(doc),
     certificate:           parseCertificate(doc),
-    assets:                doc['assets'] as CourseCertificate['badge'] | undefined as unknown as CourseAssets,
+    assets:                doc['assets'] as CourseAssets | undefined,
     triggers:              doc['triggers'] as CourseTriggers | undefined,
     discussion:            doc['discussion'] as CourseDiscussion | undefined,
     changelog:             parseChangelog(doc),

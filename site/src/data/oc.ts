@@ -30,6 +30,7 @@ export interface Course {
   stars: number;
   forks: number;
   openIssues: number;
+  qualityBadges?: string[];
   status: "added" | "modified" | "stable" | "attention";
   lastCommit: string;
   sparklineDays?: number[];

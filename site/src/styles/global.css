@@ -3008,6 +3008,12 @@ body[data-nav="side"] .app-main {
   background: var(--bg-base);
   font-size: var(--text-xs);
 }
+.course-card__tag--quality {
+  border-color: color-mix(in srgb, var(--accent-brand) 36%, var(--border-default));
+  color: var(--accent-brand);
+  background: color-mix(in srgb, var(--accent-brand) 10%, var(--bg-base));
+  font-weight: 800;
+}
 .course-card__cta {
   display: inline-flex;
   align-items: center;

@@ -1,0 +1,63 @@
+name: Curriculum RFC
+description: Propose a substantial course, track, assessment, or certificate change
+title: "[RFC] "
+labels:
+  - curriculum-rfc
+  - discussion
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for major curriculum changes: new courses, large rewrites, prerequisite changes, certificate requirement changes, grading policy changes, or track-level standards.
+
+  - type: input
+    id: scope
+    attributes:
+      label: Scope
+      description: Course slug, track, or platform area affected.
+      placeholder: llm-engineering, data, certificate policy
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should change?
+      placeholder: Describe the intended curriculum change in concrete terms.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why does this change improve learner outcomes or course maintainability?
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Learner and maintainer impact
+      description: Who is affected, and what migration or communication is needed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches were considered?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: RFC checklist
+      options:
+        - label: I checked existing issues and discussions for related proposals.
+          required: true
+        - label: I listed compatibility or migration concerns.
+          required: true
+        - label: I am open to maintainer and community review before implementation.
+          required: true

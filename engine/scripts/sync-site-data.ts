@@ -59,6 +59,7 @@ interface ParsedCourse {
   totalChapterTests: number;
   hasFinaTest: boolean;
   hasFinalAssignment: boolean;
+  qualityBadges?: string[];
   certificate: { enabled: boolean };
   changelog?: Array<{ version: string; date: string; author?: string; changes: string[] }>;
   generatedAt: string;
@@ -98,6 +99,7 @@ interface SiteCourse {
   stars: number;
   forks: number;
   openIssues: number;
+  qualityBadges: string[];
   status: 'added' | 'modified' | 'stable' | 'attention';
   lastCommit: string;
   sparklineDays: number[];
@@ -255,6 +257,7 @@ async function buildCourses(slugs: string[]): Promise<SiteCourse[]> {
       stars:        0,
       forks:        0,
       openIssues:   0,
+      qualityBadges: parsed.qualityBadges ?? [],
       status:       computeStatus(parsed),
       lastCommit:   parsed.generatedAt,
       sparklineDays: Array(90).fill(0),

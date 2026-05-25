@@ -21,6 +21,17 @@ const trackMark = (trackParts.length > 1
   ? trackParts.map(part => part[0]).join('')
   : course.track.slice(0, 2)
 ).slice(0, 2).toUpperCase();
+
+const qualityLabels: Record<string, string> = {
+  'actively-maintained': 'Maintained',
+  'has-assignments': 'Assignments',
+  'has-final-project': 'Final project',
+  'certificate-enabled': 'Certificate',
+  'beginner-friendly': 'Beginner friendly',
+  'needs-reviewers': 'Needs reviewers',
+  'community-verified': 'Community verified',
+};
+const qualityBadges = (course.qualityBadges ?? []).filter(Boolean).slice(0, 4);
 ---
 <a
   href={`${base}/courses/${course.slug}`}
@@ -76,6 +87,7 @@ const trackMark = (trackParts.length > 1
   {!dense && (
     <div class="course-card__footer">
       <div class="course-card__tags">
+        {qualityBadges.map(badge => <span class="course-card__tag course-card__tag--quality">{qualityLabels[badge] ?? badge}</span>)}
         {(course.tags || []).slice(0, 3).map(tag => <span class="course-card__tag">{tag}</span>)}
       </div>
       <span class="course-card__cta">
