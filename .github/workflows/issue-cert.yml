@@ -9,7 +9,7 @@ on:
       course:
         description: 'Course slug'
         required: true
-        default: 'git-mastery'
+        default: 'llm-engineering'
 
 permissions:
   contents: write
@@ -33,6 +33,64 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Resolve course slug
+        id: course
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            function normalize(value) {
+              return value.trim().toLowerCase().replace(/\s+/g, '-');
+            }
+
+            function distance(a, b) {
+              const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+              for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+              for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+              for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                  const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                  dp[i][j] = Math.min(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1,
+                    dp[i - 1][j - 1] + cost,
+                  );
+                }
+              }
+              return dp[a.length][b.length];
+            }
+
+            const requested = normalize('${{ inputs.course }}');
+            const coursesDir = path.join(process.env.GITHUB_WORKSPACE, 'engine', 'courses');
+            const slugs = fs.readdirSync(coursesDir, { withFileTypes: true })
+              .filter((entry) => entry.isDirectory())
+              .map((entry) => entry.name)
+              .filter((slug) => fs.existsSync(path.join(coursesDir, slug, 'course.yaml')) && slug !== 'template');
+
+            let resolved = slugs.find((slug) => slug === requested);
+            if (!resolved) {
+              const ranked = slugs
+                .map((slug) => ({ slug, score: distance(requested, slug) }))
+                .sort((a, b) => a.score - b.score);
+              const best = ranked[0];
+              if (best) {
+                const threshold = Math.min(3, Math.max(1, Math.floor(best.slug.length * 0.25)));
+                if (best.score <= threshold) {
+                  resolved = best.slug;
+                  core.warning(`Course slug "${requested}" was corrected to "${resolved}".`);
+                }
+              }
+            }
+
+            if (!resolved) {
+              core.setFailed(`Course "${requested}" was not found. Available courses: ${slugs.join(', ') || '(none)'}`);
+              return;
+            }
+
+            core.setOutput('slug', resolved);
 
       - name: Install system deps (GPG + Puppeteer)
         run: |
@@ -70,7 +128,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const student = '${{ inputs.student }}'.trim().replace(/^@+/, '').toLowerCase();
-            const course = '${{ inputs.course }}'.trim().toLowerCase();
+            const course = '${{ steps.course.outputs.slug }}';
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               state: 'all', labels: `enrolled,course:${course}`,
@@ -82,7 +140,7 @@ jobs:
       - name: Stop if enrollment record is missing
         if: steps.find_issue.outputs.result == '0'
         run: |
-          echo "No enrollment issue found for @${{ inputs.student }} in ${{ inputs.course }}"
+          echo "No enrollment issue found for @${{ inputs.student }} in ${{ steps.course.outputs.slug }}"
           exit 1
 
       - name: Generate certificate
@@ -91,7 +149,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           STUDENT: ${{ inputs.student }}
-          COURSE: ${{ inputs.course }}
+          COURSE: ${{ steps.course.outputs.slug }}
           ISSUE_NUMBER: ${{ steps.find_issue.outputs.result }}
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
 
