@@ -2027,8 +2027,8 @@ function lessonObjective(detail: CourseDetailJson, chapterId: string, lessonDesc
 .cp-root {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px);
-  overflow: hidden;
+  min-height: calc(100svh - var(--nav-h));
+  overflow: visible;
 }
 
 .cp-root--locked [data-requires-enrollment],
@@ -2129,8 +2129,9 @@ function lessonObjective(detail: CourseDetailJson, chapterId: string, lessonDesc
   display: grid;
   grid-template-columns: 280px 1fr 280px;
   grid-template-areas: "sidebar content infopanel";
-  height: calc(100vh - 56px - 48px);
-  overflow: hidden;
+  align-items: start;
+  min-height: calc(100svh - var(--nav-h) - 48px);
+  overflow: visible;
 }
 @media (max-width: 1280px) {
   .cp-body {
@@ -2151,7 +2152,7 @@ function lessonObjective(detail: CourseDetailJson, chapterId: string, lessonDesc
 /* ── Sidebar: chapter/lesson tree ────────────────────────────────────────── */
 .cp-sidebar {
   grid-area: sidebar;
-  overflow-y: auto;
+  overflow: visible;
   scrollbar-width: thin;
   border-right: 1px solid var(--border-default);
   background: var(--bg-surface);
@@ -2865,7 +2866,8 @@ body.cp-image-viewer-open { overflow: hidden; }
 /* ── Main content: lesson panes ──────────────────────────────────────────── */
 .cp-content {
   grid-area: content;
-  overflow-y: auto;
+  min-width: 0;
+  overflow: visible;
   scrollbar-width: thin;
   background: var(--bg-base);
 }
@@ -3761,7 +3763,7 @@ body.cp-image-viewer-open { overflow: hidden; }
 /* ── Right info panel ────────────────────────────────────────────────────── */
 .cp-infopanel {
   grid-area: infopanel;
-  overflow-y: auto;
+  overflow: visible;
   scrollbar-width: thin;
   border-left: 1px solid var(--border-default);
   background: var(--bg-surface);
@@ -3894,7 +3896,6 @@ body.cp-image-viewer-open { overflow: hidden; }
 }
 .cp-body {
   grid-template-columns: minmax(260px, 310px) minmax(0, 1fr) minmax(250px, 300px);
-  height: calc(100vh - 56px - 64px);
   gap: 1px;
   background: color-mix(in srgb, var(--border-default) 80%, transparent);
 }
@@ -4169,6 +4170,13 @@ body.cp-image-viewer-open { overflow: hidden; }
 .cp-infopanel {
   gap: 12px;
 }
+@media (min-width: 801px) {
+  .cp-sidebar,
+  .cp-infopanel {
+    position: sticky;
+    top: calc(var(--nav-h) + 12px);
+  }
+}
 .cp-card {
   border-color: color-mix(in srgb, var(--border-default) 82%, transparent);
 }
@@ -4243,7 +4251,7 @@ body.cp-image-viewer-open { overflow: hidden; }
 }
 @media (max-width: 800px) {
   .cp-body {
-    height: calc(100vh - 56px - 64px);
+    min-height: calc(100svh - var(--nav-h) - 64px);
   }
   .cp-sidebar--open {
     top: 120px;
@@ -4320,8 +4328,7 @@ body.cp-image-viewer-open { overflow: hidden; }
     margin-left: auto;
   }
   .cp-body {
-    height: calc(100svh - 126px);
-    min-height: 560px;
+    min-height: calc(100svh - var(--nav-h) - 64px);
   }
   .cp-content {
     min-width: 0;
