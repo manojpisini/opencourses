@@ -21,7 +21,7 @@ import * as path from 'path';
 import { parseCourseFile } from '../lib/course-parser.ts';
 import {
   makeOctokit, repoFromEnv, fetchGitHubProfile,
-  addLabels, postComment, parseIssueField, findEnrollmentIssue, setOutput,
+  addLabels, removeLabel, postComment, parseIssueField, findEnrollmentIssue, setOutput,
   normalizeGitHubLogin,
 } from '../lib/github.ts';
 import type { Course } from '../types/course.ts';
@@ -29,7 +29,7 @@ import type { Course } from '../types/course.ts';
 const octokit         = makeOctokit();
 const { owner, repo } = repoFromEnv();
 const issueNumber     = parseInt(process.env['ISSUE_NUMBER'] ?? '0', 10);
-const issueAuthor     = process.env['ISSUE_AUTHOR'] ?? '';
+let issueAuthor       = process.env['ISSUE_AUTHOR'] ?? '';
 
 // ─── Course lookup ────────────────────────────────────────────────────────────
 
@@ -52,6 +52,11 @@ function listAvailableCourses(): string[] {
   return fs.readdirSync(base, { withFileTypes: true })
     .filter((e) => e.isDirectory() && fs.existsSync(`${base}/${e.name}/course.yaml`))
     .map((e) => e.name);
+}
+
+function cleanOptionalField(value: string): string {
+  const normalized = value.trim();
+  return /^_?no response_?$/i.test(normalized) ? '' : normalized;
 }
 
 // ─── Welcome comment ──────────────────────────────────────────────────────────
@@ -112,18 +117,20 @@ _Issue #${enrollmentIssue} is your progress tracker — keep it open. Labels are
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log(`Processing enrollment for @${issueAuthor} (issue #${issueNumber})`);
+  console.log(`Processing enrollment issue #${issueNumber}`);
 
   // Fetch issue body
   const { data: issue } = await octokit.issues.get({ owner, repo, issue_number: issueNumber });
+  issueAuthor = issueAuthor || issue.user?.login || '';
+  console.log(`Processing enrollment for @${issueAuthor} (issue #${issueNumber})`);
   const body = issue.body ?? '';
 
   // Parse form fields — only course slug and optional email
   const enteredLogin = normalizeGitHubLogin(parseIssueField(body, 'Your GitHub Username'));
   const issueLogin   = normalizeGitHubLogin(issueAuthor);
   const courseSlug = parseIssueField(body, 'Course Slug').toLowerCase().trim().replace(/\s+/g, '-');
-  const certEmail  = parseIssueField(body, 'Email Address');
-  const goal       = parseIssueField(body, 'Your Goal (optional)');
+  const certEmail  = cleanOptionalField(parseIssueField(body, 'Email Address'));
+  const goal       = cleanOptionalField(parseIssueField(body, 'Your Goal (optional)'));
 
   if (!enteredLogin) {
     await postComment(octokit, owner, repo, issueNumber,
@@ -160,7 +167,7 @@ async function main() {
 
   // Duplicate enrollment check
   const existing = await findEnrollmentIssue(octokit, owner, repo, issueAuthor, courseSlug);
-  if (existing) {
+  if (existing && existing.number !== issueNumber) {
     await postComment(octokit, owner, repo, issueNumber,
       `@${issueAuthor} — You are already enrolled in **${course.identity.title}**.\n\nYour progress is tracked in issue #${existing.number}. Closing this duplicate.`);
     await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: 'closed' });
@@ -178,6 +185,7 @@ async function main() {
 
   // Apply labels
   await addLabels(octokit, owner, repo, issueNumber, ['enrolled', `course:${courseSlug}`]);
+  await removeLabel(octokit, owner, repo, issueNumber, 'enrollment-request');
 
   // Post welcome comment
   const comment = buildWelcomeComment(profile, certEmail, course, issueNumber);

@@ -1,8 +1,13 @@
 name: Course Enrollment
 
 on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Enrollment issue number to process'
+        required: true
   issues:
-    types: [opened, reopened]
+    types: [opened, reopened, labeled, edited]
 
 permissions:
   issues: write
@@ -11,8 +16,8 @@ permissions:
 jobs:
   enroll:
     name: Process enrollment
-    # Trigger when the issue has the enrollment-request label (set by the issue template)
-    if: contains(github.event.issue.labels.*.name, 'enrollment-request')
+    # Trigger when the issue has the enrollment-request label, or manually for repair.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.issue.labels.*.name, 'enrollment-request')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,7 +39,7 @@ jobs:
       - name: Process enrollment
         run: bun run scripts/enroll.ts
         env:
-          GITHUB_TOKEN: ${{ secrets.COURSE_BOT_TOKEN || github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_NUMBER: ${{ github.event.inputs.issue_number || github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login || '' }}

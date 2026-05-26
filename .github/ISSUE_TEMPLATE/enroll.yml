@@ -1,6 +1,6 @@
 name: 📚 Enroll in a Course
 description: Start your learning journey — enroll in an OpenCourse
-title: "[Enrolled] @YOUR_USERNAME — COURSE_SLUG"
+title: "[Enroll] @YOUR_USERNAME — COURSE_SLUG"
 labels:
   - enrollment-request
 assignees: []

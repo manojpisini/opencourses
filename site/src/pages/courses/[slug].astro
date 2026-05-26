@@ -342,7 +342,7 @@ const courseIdForActions = detail?.id ?? slugFallback;
 const courseActions: Record<string, CourseAction> = {};
 const chapterTestMap = new Map((detail?.chapter_tests ?? []).map(test => [test.id, test]));
 const chapterAssignmentMap = new Map((detail?.chapter_assignments ?? []).map(assignment => [assignment.id, assignment]));
-const enrollTitle = `[Enrolled] @YOUR_USERNAME - ${courseIdForActions}`;
+const enrollTitle = `[Enroll] @YOUR_USERNAME - ${courseIdForActions}`;
 courseActions.enroll = {
   kind: 'enroll',
   title: 'Enroll in Course',
