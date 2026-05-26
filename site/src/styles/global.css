@@ -2691,7 +2691,7 @@ body[data-nav="side"] .app-main {
 .page-head {
   position: relative;
   margin-top: var(--space-6);
-  padding: clamp(2rem, 5vw, 4rem);
+  padding: clamp(1.5rem, 4vw, 3.25rem);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border-default) 78%, transparent);
   border-radius: 8px;
@@ -2723,12 +2723,13 @@ body[data-nav="side"] .app-main {
 }
 .page-head__title {
   max-width: 760px;
-  font-size: clamp(2.45rem, 8vw, 5.7rem);
+  font-size: clamp(2.15rem, 5.6vw, 4.6rem);
   letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 .page-head__sub {
   max-width: 720px;
-  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-size: clamp(0.98rem, 1.45vw, 1.18rem);
   line-height: 1.55;
 }
 .catalog-hero-stats {
@@ -3372,6 +3373,16 @@ pre {
 @media (max-width: 760px) {
   :root {
     --nav-h: 52px;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.35rem;
+    --text-3xl: 1.65rem;
+    --text-4xl: 2rem;
+    --text-5xl: 2.35rem;
+    --space-10: 32px;
+    --space-12: 40px;
+    --space-16: 48px;
+    --space-20: 60px;
   }
 
   .container {
@@ -3463,8 +3474,14 @@ pre {
 
   .hero__title,
   .page-head__title {
-    font-size: clamp(2.2rem, 13vw, 4.4rem);
-    line-height: 0.98;
+    font-size: clamp(2rem, 10vw, 3.1rem);
+    line-height: 1.02;
+  }
+
+  .hero__sub,
+  .page-head__sub {
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem);
+    line-height: 1.55;
   }
 
   .hero__ctas,
@@ -3483,7 +3500,7 @@ pre {
   }
 
   .page-head {
-    padding: clamp(1.5rem, 8vw, 2.25rem);
+    padding: clamp(1.15rem, 5.5vw, 1.75rem);
   }
 
   .page-head__crumbs {
@@ -3625,6 +3642,20 @@ pre {
 @media (max-width: 380px) {
   .container {
     padding-inline: 0.75rem;
+  }
+
+  .page-head {
+    padding: 1rem;
+  }
+
+  .hero__title,
+  .page-head__title {
+    font-size: clamp(1.85rem, 9vw, 2.35rem);
+  }
+
+  .page-head__crumbs {
+    margin-bottom: var(--space-3);
+    font-size: 0.72rem;
   }
 
   .wordmark__logo {

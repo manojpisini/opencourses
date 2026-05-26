@@ -146,35 +146,34 @@ function medal(rank: number): string {
 <style>
   /* ── Stats bar ─────────────────────────────────────────────── */
   .lb-stats {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
     gap: 1px;
-    margin-bottom: 2rem;
+    margin-bottom: clamp(1rem, 4vw, 2rem);
     background: var(--border-default);
     border: 1px solid var(--border-default);
     border-radius: 8px;
     overflow: hidden;
   }
   .lb-stat {
-    flex: 1;
-    min-width: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 1.25rem 1rem;
+    min-width: 0;
+    padding: clamp(0.85rem, 3vw, 1.25rem) clamp(0.65rem, 2.5vw, 1rem);
     background: var(--bg-surface);
     text-align: center;
   }
   .lb-stat__num {
     font-family: var(--font-mono);
-    font-size: 1.75rem;
+    font-size: clamp(1.2rem, 5vw, 1.75rem);
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1;
   }
   .lb-stat__label {
-    font-size: 11px;
+    font-size: clamp(0.62rem, 2.7vw, 0.72rem);
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -185,7 +184,7 @@ function medal(rank: number): string {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 5rem 2rem;
+    padding: clamp(2.5rem, 10vw, 5rem) clamp(1rem, 5vw, 2rem);
     text-align: center;
   }
   .lb-empty__icon {
@@ -210,12 +209,14 @@ function medal(rank: number): string {
   /* ── Table ─────────────────────────────────────────────────── */
   .lb-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border-default);
     border-radius: 8px;
     margin-bottom: 1.5rem;
   }
   .lb-table {
     width: 100%;
+    min-width: 720px;
     border-collapse: collapse;
     font-size: 0.875rem;
   }
@@ -329,4 +330,19 @@ function medal(rank: number): string {
     padding: 0.5rem 0;
   }
   .lb-meta__sep { color: var(--border-default); }
+
+  @media (max-width: 520px) {
+    .lb-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lb-table {
+      font-size: 0.8rem;
+    }
+
+    .lb-th,
+    .lb-td {
+      padding-inline: 0.75rem;
+    }
+  }
 </style>
