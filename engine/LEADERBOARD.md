@@ -1,6 +1,6 @@
 # 🏆 Leaderboard
 
-> Updated: 2026-05-25 · Showing top 1 of 1 students
+> Updated: 2026-05-26 · Showing top 0 of 0 students
 
 ## Rankings
 
@@ -8,16 +8,16 @@ Sorted by: **Average Score** → **Courses Completed** → **Total Points** → 
 
 | Rank | Student | Avg Score | Progress | Done | Points | Fastest | Courses |
 |------|---------|-----------|----------|------|--------|---------|---------|
-| 🥇 | [@manojpisini](https://github.com/manojpisini) | 0.0% | `░░░░░░░░░░` | 0 | 0/0 | — | llm-engineering |
+
 
 ## Stats
 
 | Metric | Value |
 |--------|-------|
-| Total enrolled | 1 |
+| Total enrolled | 0 |
 | Certified | 0 |
 | Courses completed | 0 |
-| Avg score (all) | 0.0% |
+| Avg score (all) | 0% |
 
 ---
 _Rankings update automatically on every quiz/project submission. 🎓 = certificate earned._
