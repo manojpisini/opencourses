@@ -47,3 +47,37 @@ document.addEventListener('keydown', (e) => {
 
 document.getElementById('cmd-trigger')?.addEventListener('click', openCmdPalette);
 document.getElementById('hero-search-btn')?.addEventListener('click', openCmdPalette);
+
+// ── Mobile navigation menu ───────────────────────────────────
+(function () {
+  const navbar = document.querySelector('.navbar');
+  const toggle = document.getElementById('nav-menu-toggle');
+  const nav = document.getElementById('main-nav');
+  if (!navbar || !toggle || !nav) return;
+
+  function setOpen(open) {
+    navbar.toggleAttribute('data-menu-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+  }
+
+  toggle.addEventListener('click', () => {
+    setOpen(!navbar.hasAttribute('data-menu-open'));
+  });
+
+  nav.addEventListener('click', (event) => {
+    if (event.target.closest('a')) setOpen(false);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!navbar.contains(event.target)) setOpen(false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+
+  window.matchMedia('(min-width: 761px)').addEventListener('change', (event) => {
+    if (event.matches) setOpen(false);
+  });
+})();
