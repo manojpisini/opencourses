@@ -4300,4 +4300,82 @@ body.cp-image-viewer-open { overflow: hidden; }
     justify-content: center;
   }
 }
+@media (max-width: 800px) {
+  .cp-topbar {
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-block: 0.55rem;
+  }
+  .cp-topbar__back {
+    min-height: 34px;
+  }
+  .cp-topbar__title {
+    order: 3;
+    flex: 1 0 100%;
+    max-width: 100%;
+  }
+  .cp-resume-btn {
+    margin-left: auto;
+  }
+  .cp-body {
+    height: calc(100svh - 126px);
+    min-height: 560px;
+  }
+  .cp-content {
+    min-width: 0;
+  }
+}
+@media (max-width: 560px) {
+  .cp-body {
+    height: auto;
+    min-height: calc(100svh - 130px);
+    overflow: visible;
+  }
+  .cp-content {
+    overflow: visible;
+  }
+  .cp-pane {
+    padding-inline: 0.85rem;
+  }
+  .cp-pane__title,
+  .cp-gate-hero__title {
+    font-size: clamp(1.85rem, 11vw, 3rem);
+  }
+  .cp-enrollment-check__row,
+  .cp-learning-stage__bar,
+  .cp-video-meta,
+  .cp-resource-card__body,
+  .cp-exercise__header,
+  .cp-exercise__body,
+  .cp-action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cp-enrollment-check__input,
+  .cp-action-choice,
+  .cp-enroll-btn,
+  .cp-video-meta__link,
+  .cp-resource-card__open,
+  .cp-exercise__repo {
+    width: 100%;
+    justify-content: center;
+  }
+  .cp-test-question__options {
+    grid-template-columns: 1fr;
+  }
+  .cp-test-section__title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .cp-sidebar--open {
+    top: 118px;
+    width: min(92vw, 340px);
+  }
+  .cp-sidebar-toggle {
+    bottom: 1rem;
+    left: 1rem;
+  }
+}
 </style>

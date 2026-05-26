@@ -622,6 +622,80 @@ const current = CHAPTERS.find(c => c.id === chapterId)!;
   margin: 0;
   line-height: 1.6;
 }
+
+@media (max-width: 780px) {
+  .docs-page {
+    width: min(100% - 1.25rem, 720px);
+    margin-top: 0.75rem;
+  }
+
+  .docs-ch-header {
+    padding: 1.6rem 1.25rem 1.4rem;
+  }
+
+  .docs-ch-header__title {
+    font-size: clamp(2rem, 12vw, 3.4rem);
+    line-height: 1;
+  }
+
+  .docs-content {
+    padding-block: 1.25rem;
+  }
+
+  .docs-section {
+    margin-bottom: 2.25rem;
+  }
+
+  .docs-section-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: 1.25rem;
+  }
+
+  .docs-pre code {
+    font-size: 0.78rem;
+  }
+
+  .docs-table {
+    min-width: 560px;
+  }
+
+  .docs-ch-footer {
+    padding: 1rem;
+  }
+
+  .docs-ch-footer__inner {
+    flex-direction: column;
+  }
+
+  .docs-ch-footer__link,
+  .docs-ch-footer__link--next {
+    width: 100%;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .docs-page {
+    width: min(100% - 0.75rem, 420px);
+  }
+
+  .docs-callout,
+  .docs-checklist li,
+  .docs-step {
+    gap: 8px;
+  }
+
+  .docs-step {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .docs-step__num {
+    width: 28px;
+    height: 28px;
+  }
+}
 </style>
 
 <script is:inline>
