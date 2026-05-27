@@ -1,10 +1,24 @@
 {
-  "entries": [],
+  "entries": [
+    {
+      "rank": 1,
+      "login": "manojpisini",
+      "coursesCompleted": 0,
+      "avgScore": 0,
+      "totalPoints": 0,
+      "maxPoints": 0,
+      "fastestCourse": null,
+      "certified": false,
+      "enrolledCourses": [
+        "llm-engineering"
+      ]
+    }
+  ],
   "stats": {
-    "totalEnrolled": 0,
+    "totalEnrolled": 1,
     "totalCertified": 0,
     "totalCompletions": 0,
     "avgScore": 0
   },
-  "builtAt": "2026-05-26T05:58:04.476Z"
+  "builtAt": "2026-05-27T06:08:25.368Z"
 }
